@@ -1,0 +1,15 @@
+{
+  "title": "Kuma Science",
+  "kind": "platform",
+  "status": "live",
+  "featured": true,
+  "order": 1,
+  "year": "2026",
+  "url": "https://kuma-science.siba-kalivogui94.workers.dev",
+  "repo": null,
+  "summaryFr": "Plateforme éditoriale et scientifique d’ingénierie énergétique pour l’Afrique francophone.",
+  "summaryEn": "Editorial and scientific platform for energy engineering across French-speaking Africa.",
+  "stack": ["Astro", "Cloudflare", "Supabase", "D3", "MapLibre"],
+  "tags": ["Énergie", "Données", "Afrique francophone"],
+  "body": "Plateforme phare de l’écosystème Kuma : données techniques, méthodologie et outils, calibrés sur des villes pilotes en Guinée puis à l’échelle du continent."
+}

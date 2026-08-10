@@ -1,0 +1,15 @@
+{
+  "title": "Kuma Solar Bridge",
+  "kind": "tool",
+  "status": "wip",
+  "featured": false,
+  "order": 3,
+  "year": "2026",
+  "url": null,
+  "repo": null,
+  "summaryFr": "Convertisseur CSV pour dataloggers solaires, au sein de l’écosystème Kuma.",
+  "summaryEn": "CSV converter for solar dataloggers, within the Kuma ecosystem.",
+  "stack": ["Node", "CSV"],
+  "tags": ["Solaire", "Outil"],
+  "body": "Outil de conversion des exports CSV de dataloggers solaires vers un format exploitable par la chaîne de données Kuma."
+}

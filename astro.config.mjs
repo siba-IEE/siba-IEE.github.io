@@ -1,6 +1,8 @@
 // @ts-check
 import { defineConfig } from 'astro/config';
 import cloudflare from '@astrojs/cloudflare';
+import react from '@astrojs/react';
+import keystatic from '@keystatic/astro';
 import mdx from '@astrojs/mdx';
 import sitemap from '@astrojs/sitemap';
 import tailwindcss from '@tailwindcss/vite';
@@ -17,7 +19,7 @@ export default defineConfig({
   site: SITE,
   output: 'static',
   ...(isVitest || isDev ? {} : { adapter: cloudflare() }),
-  integrations: [mdx(), sitemap()],
+  integrations: [react(), keystatic(), mdx(), sitemap()],
   i18n: {
     defaultLocale: 'fr',
     locales: ['fr', 'en'],

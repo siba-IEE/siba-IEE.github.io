@@ -1,0 +1,15 @@
+{
+  "title": "SOLCLIM-3",
+  "kind": "data",
+  "status": "wip",
+  "featured": true,
+  "order": 2,
+  "year": "2026",
+  "url": "https://solclim3.com",
+  "repo": null,
+  "summaryFr": "Données solaires calées au sol pour l’Afrique de l’Ouest, un produit de Kuma Science.",
+  "summaryEn": "Ground-calibrated solar data for West Africa, a Kuma Science product.",
+  "stack": ["Astro", "Tailwind", "MapLibre"],
+  "tags": ["Solaire", "Données"],
+  "body": "Plateforme de données solaires calées au sol, avec un tableau de bord du pilote guinéen (34 communes)."
+}

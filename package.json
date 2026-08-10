@@ -13,6 +13,7 @@
   "scripts": {
     "dev": "astro dev",
     "fetch:orcid": "node scripts/fetch-orcid.mjs",
+    "og": "node scripts/build-og.mjs",
     "guard:emdash": "node scripts/clean-emdash.mjs",
     "build": "node scripts/fetch-orcid.mjs && node scripts/clean-emdash.mjs && astro build",
     "preview": "astro preview",

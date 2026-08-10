@@ -1,57 +1,20 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
+import ProjectCard from '../components/projects/ProjectCard.astro';
 import { SITE, orcidUrl } from '../lib/site';
 import { getLangFromUrl, useTranslations } from '../lib/i18n';
-import profile from '../content/profile/index.json';
+import { getProfile, getProjects, getPublications } from '../lib/content';
 
 const lang = getLangFromUrl(Astro.url);
 const t = useTranslations(lang);
 
-const kindLabels = {
-  platform: { fr: 'Plateforme', en: 'Platform' },
-  data: { fr: 'Données', en: 'Data' },
-  tool: { fr: 'Outil', en: 'Tool' },
-} as const;
-const statusLabels = {
-  live: { fr: 'En ligne', en: 'Live' },
-  wip: { fr: 'En cours', en: 'In progress' },
-  archived: { fr: 'Archivé', en: 'Archived' },
-} as const;
-
-// Profil éditable (Keystatic écrit ce JSON), avec repli sur la config du site.
+const profile = getProfile();
 const role = (lang === 'fr' ? profile.roleFr : profile.roleEn) || SITE.role[lang];
 const tagline = (lang === 'fr' ? profile.taglineFr : profile.taglineEn) || SITE.tagline[lang];
 const bio = (lang === 'fr' ? profile.bioFr : profile.bioEn) || SITE.bio[lang];
 
-// Projets éditables (Keystatic écrit ces JSON) lus au build via Vite, triés par ordre.
-type ProjectData = {
-  title: string;
-  kind: keyof typeof kindLabels;
-  status: keyof typeof statusLabels;
-  order: number;
-  url: string | null;
-  summaryFr: string;
-  summaryEn: string;
-  stack: string[];
-};
-const projectModules = import.meta.glob<{ default: ProjectData }>('../content/projects/*.json', {
-  eager: true,
-});
-const projects = Object.entries(projectModules)
-  .map(([path, mod]) => {
-    const p = mod.default;
-    return {
-      slug: path.split('/').pop()!.replace(/\.json$/, ''),
-      title: p.title,
-      kind: p.kind,
-      status: p.status,
-      order: p.order ?? 0,
-      url: p.url,
-      summary: (lang === 'fr' ? p.summaryFr : p.summaryEn) || '',
-      stack: p.stack ?? [],
-    };
-  })
-  .sort((a, b) => a.order - b.order);
+const projects = getProjects();
+const publicationCount = getPublications().length;
 ---
 
 <BaseLayout description={tagline}>
@@ -87,13 +50,13 @@ const projects = Object.entries(projectModules)
 
       <div class="mt-8 flex flex-wrap items-center gap-3">
         <a
-          href="#projets"
+          href="/projets"
           class="inline-flex items-center gap-2 rounded-lg bg-brand-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-brand-700"
         >
           {t('hero.cta.projects')}
         </a>
         <a
-          href="#contact"
+          href="/contact"
           class="inline-flex items-center gap-2 rounded-lg border border-border px-5 py-2.5 text-sm font-semibold text-text transition-colors hover:bg-surface-2"
         >
           {t('hero.cta.contact')}
@@ -113,49 +76,37 @@ const projects = Object.entries(projectModules)
     <div class="shell py-16">
       <h2 class="font-display text-2xl font-bold tracking-tight">{t('nav.about')}</h2>
       <p class="mt-5 max-w-3xl text-lg leading-relaxed text-text-muted text-pretty">{bio}</p>
+      <a
+        href="/a-propos"
+        class="mt-6 inline-flex items-center gap-1 text-sm font-medium text-brand-700 hover:underline"
+      >
+        {t('about.pageTitle')}
+        <span aria-hidden="true">&rarr;</span>
+      </a>
     </div>
   </section>
 
   {/* Projets */}
   <section id="projets" class="scroll-mt-20 border-t border-border/60 bg-surface-2/40">
     <div class="shell py-16">
-      <div class="max-w-2xl">
-        <h2 class="font-display text-2xl font-bold tracking-tight">{t('section.projects.title')}</h2>
-        <p class="mt-3 text-text-muted">{t('section.projects.lede')}</p>
+      <div class="flex flex-wrap items-end justify-between gap-4">
+        <div class="max-w-2xl">
+          <h2 class="font-display text-2xl font-bold tracking-tight">
+            {t('section.projects.title')}
+          </h2>
+          <p class="mt-3 text-text-muted">{t('section.projects.lede')}</p>
+        </div>
+        <a
+          href="/projets"
+          class="text-sm font-medium text-brand-700 hover:underline"
+        >
+          {t('section.projects.all')}
+          <span aria-hidden="true">&rarr;</span>
+        </a>
       </div>
 
       <ul class="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-        {
-          projects.map((project) => (
-            <li class="group relative flex flex-col rounded-2xl border border-border bg-surface p-6 transition-colors hover:border-brand-400">
-              <div class="flex items-center justify-between gap-3">
-                <span class="text-xs font-medium tracking-wide text-text-subtle uppercase">
-                  {kindLabels[project.kind][lang]}
-                </span>
-                <span class="rounded-full bg-brand-100 px-2.5 py-0.5 text-xs font-medium text-brand-800">
-                  {statusLabels[project.status][lang]}
-                </span>
-              </div>
-              <h3 class="mt-3 font-display text-lg font-semibold">
-                {project.url ? (
-                  <a href={project.url} target="_blank" rel="noopener" class="after:absolute after:inset-0">
-                    {project.title}
-                  </a>
-                ) : (
-                  project.title
-                )}
-              </h3>
-              <p class="mt-2 flex-1 text-sm text-text-muted text-pretty">{project.summary}</p>
-              <ul class="mt-4 flex flex-wrap gap-1.5">
-                {project.stack.map((tech) => (
-                  <li class="rounded-md bg-surface-3 px-2 py-0.5 font-mono text-xs text-text-muted">
-                    {tech}
-                  </li>
-                ))}
-              </ul>
-            </li>
-          ))
-        }
+        {projects.map((project) => <ProjectCard project={project} lang={lang} />)}
       </ul>
     </div>
   </section>
@@ -164,12 +115,23 @@ const projects = Object.entries(projectModules)
   <section id="publications" class="scroll-mt-20 border-t border-border/60">
     <div class="shell py-16">
       <h2 class="font-display text-2xl font-bold tracking-tight">{t('nav.publications')}</h2>
-      <p class="mt-4 max-w-2xl text-text-muted">
-        Liste synchronisée depuis ORCID (à brancher en Phase 2).{' '}
-        <a href={orcidUrl} target="_blank" rel="me noopener" class="text-brand-700 underline-offset-4 hover:underline">
-          Profil ORCID {SITE.orcid}
-        </a>.
-      </p>
+      <p class="mt-4 max-w-2xl text-text-muted">{t('publications.pageLede')}</p>
+      <div class="mt-6 flex flex-wrap items-center gap-4">
+        <a
+          href="/publications"
+          class="inline-flex items-center gap-2 rounded-lg border border-border px-4 py-2 text-sm font-semibold transition-colors hover:bg-surface-2"
+        >
+          {t('nav.publications')} ({publicationCount})
+        </a>
+        <a
+          href={orcidUrl}
+          target="_blank"
+          rel="me noopener"
+          class="text-sm text-brand-700 underline-offset-4 hover:underline"
+        >
+          ORCID {SITE.orcid}
+        </a>
+      </div>
     </div>
   </section>
 
@@ -177,7 +139,7 @@ const projects = Object.entries(projectModules)
   <section id="contact" class="scroll-mt-20 border-t border-border/60 bg-surface-2/40">
     <div class="shell py-16">
       <h2 class="font-display text-2xl font-bold tracking-tight">{t('nav.contact')}</h2>
-      <p class="mt-4 max-w-2xl text-text-muted">{SITE.location[lang]}.</p>
+      <p class="mt-4 max-w-2xl text-text-muted">{t('contact.pageLede')}</p>
       <a
         href={`mailto:${SITE.email}`}
         class="mt-5 inline-flex items-center gap-2 rounded-lg bg-brand-600 px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-brand-700"

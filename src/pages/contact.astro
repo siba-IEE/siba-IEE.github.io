@@ -1,0 +1,46 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { SITE, socialLinks } from '../lib/site';
+import { getLangFromUrl, useTranslations } from '../lib/i18n';
+
+const lang = getLangFromUrl(Astro.url);
+const t = useTranslations(lang);
+---
+
+<BaseLayout title={t('contact.pageTitle')} description={t('contact.pageLede')}>
+  <section class="shell py-16">
+    <h1 class="font-display text-3xl font-bold tracking-tight sm:text-4xl">
+      {t('contact.pageTitle')}
+    </h1>
+    <p class="mt-4 max-w-2xl text-lg text-text-muted text-pretty">{t('contact.pageLede')}</p>
+    <p class="mt-2 text-sm text-text-muted">{SITE.location[lang]}</p>
+
+    <a
+      href={`mailto:${SITE.email}`}
+      class="mt-8 inline-flex items-center gap-2 rounded-lg bg-brand-600 px-5 py-3 text-sm font-semibold text-white transition-colors hover:bg-brand-700"
+    >
+      {t('contact.email')}
+      <span aria-hidden="true">&rarr;</span>
+    </a>
+    <p class="mt-3 font-mono text-sm text-text-muted">{SITE.email}</p>
+
+    <ul class="mt-10 flex flex-wrap gap-3">
+      {
+        socialLinks
+          .filter((link) => link.key !== 'email')
+          .map((link) => (
+            <li>
+              <a
+                href={link.href}
+                target="_blank"
+                rel="me noopener"
+                class="inline-flex items-center gap-2 rounded-lg border border-border px-4 py-2 text-sm font-medium transition-colors hover:bg-surface-2"
+              >
+                {link.label}
+              </a>
+            </li>
+          ))
+      }
+    </ul>
+  </section>
+</BaseLayout>

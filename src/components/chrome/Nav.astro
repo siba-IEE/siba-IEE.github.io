@@ -4,13 +4,16 @@ import { getLangFromUrl, useTranslations, type UiKey } from '../../lib/i18n';
 
 const lang = getLangFromUrl(Astro.url);
 const t = useTranslations(lang);
+const path = Astro.url.pathname.replace(/\/$/, '') || '/';
 
 const items: { key: UiKey; href: string }[] = [
-  { key: 'nav.about', href: '#a-propos' },
-  { key: 'nav.projects', href: '#projets' },
-  { key: 'nav.publications', href: '#publications' },
-  { key: 'nav.contact', href: '#contact' },
+  { key: 'nav.about', href: '/a-propos' },
+  { key: 'nav.projects', href: '/projets' },
+  { key: 'nav.publications', href: '/publications' },
+  { key: 'nav.contact', href: '/contact' },
 ];
+
+const isActive = (href: string) => path === href || path.startsWith(`${href}/`);
 ---
 
 <header
@@ -31,7 +34,11 @@ const items: { key: UiKey; href: string }[] = [
         items.map((item) => (
           <a
             href={item.href}
-            class="rounded-lg px-3 py-2 text-sm text-text-muted transition-colors hover:bg-surface-2 hover:text-text"
+            aria-current={isActive(item.href) ? 'page' : undefined}
+            class:list={[
+              'rounded-lg px-3 py-2 text-sm transition-colors hover:bg-surface-2',
+              isActive(item.href) ? 'font-medium text-text' : 'text-text-muted hover:text-text',
+            ]}
           >
             {t(item.key)}
           </a>
@@ -61,7 +68,11 @@ const items: { key: UiKey; href: string }[] = [
       items.map((item) => (
         <a
           href={item.href}
-          class="block rounded-lg px-3 py-2.5 text-sm text-text-muted transition-colors hover:bg-surface-2 hover:text-text"
+          aria-current={isActive(item.href) ? 'page' : undefined}
+          class:list={[
+            'block rounded-lg px-3 py-2.5 text-sm transition-colors hover:bg-surface-2',
+            isActive(item.href) ? 'font-medium text-text' : 'text-text-muted hover:text-text',
+          ]}
         >
           {t(item.key)}
         </a>

@@ -1,0 +1,123 @@
+@import 'tailwindcss';
+
+/* Thème sombre piloté par l'attribut data-theme (toggle + repli prefers-color-scheme). */
+@custom-variant dark (&:where([data-theme='dark'], [data-theme='dark'] *));
+
+@theme {
+  --font-sans: 'Inter Variable', ui-sans-serif, system-ui, -apple-system, sans-serif;
+  --font-display: 'Manrope Variable', 'Inter Variable', ui-sans-serif, sans-serif;
+  --font-mono: 'Source Code Pro Variable', ui-monospace, SFMono-Regular, monospace;
+
+  /* Palette de marque, teinte solaire (OKLCH). */
+  --color-brand-50: oklch(0.97 0.02 85);
+  --color-brand-100: oklch(0.94 0.05 84);
+  --color-brand-200: oklch(0.9 0.09 82);
+  --color-brand-300: oklch(0.85 0.13 78);
+  --color-brand-400: oklch(0.8 0.16 72);
+  --color-brand-500: oklch(0.74 0.17 66);
+  --color-brand-600: oklch(0.66 0.16 62);
+  --color-brand-700: oklch(0.56 0.14 58);
+  --color-brand-800: oklch(0.46 0.11 56);
+  --color-brand-900: oklch(0.38 0.08 55);
+
+  /* Accent secondaire, teinte énergie/eau. */
+  --color-accent-400: oklch(0.72 0.12 205);
+  --color-accent-500: oklch(0.62 0.13 205);
+  --color-accent-600: oklch(0.54 0.12 208);
+}
+
+/* Jetons sémantiques, valeurs qui basculent en sombre. */
+:root {
+  color-scheme: light;
+  --surface: oklch(0.99 0.004 95);
+  --surface-2: oklch(0.965 0.006 95);
+  --surface-3: oklch(0.93 0.008 95);
+  --border: oklch(0.9 0.01 95);
+  --text: oklch(0.24 0.02 90);
+  --text-muted: oklch(0.5 0.02 90);
+  --text-subtle: oklch(0.62 0.02 90);
+}
+
+[data-theme='dark'] {
+  color-scheme: dark;
+  --surface: oklch(0.19 0.015 260);
+  --surface-2: oklch(0.23 0.017 260);
+  --surface-3: oklch(0.28 0.02 260);
+  --border: oklch(0.34 0.02 260);
+  --text: oklch(0.95 0.01 260);
+  --text-muted: oklch(0.74 0.015 260);
+  --text-subtle: oklch(0.6 0.015 260);
+}
+
+/* Expose les jetons sémantiques comme utilitaires Tailwind (bg-surface, text-text, border-border...). */
+@theme inline {
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-surface-3: var(--surface-3);
+  --color-border: var(--border);
+  --color-text: var(--text);
+  --color-text-muted: var(--text-muted);
+  --color-text-subtle: var(--text-subtle);
+}
+
+@layer components {
+  /* Conteneur pleine largeur, marges généreuses, pour éviter la colonne étroite centrée. */
+  .shell {
+    margin-inline: auto;
+    width: 100%;
+    max-width: 96rem;
+    padding-inline: 1.5rem;
+
+    @media (min-width: 640px) {
+      padding-inline: 2rem;
+    }
+
+    @media (min-width: 1024px) {
+      padding-inline: 4rem;
+    }
+
+    @media (min-width: 1536px) {
+      padding-inline: 5rem;
+    }
+  }
+}
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    background-color: var(--surface);
+    color: var(--text);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-brand-500);
+    outline-offset: 2px;
+    border-radius: 2px;
+  }
+
+  ::selection {
+    background-color: var(--color-brand-200);
+    color: var(--color-brand-900);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-behavior: auto;
+    }
+
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+}

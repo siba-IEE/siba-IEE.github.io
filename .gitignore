@@ -1,0 +1,23 @@
+# dependencies
+node_modules/
+
+# build output
+dist/
+.astro/
+.output/
+.vercel/
+.wrangler/
+
+# logs
+*.log
+npm-debug.log*
+pnpm-debug.log*
+
+# env
+.env
+.env.*
+!.env.example
+
+# os
+.DS_Store
+Thumbs.db

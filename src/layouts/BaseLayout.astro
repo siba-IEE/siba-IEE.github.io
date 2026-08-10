@@ -1,0 +1,70 @@
+---
+import '@fontsource-variable/inter';
+import '@fontsource-variable/manrope';
+import '@fontsource-variable/source-code-pro';
+import '../styles/global.css';
+
+import Nav from '../components/chrome/Nav.astro';
+import Footer from '../components/chrome/Footer.astro';
+import { SITE } from '../lib/site';
+import { getLangFromUrl, localeTag, useTranslations } from '../lib/i18n';
+import { personJsonLd } from '../lib/seo';
+
+interface Props {
+  title?: string;
+  description?: string;
+}
+
+const lang = getLangFromUrl(Astro.url);
+const t = useTranslations(lang);
+
+const { title, description = SITE.tagline[lang] } = Astro.props;
+const pageTitle = title ? `${title} · ${SITE.name}` : `${SITE.name} · ${SITE.shortRole[lang]}`;
+const canonical = new URL(Astro.url.pathname, SITE.url).href;
+const jsonLd = JSON.stringify(personJsonLd(lang));
+---
+
+<!doctype html>
+<html lang={localeTag[lang]} data-theme="light">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="canonical" href={canonical} />
+
+    <title>{pageTitle}</title>
+    <meta name="description" content={description} />
+    <meta name="author" content={SITE.name} />
+
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content={pageTitle} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonical} />
+    <meta property="og:locale" content={localeTag[lang]} />
+    <meta name="twitter:card" content="summary_large_image" />
+
+    <script is:inline type="application/ld+json" set:html={jsonLd} />
+
+    {/* Applique le thème avant le premier rendu pour éviter tout flash. */}
+    <script is:inline>
+      (() => {
+        const stored = localStorage.getItem('theme');
+        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        document.documentElement.dataset.theme = stored ?? (prefersDark ? 'dark' : 'light');
+      })();
+    </script>
+  </head>
+  <body class="min-h-dvh flex flex-col">
+    <a
+      href="#main"
+      class="sr-only focus:not-sr-only focus:absolute focus:top-3 focus:left-3 focus:z-50 focus:rounded-lg focus:bg-brand-600 focus:px-4 focus:py-2 focus:text-white"
+    >
+      {t('nav.skipToContent')}
+    </a>
+    <Nav />
+    <main id="main" class="flex-1">
+      <slot />
+    </main>
+    <Footer />
+  </body>
+</html>

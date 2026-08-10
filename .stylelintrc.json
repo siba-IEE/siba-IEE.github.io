@@ -1,0 +1,27 @@
+{
+  "extends": "stylelint-config-standard",
+  "rules": {
+    "at-rule-no-unknown": [
+      true,
+      {
+        "ignoreAtRules": [
+          "theme",
+          "custom-variant",
+          "variant",
+          "apply",
+          "tailwind",
+          "layer",
+          "config",
+          "plugin",
+          "source",
+          "utility",
+          "reference"
+        ]
+      }
+    ],
+    "import-notation": null,
+    "no-descending-specificity": null,
+    "custom-property-empty-line-before": null,
+    "declaration-empty-line-before": null
+  }
+}

@@ -1,0 +1,43 @@
+{
+  "source": "orcid",
+  "orcid": "0009-0002-8292-1905",
+  "count": 4,
+  "works": [
+    {
+      "putCode": 223022274,
+      "title": "Kuma Data Core",
+      "year": "2026",
+      "type": "software",
+      "journal": "Moteur de données solaires à confiance tracée",
+      "doi": "10.5281/ZENODO.21117158",
+      "url": "https://zenodo.org/doi/10.5281/zenodo.21117158"
+    },
+    {
+      "putCode": 223022442,
+      "title": "Référentiel de Données Solaires de la Guinée (RDS Guinée)",
+      "year": "2026",
+      "type": "data-set",
+      "journal": null,
+      "doi": "10.5281/ZENODO.21051755",
+      "url": "https://zenodo.org/doi/10.5281/zenodo.21051755"
+    },
+    {
+      "putCode": 223022084,
+      "title": "Decarbonization Strategies for Northern Quebec: Enhancing Building Efficiency and Integrating Renewable Energy in Off-Grid Indigenous Communities",
+      "year": "2025",
+      "type": "journal-article",
+      "journal": "Energies",
+      "doi": "10.3390/en18164234",
+      "url": "http://dx.doi.org/10.3390/en18164234"
+    },
+    {
+      "putCode": 223019642,
+      "title": "Decarbonization strategies for northern Canada: A review of renewable energy and energy storage in off-grid communities",
+      "year": "2025",
+      "type": "journal-article",
+      "journal": "Energy Conversion and Management: X",
+      "doi": "10.1016/j.ecmx.2025.101055",
+      "url": "https://doi.org/10.1016/j.ecmx.2025.101055"
+    }
+  ]
+}

@@ -1,0 +1,86 @@
+---
+import ThemeToggle from '../ui/ThemeToggle.astro';
+import { getLangFromUrl, useTranslations, type UiKey } from '../../lib/i18n';
+
+const lang = getLangFromUrl(Astro.url);
+const t = useTranslations(lang);
+
+const items: { key: UiKey; href: string }[] = [
+  { key: 'nav.about', href: '#a-propos' },
+  { key: 'nav.projects', href: '#projets' },
+  { key: 'nav.publications', href: '#publications' },
+  { key: 'nav.contact', href: '#contact' },
+];
+---
+
+<header
+  class="sticky top-0 z-40 border-b border-border/70 bg-surface/80 backdrop-blur-md supports-[backdrop-filter]:bg-surface/60"
+>
+  <nav class="shell flex h-16 items-center justify-between gap-4" aria-label="Principale">
+    <a href="/" class="group inline-flex items-center gap-2.5" aria-label="Accueil">
+      <span
+        class="grid size-9 place-items-center rounded-lg bg-brand-600 font-display text-sm font-bold text-white shadow-sm transition-transform group-hover:-rotate-6"
+      >
+        S
+      </span>
+      <span class="font-display text-sm font-semibold tracking-tight">Siba Kalivogui</span>
+    </a>
+
+    <div class="hidden items-center gap-1 md:flex">
+      {
+        items.map((item) => (
+          <a
+            href={item.href}
+            class="rounded-lg px-3 py-2 text-sm text-text-muted transition-colors hover:bg-surface-2 hover:text-text"
+          >
+            {t(item.key)}
+          </a>
+        ))
+      }
+    </div>
+
+    <div class="flex items-center gap-2">
+      <ThemeToggle />
+      <button
+        type="button"
+        id="nav-toggle"
+        class="inline-flex size-9 items-center justify-center rounded-lg border border-border text-text-muted hover:bg-surface-2 md:hidden"
+        aria-label="Menu"
+        aria-expanded="false"
+        aria-controls="nav-mobile"
+      >
+        <svg class="size-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true">
+          <path d="M4 7h16M4 12h16M4 17h16" stroke-linecap="round"></path>
+        </svg>
+      </button>
+    </div>
+  </nav>
+
+  <div id="nav-mobile" class="hidden border-t border-border px-5 py-2 md:hidden">
+    {
+      items.map((item) => (
+        <a
+          href={item.href}
+          class="block rounded-lg px-3 py-2.5 text-sm text-text-muted transition-colors hover:bg-surface-2 hover:text-text"
+        >
+          {t(item.key)}
+        </a>
+      ))
+    }
+  </div>
+</header>
+
+<script>
+  const toggle = document.getElementById('nav-toggle');
+  const panel = document.getElementById('nav-mobile');
+  toggle?.addEventListener('click', () => {
+    const open = panel?.classList.toggle('hidden') === false;
+    toggle.setAttribute('aria-expanded', String(open));
+  });
+  panel?.querySelectorAll('a').forEach((link) =>
+    link.addEventListener('click', () => {
+      panel.classList.add('hidden');
+      toggle?.setAttribute('aria-expanded', 'false');
+    }),
+  );
+</script>

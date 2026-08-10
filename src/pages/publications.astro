@@ -11,7 +11,7 @@ const publications = getPublications();
 // Regroupe par année (décroissant), "Sans date" en dernier.
 const groups = new Map<string, typeof publications>();
 for (const publication of publications) {
-  const key = publication.year ?? '—';
+  const key = publication.year ?? '·';
   if (!groups.has(key)) groups.set(key, []);
   groups.get(key)!.push(publication);
 }

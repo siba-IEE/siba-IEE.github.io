@@ -5,7 +5,7 @@
 
 @theme {
   --font-sans: 'Inter Variable', ui-sans-serif, system-ui, -apple-system, sans-serif;
-  --font-display: 'Fraunces Variable', 'Manrope Variable', Georgia, 'Times New Roman', serif;
+  --font-display: 'Manrope Variable', 'Inter Variable', ui-sans-serif, sans-serif;
   --font-mono: 'Source Code Pro Variable', ui-monospace, SFMono-Regular, monospace;
 
   /* Palette de marque, encre bleue (OKLCH) : accent unique et sobre, registre revue scientifique. */

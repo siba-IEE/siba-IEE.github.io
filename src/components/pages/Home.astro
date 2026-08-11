@@ -7,133 +7,129 @@ import { getProfile, getProjects, getPublications } from '../../lib/content';
 
 const lang = getLangFromUrl(Astro.url);
 const t = useTranslations(lang);
+const isFr = lang === 'fr';
 
 const profile = getProfile();
-const role = (lang === 'fr' ? profile.roleFr : profile.roleEn) || SITE.role[lang];
-const tagline = (lang === 'fr' ? profile.taglineFr : profile.taglineEn) || SITE.tagline[lang];
-const bio = (lang === 'fr' ? profile.bioFr : profile.bioEn) || SITE.bio[lang];
+const bio = (isFr ? profile.bioFr : profile.bioEn) || SITE.bio[lang];
 
 const projects = getProjects();
 const publications = getPublications();
 const publicationCount = publications.length;
 const peerReviewed = publications.filter((p) => p.type === 'journal-article').length;
 
+// Accroche de mission (à affiner librement).
+const mission = isFr
+  ? 'Fiabiliser la donnée solaire de l’Afrique de l’Ouest.'
+  : 'Making West Africa’s solar data trustworthy.';
+const missionLede = isFr
+  ? 'Chercheur et ingénieur énergéticien, je bâtis les référentiels, méthodes et outils qui font passer le solaire ouest-africain de l’estimation à la mesure : de la recherche publiée au logiciel en production.'
+  : 'A researcher and energy engineer, I build the references, methods and tools that move West African solar from estimation to measurement: from published research to shipped software.';
+
 const stats = [
   {
     value: String(projects.length),
-    label: lang === 'fr' ? 'projets dans l’écosystème Kuma' : 'projects in the Kuma ecosystem',
+    label: isFr ? 'projets dans l’écosystème Kuma' : 'projects in the Kuma ecosystem',
+  },
+  { value: String(peerReviewed), label: isFr ? 'articles évalués par les pairs' : 'peer-reviewed articles' },
+  { value: '15', label: isFr ? 'sources de données qualifiées' : 'qualified data sources' },
+];
+
+const pillars = [
+  {
+    n: '01',
+    title: isFr ? 'Recherche & méthode' : 'Research & method',
+    desc: isFr
+      ? 'Des méthodes de qualification et de transfert de la donnée solaire (calage spatial, incertitude, dégénérescence de pixel), validées et publiées.'
+      : 'Methods to qualify and transfer solar data (spatial calibration, uncertainty, pixel degeneracy), validated and published.',
+    href: localizePath('/publications', lang),
   },
   {
-    value: String(peerReviewed),
-    label: lang === 'fr' ? 'articles évalués par les pairs' : 'peer-reviewed articles',
+    n: '02',
+    title: isFr ? 'Infrastructure de données' : 'Data infrastructure',
+    desc: isFr
+      ? 'Kuma Data Core : l’ossature qui ingère, qualifie (A/B/C) et sert des millions de points de données solaires.'
+      : 'Kuma Data Core: the backbone that ingests, qualifies (A/B/C) and serves millions of solar data points.',
+    href: localizePath('/projets/kuma-data-core', lang),
   },
   {
-    value: '15',
-    label: lang === 'fr' ? 'sources de données qualifiées' : 'qualified data sources',
+    n: '03',
+    title: isFr ? 'Outils & logiciels' : 'Tools & software',
+    desc: isFr
+      ? 'Des applications de dimensionnement, desktop et mobile, qui mettent la donnée qualifiée entre les mains des bureaux d’études.'
+      : 'Desktop and mobile sizing apps that put qualified data in the hands of design offices.',
+    href: localizePath('/projets', lang),
   },
   {
-    value: 'FR · EN',
-    label: lang === 'fr' ? 'recherche, données et logiciel' : 'research, data and software',
+    n: '04',
+    title: isFr ? 'Ingénierie énergétique' : 'Energy engineering',
+    desc: isFr
+      ? 'Audit et optimisation de la performance énergétique des bâtiments : audits, DPE, bilans carbone, simulation.'
+      : 'Auditing and optimising building energy performance: audits, EPC, carbon assessments, simulation.',
+    href: localizePath('/a-propos', lang),
   },
 ];
 ---
 
-<BaseLayout description={tagline}>
-  {/* Hero */}
-  <section class="relative overflow-hidden border-b border-border/60">
-    <div class="pointer-events-none absolute inset-0 -z-10" aria-hidden="true">
-      <div class="absolute -top-32 right-[-8rem] size-[46rem] rounded-full bg-brand-400/20 blur-3xl"></div>
-      <div
-        class="absolute inset-0 opacity-[0.06] [background-image:linear-gradient(var(--border)_1px,transparent_1px),linear-gradient(90deg,var(--border)_1px,transparent_1px)] [background-size:44px_44px] [mask-image:radial-gradient(75%_60%_at_50%_0%,black,transparent)]"
-      >
-      </div>
-    </div>
-
+<BaseLayout description={missionLede.slice(0, 155)}>
+  {/* Hero de mission · bandeau encre */}
+  <section class="relative overflow-hidden bg-brand-900 text-white">
     <div
-      class="shell grid gap-12 pt-16 pb-12 sm:pt-24 lg:grid-cols-[1.25fr_1fr] lg:items-center lg:gap-16"
+      class="pointer-events-none absolute inset-0 opacity-[0.12] [background-image:linear-gradient(rgba(255,255,255,0.7)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.7)_1px,transparent_1px)] [background-size:46px_46px] [mask-image:radial-gradient(80%_75%_at_25%_0%,black,transparent)]"
+      aria-hidden="true"
     >
-      <div>
-        <p
-          class="inline-flex items-center gap-2 rounded-full border border-border bg-surface-2 px-3 py-1 text-xs font-medium text-text-muted"
+    </div>
+    <div class="shell relative py-20 sm:py-28">
+      <p class="inline-flex items-center gap-2 text-xs font-medium tracking-[0.15em] text-white/70 uppercase">
+        <span class="relative flex size-2">
+          <span class="absolute inline-flex size-full animate-ping rounded-full bg-accent-400 opacity-75"></span>
+          <span class="relative inline-flex size-2 rounded-full bg-accent-400"></span>
+        </span>
+        {t('hero.availability')}
+      </p>
+
+      <h1 class="mt-6 max-w-4xl font-display text-4xl font-bold tracking-tight text-balance sm:text-6xl">
+        {mission}
+      </h1>
+      <p class="mt-6 max-w-2xl text-lg text-white/80 text-pretty">{missionLede}</p>
+
+      <div class="mt-9 flex flex-wrap items-center gap-4">
+        <a
+          href={localizePath('/projets', lang)}
+          class="inline-flex items-center gap-2 rounded-full bg-white px-6 py-3 text-sm font-semibold text-brand-900 transition-transform hover:-translate-y-0.5"
         >
-          <span class="relative flex size-2">
-            <span class="absolute inline-flex size-full animate-ping rounded-full bg-brand-500 opacity-75"
-            ></span>
-            <span class="relative inline-flex size-2 rounded-full bg-brand-500"></span>
-          </span>
-          {t('hero.availability')}
-        </p>
-
-        <h1 class="mt-6 font-display text-5xl font-bold tracking-tight text-balance sm:text-7xl">
-          {SITE.name}
-        </h1>
-        <p class="mt-4 text-xl font-medium text-brand-700 text-pretty">{role}</p>
-        <p class="mt-5 max-w-xl text-lg text-text-muted text-pretty">{tagline}</p>
-
-        <div class="mt-8 flex flex-wrap items-center gap-3">
-          <a
-            href={localizePath('/projets', lang)}
-            class="inline-flex items-center gap-2 rounded-lg bg-brand-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-brand-700"
-          >
-            {t('hero.cta.projects')}
-            <span aria-hidden="true">&rarr;</span>
-          </a>
-          <a
-            href={localizePath('/contact', lang)}
-            class="inline-flex items-center gap-2 rounded-lg border border-border px-5 py-2.5 text-sm font-semibold text-text transition-colors hover:bg-surface-2"
-          >
-            {t('hero.cta.contact')}
-          </a>
-        </div>
-
-        <div class="mt-8 flex flex-wrap items-center gap-x-5 gap-y-2 text-sm text-text-muted">
-          <a href={SITE.github} target="_blank" rel="me noopener" class="hover:text-text">GitHub</a>
-          <a href={SITE.linkedin} target="_blank" rel="me noopener" class="hover:text-text">LinkedIn</a>
-          <a href={orcidUrl} target="_blank" rel="me noopener" class="hover:text-text">ORCID</a>
-        </div>
-      </div>
-
-      <div class="relative mx-auto w-full max-w-sm lg:mx-0">
-        <div
-          class="relative aspect-[4/5] overflow-hidden rounded-2xl border border-border bg-surface-2 shadow-sm"
+          {isFr ? 'Voir mes travaux' : 'See my work'}
+          <span aria-hidden="true">&rarr;</span>
+        </a>
+        <a
+          href={localizePath('/contact', lang)}
+          class="inline-flex items-center gap-2 text-sm font-semibold text-white/90 underline-offset-4 hover:underline"
         >
-          {
-            profile.photo ? (
-              <img
-                src={profile.photo}
-                alt={SITE.name}
-                width="480"
-                height="600"
-                class="size-full object-cover"
-              />
-            ) : (
-              <div class="flex size-full flex-col items-center justify-center gap-3 bg-gradient-to-br from-brand-500 to-brand-700 text-white">
-                <span class="font-display text-7xl font-bold">S</span>
-                <span class="text-[0.7rem] uppercase tracking-[0.2em] opacity-80">
-                  {lang === 'fr' ? 'portrait à venir' : 'portrait coming'}
-                </span>
-              </div>
-            )
-          }
-        </div>
-        <div class="absolute -bottom-4 -left-4 rounded-xl border border-border bg-surface px-4 py-2.5 shadow-md">
-          <p class="font-mono text-[0.7rem] uppercase tracking-wider text-text-subtle">
-            {lang === 'fr' ? 'basé entre' : 'based between'}
-          </p>
-          <p class="text-sm font-semibold">Montréal &harr; Conakry</p>
-        </div>
+          {t('nav.contact')}
+        </a>
       </div>
     </div>
+  </section>
 
-    <div class="shell pb-14">
-      <dl
-        class="grid grid-cols-2 gap-px overflow-hidden rounded-2xl border border-border bg-border sm:grid-cols-4"
-      >
+  {/* Positionnement + chiffres-clés */}
+  <section data-reveal class="border-b border-border">
+    <div class="shell grid gap-10 py-16 lg:grid-cols-[1.4fr_1fr] lg:gap-16">
+      <div>
+        <p class="text-lg leading-relaxed text-text-muted text-pretty">{bio}</p>
+        <div class="mt-6 flex flex-wrap items-center gap-x-5 gap-y-2 text-sm">
+          <a href={localizePath('/a-propos', lang)} class="font-medium text-brand-700 hover:underline">
+            {t('about.pageTitle')} <span aria-hidden="true">&rarr;</span>
+          </a>
+          <span class="font-mono text-xs tracking-wider text-text-subtle uppercase">
+            Montréal &harr; Conakry
+          </span>
+        </div>
+      </div>
+      <dl class="grid grid-cols-3 gap-px self-start overflow-hidden rounded-xl border border-border bg-border">
         {
           stats.map((s) => (
-            <div class="bg-surface p-5">
-              <dt class="font-display text-3xl font-bold tracking-tight text-brand-700">{s.value}</dt>
-              <dd class="mt-1 text-sm text-text-muted text-pretty">{s.label}</dd>
+            <div class="bg-surface p-4">
+              <dt class="font-display text-2xl font-bold text-brand-700">{s.value}</dt>
+              <dd class="mt-1 text-xs text-text-muted text-pretty">{s.label}</dd>
             </div>
           ))
         }
@@ -141,63 +137,72 @@ const stats = [
     </div>
   </section>
 
-  {/* À propos */}
-  <section id="a-propos" data-reveal class="scroll-mt-20 border-t border-border/60">
-    <div class="shell py-16">
-      <h2 class="font-display text-2xl font-bold tracking-tight">{t('nav.about')}</h2>
-      <p class="mt-5 max-w-3xl text-lg leading-relaxed text-text-muted text-pretty">{bio}</p>
-      <a
-        href={localizePath('/a-propos', lang)}
-        class="mt-6 inline-flex items-center gap-1 text-sm font-medium text-brand-700 hover:underline"
+  {/* Ce que je fais · piliers */}
+  <section data-reveal class="bg-surface-2/50">
+    <div class="shell py-16 sm:py-20">
+      <h2 class="font-display text-3xl font-bold tracking-tight sm:text-4xl">
+        {isFr ? 'Ce que je fais' : 'What I do'}
+      </h2>
+      <div
+        class="mt-10 grid gap-px overflow-hidden rounded-2xl border border-border bg-border sm:grid-cols-2"
       >
-        {t('about.pageTitle')}
-        <span aria-hidden="true">&rarr;</span>
-      </a>
+        {
+          pillars.map((p) => (
+            <a
+              href={p.href}
+              class="group flex flex-col gap-3 bg-surface p-7 transition-colors hover:bg-surface-3/50"
+            >
+              <span class="font-mono text-xs font-medium text-brand-600">{p.n}</span>
+              <h3 class="font-display text-xl font-bold tracking-tight">{p.title}</h3>
+              <p class="flex-1 text-sm text-text-muted text-pretty">{p.desc}</p>
+              <span class="text-sm font-medium text-brand-700 group-hover:underline">
+                {isFr ? 'En savoir plus' : 'Learn more'} <span aria-hidden="true">&rarr;</span>
+              </span>
+            </a>
+          ))
+        }
+      </div>
     </div>
   </section>
 
   {/* Projets */}
-  <section id="projets" data-reveal class="scroll-mt-20 border-t border-border/60 bg-surface-2/40">
-    <div class="shell py-16">
+  <section data-reveal class="border-t border-border">
+    <div class="shell py-16 sm:py-20">
       <div class="flex flex-wrap items-end justify-between gap-4">
         <div class="max-w-2xl">
-          <h2 class="font-display text-2xl font-bold tracking-tight">
+          <h2 class="font-display text-3xl font-bold tracking-tight sm:text-4xl">
             {t('section.projects.title')}
           </h2>
           <p class="mt-3 text-text-muted">{t('section.projects.lede')}</p>
         </div>
-        <a
-          href={localizePath('/projets', lang)}
-          class="text-sm font-medium text-brand-700 hover:underline"
-        >
-          {t('section.projects.all')}
-          <span aria-hidden="true">&rarr;</span>
+        <a href={localizePath('/projets', lang)} class="text-sm font-medium text-brand-700 hover:underline">
+          {t('section.projects.all')} <span aria-hidden="true">&rarr;</span>
         </a>
       </div>
-
-      <ul class="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+      <ul class="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
         {projects.map((project) => <ProjectCard project={project} lang={lang} />)}
       </ul>
     </div>
   </section>
 
-  {/* Publications */}
-  <section id="publications" data-reveal class="scroll-mt-20 border-t border-border/60">
-    <div class="shell py-16">
-      <h2 class="font-display text-2xl font-bold tracking-tight">{t('nav.publications')}</h2>
-      <p class="mt-4 max-w-2xl text-text-muted">{t('publications.pageLede')}</p>
-      <div class="mt-6 flex flex-wrap items-center gap-4">
+  {/* Publications / reconnaissance */}
+  <section data-reveal class="bg-surface-2/50">
+    <div class="shell py-16 sm:py-20">
+      <h2 class="font-display text-3xl font-bold tracking-tight sm:text-4xl">{t('nav.publications')}</h2>
+      <p class="mt-4 max-w-2xl text-text-muted text-pretty">{t('publications.pageLede')}</p>
+      <div class="mt-8 flex flex-wrap items-center gap-4">
         <a
           href={localizePath('/publications', lang)}
-          class="inline-flex items-center gap-2 rounded-lg border border-border px-4 py-2 text-sm font-semibold transition-colors hover:bg-surface-2"
+          class="inline-flex items-center gap-2 rounded-full bg-brand-700 px-5 py-2.5 text-sm font-semibold text-white transition-transform hover:-translate-y-0.5"
         >
-          {t('nav.publications')} ({publicationCount})
+          {isFr ? `${publicationCount} références` : `${publicationCount} references`}
+          <span aria-hidden="true">&rarr;</span>
         </a>
         <a
           href={orcidUrl}
           target="_blank"
           rel="me noopener"
-          class="text-sm text-brand-700 underline-offset-4 hover:underline"
+          class="font-mono text-sm text-brand-700 underline-offset-4 hover:underline"
         >
           ORCID {SITE.orcid}
         </a>
@@ -205,14 +210,18 @@ const stats = [
     </div>
   </section>
 
-  {/* Contact */}
-  <section id="contact" data-reveal class="scroll-mt-20 border-t border-border/60 bg-surface-2/40">
-    <div class="shell py-16">
-      <h2 class="font-display text-2xl font-bold tracking-tight">{t('nav.contact')}</h2>
-      <p class="mt-4 max-w-2xl text-text-muted">{t('contact.pageLede')}</p>
+  {/* Contact · bandeau encre */}
+  <section data-reveal class="bg-brand-900 text-white">
+    <div
+      class="shell flex flex-col items-start gap-6 py-16 sm:flex-row sm:items-center sm:justify-between sm:py-20"
+    >
+      <div>
+        <h2 class="font-display text-3xl font-bold tracking-tight sm:text-4xl">{t('nav.contact')}</h2>
+        <p class="mt-3 max-w-xl text-white/80 text-pretty">{t('contact.pageLede')}</p>
+      </div>
       <a
         href={`mailto:${SITE.email}`}
-        class="mt-5 inline-flex items-center gap-2 rounded-lg bg-brand-600 px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-brand-700"
+        class="inline-flex shrink-0 items-center gap-2 rounded-full bg-white px-6 py-3 text-sm font-semibold text-brand-900 transition-transform hover:-translate-y-0.5"
       >
         {SITE.email}
       </a>

@@ -1,7 +1,8 @@
 /**
- * Garde-fou : aucun tiret cadratin dans le contenu visible.
- * Remplace U+2014 (—) par le point médian « · » dans les fichiers texte de src/.
- * Le demi-cadratin « – » reste autorisé (plages numériques : 2021–2025).
+ * Garde-fou anti « signature IA » : ni tiret cadratin (—) ni point médian (·)
+ * comme séparateur dans le contenu visible.
+ * Remplace U+2014 (—) par une virgule dans les fichiers texte de src/.
+ * Le demi-cadratin « – » reste autorisé (plages : 2021–2025, E0–E6).
  */
 import { readdir, readFile, writeFile } from 'node:fs/promises';
 import { join, extname, dirname } from 'node:path';
@@ -10,7 +11,7 @@ import { fileURLToPath } from 'node:url';
 const scriptDir = dirname(fileURLToPath(import.meta.url));
 const ROOT = join(scriptDir, '..', 'src');
 const EXTENSIONS = new Set(['.astro', '.md', '.mdx', '.ts', '.tsx', '.json', '.css']);
-const EMDASH = /—/g;
+const EMDASH = /\s*—\s*/g;
 
 async function* walk(dir) {
   for (const entry of await readdir(dir, { withFileTypes: true })) {
@@ -23,8 +24,9 @@ async function* walk(dir) {
 let changed = 0;
 for await (const file of walk(ROOT)) {
   const content = await readFile(file, 'utf8');
-  if (EMDASH.test(content)) {
-    await writeFile(file, content.replace(EMDASH, '·'), 'utf8');
+  const cleaned = content.replace(EMDASH, ', ');
+  if (cleaned !== content) {
+    await writeFile(file, cleaned, 'utf8');
     changed += 1;
     console.log(`[emdash] corrige : ${file}`);
   }

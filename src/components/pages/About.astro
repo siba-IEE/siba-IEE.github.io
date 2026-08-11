@@ -16,9 +16,9 @@ const experience = getExperience();
 const education = getEducation();
 const skills = getSkills();
 
-const present = isFr ? 'aujourd’hui' : 'present';
+const since = isFr ? 'Depuis' : 'Since';
 const dateRange = (start: string, end: string, current: boolean) =>
-  `${start}${current ? ` · ${present}` : end ? ` · ${end}` : ''}`;
+  current ? `${since} ${start}` : end ? `${start}–${end}` : start;
 
 // Normalisation en une même forme pour une frise commune.
 const parcours = experience.map((e) => ({
@@ -46,8 +46,8 @@ const timelines = [
 const reperes = [
   { k: isFr ? 'Rôle' : 'Role', v: isFr ? 'Ingénieur & chercheur' : 'Engineer & researcher' },
   { k: isFr ? 'Basé à' : 'Based in', v: SITE.location[lang] },
-  { k: isFr ? 'Terrain' : 'Field', v: isFr ? 'Guinée · Afrique de l’Ouest' : 'Guinea · West Africa' },
-  { k: isFr ? 'Actuellement' : 'Currently', v: 'Kuma Science · ÉTS' },
+  { k: isFr ? 'Terrain' : 'Field', v: isFr ? 'Guinée, Afrique de l’Ouest' : 'Guinea, West Africa' },
+  { k: isFr ? 'Actuellement' : 'Currently', v: 'Kuma Science, ÉTS' },
 ];
 ---
 
@@ -136,7 +136,7 @@ const reperes = [
                     <p class="font-mono text-xs tracking-wide text-text-subtle">{item.dates}</p>
                     <h3 class="mt-1 font-display text-lg font-bold tracking-tight text-heading text-pretty">
                       {item.title}
-                      {item.org && <span class="font-normal text-text-muted"> · {item.org}</span>}
+                      {item.org && <span class="font-normal text-text-muted">, {item.org}</span>}
                     </h3>
                     {item.location && <p class="text-sm text-text-subtle">{item.location}</p>}
                     {item.note && <p class="mt-1.5 text-sm leading-relaxed text-text-muted text-pretty">{item.note}</p>}

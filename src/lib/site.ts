@@ -12,16 +12,16 @@ export interface LocalizedText {
 export const SITE = {
   name: 'Siba Kalivogui',
   role: {
-    fr: 'Ingénieur énergéticien et chercheur · Fondateur de Kuma Science',
-    en: 'Energy engineer and researcher · Founder of Kuma Science',
+    fr: 'Ingénieur énergéticien et chercheur, fondateur de Kuma Science',
+    en: 'Energy engineer and researcher, founder of Kuma Science',
   } satisfies LocalizedText,
   shortRole: {
     fr: 'Ingénieur énergéticien',
     en: 'Energy engineer',
   } satisfies LocalizedText,
   location: {
-    fr: 'Montréal · Conakry',
-    en: 'Montréal · Conakry',
+    fr: 'Montréal, Conakry',
+    en: 'Montréal, Conakry',
   } satisfies LocalizedText,
   tagline: {
     fr: 'Données, méthodes et outils pour l’ingénierie solaire en Afrique de l’Ouest francophone.',

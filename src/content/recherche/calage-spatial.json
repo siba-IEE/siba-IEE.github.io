@@ -10,8 +10,8 @@
   "pullFr": "L'intuition dit *la distance*. Les mesures disent *le climat*.",
   "pullEn": "Intuition says *distance*. The measurements say *climate*.",
   "metrics": [
-    { "value": "31", "labelFr": "stations ESMAP·WAPP", "labelEn": "ESMAP·WAPP stations" },
-    { "value": "930", "labelFr": "paires source·cible", "labelEn": "source·target pairs" },
+    { "value": "31", "labelFr": "stations ESMAP/WAPP", "labelEn": "ESMAP/WAPP stations" },
+    { "value": "930", "labelFr": "paires source-cible", "labelEn": "source-target pairs" },
     { "value": "2", "labelFr": "produits indépendants", "labelEn": "independent products" },
     { "value": "+0.53", "labelFr": "résidu vs Δclim (GHI)", "labelEn": "residual vs Δclim (GHI)" }
   ],
@@ -19,8 +19,8 @@
     {
       "src": "/images/recherche/calage-reseau.png",
       "section": "method",
-      "captionFr": "Le réseau ESMAP·WAPP : 31 stations couvrant l'Afrique de l'Ouest (haut) et la distribution des 930 distances inter-stations, de 100 à 2 800 km (bas).",
-      "captionEn": "The ESMAP·WAPP network: 31 stations across West Africa (top) and the distribution of the 930 inter-station distances, from 100 to 2,800 km (bottom)."
+      "captionFr": "Le réseau ESMAP/WAPP : 31 stations couvrant l'Afrique de l'Ouest (haut) et la distribution des 930 distances inter-stations, de 100 à 2 800 km (bas).",
+      "captionEn": "The ESMAP/WAPP network: 31 stations across West Africa (top) and the distribution of the 930 inter-station distances, from 100 to 2,800 km (bottom)."
     },
     {
       "src": "/images/recherche/calage-variogramme.png",
@@ -44,8 +44,8 @@
     {
       "src": "/images/recherche/calage-carte-guinee.png",
       "section": "result",
-      "captionFr": "Zoom sur la Guinée : application au cas d'usage, avec l'ancre terrain de Kankan (campagne ESMAP·WAPP) et le site de Tarambaly.",
-      "captionEn": "Zoom on Guinea: application to the use case, with the Kankan field anchor (ESMAP·WAPP campaign) and the Tarambaly site."
+      "captionFr": "Zoom sur la Guinée : application au cas d'usage, avec l'ancre terrain de Kankan (campagne ESMAP/WAPP) et le site de Tarambaly.",
+      "captionEn": "Zoom on Guinea: application to the use case, with the Kankan field anchor (ESMAP/WAPP campaign) and the Tarambaly site."
     }
   ],
   "problemFr": "Les produits satellitaires (GHI, DNI) sont biaisés localement ; on les corrige par un calage sur des mesures au sol. Mais les stations de mesure sont rares en Afrique de l'Ouest, et un dimensionnement se fait presque toujours loin de toute station.\n\nLa question : un calage établi en une station est-il transférable ailleurs, et selon quel critère ? L'intuition courante suppose que la proximité géographique gouverne la transférabilité. Ce travail teste l'hypothèse concurrente : c'est la **similarité climatique** entre sites, notée $\\Delta_{\\mathrm{clim}}$, qui la gouverne : deux sites au climat proche mais géographiquement éloignés se calent mieux l'un l'autre que deux voisins de régimes différents.",

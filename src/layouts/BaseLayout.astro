@@ -36,7 +36,7 @@ const {
   ogType = 'website',
   jsonLd,
 } = Astro.props;
-const pageTitle = title ? `${title} · ${SITE.name}` : `${SITE.name} · ${SITE.shortRole[lang]}`;
+const pageTitle = title ? `${title} – ${SITE.name}` : `${SITE.name} – ${SITE.shortRole[lang]}`;
 const canonical = new URL(Astro.url.pathname, SITE.url).href;
 const ogImage = new URL(image, SITE.url).href;
 const structuredData = JSON.stringify(jsonLd ?? personJsonLd(lang));

@@ -114,24 +114,49 @@ const pillars = [
     </div>
   </section>
 
-  {/* Positionnement + chiffres-clés */}
-  <section data-reveal class="border-b border-border">
-    <div class="shell grid gap-10 py-16 lg:grid-cols-[1.4fr_1fr] lg:gap-16">
-      <div>
-        <p class="text-lg leading-relaxed text-text-muted text-pretty">{bio}</p>
-        <div class="mt-6 flex flex-wrap items-center gap-x-5 gap-y-2 text-sm">
-          <a href={localizePath('/a-propos', lang)} class="font-medium text-brand-700 hover:underline">
-            {t('about.pageTitle')} <span aria-hidden="true">&rarr;</span>
-          </a>
-          <span class="font-mono text-xs tracking-wider text-text-subtle uppercase">
-            Montréal &harr; Conakry
-          </span>
+  {/* Présentation · panneau encre + portrait */}
+  <section data-reveal class="bg-surface-2/60">
+    <div class="shell py-16 sm:py-20">
+      <div class="grid overflow-hidden rounded-2xl border border-border sm:grid-cols-[1.05fr_0.95fr]">
+        <div class="flex flex-col justify-center gap-6 bg-brand-900 p-8 text-white sm:p-10">
+          <p class="font-mono text-xs tracking-[0.2em] text-white/50 uppercase">Montréal &harr; Conakry</p>
+          <p class="text-lg leading-relaxed text-white/90 text-pretty">{bio}</p>
+          <div class="flex flex-wrap items-center gap-4">
+            <a
+              href={localizePath('/contact', lang)}
+              class="inline-flex items-center gap-2 rounded-full bg-white px-6 py-3 text-sm font-semibold text-brand-900 transition-transform hover:-translate-y-0.5"
+            >
+              {t('nav.contact')}
+              <span aria-hidden="true">&rarr;</span>
+            </a>
+            <a
+              href={localizePath('/a-propos', lang)}
+              class="text-sm font-semibold text-white/90 underline-offset-4 hover:underline"
+            >
+              {t('about.pageTitle')}
+            </a>
+          </div>
+        </div>
+        <div class="relative min-h-[22rem] bg-surface-3">
+          {
+            profile.photo ? (
+              <img src={profile.photo} alt={SITE.name} class="absolute inset-0 size-full object-cover" />
+            ) : (
+              <div class="flex size-full flex-col items-center justify-center gap-2 bg-gradient-to-br from-surface-3 to-brand-100">
+                <span class="font-display text-6xl font-bold text-brand-800/40">S</span>
+                <span class="font-mono text-xs tracking-[0.2em] text-text-subtle uppercase">
+                  {isFr ? 'portrait à venir' : 'portrait coming'}
+                </span>
+              </div>
+            )
+          }
         </div>
       </div>
-      <dl class="grid grid-cols-3 gap-px self-start overflow-hidden rounded-xl border border-border bg-border">
+
+      <dl class="mt-6 grid grid-cols-3 gap-px overflow-hidden rounded-xl border border-border bg-border">
         {
           stats.map((s) => (
-            <div class="bg-surface p-4">
+            <div class="bg-surface p-4 text-center">
               <dt class="font-display text-2xl font-bold text-brand-700">{s.value}</dt>
               <dd class="mt-1 text-xs text-text-muted text-pretty">{s.label}</dd>
             </div>

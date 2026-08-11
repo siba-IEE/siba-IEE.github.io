@@ -5,22 +5,22 @@
 
 @theme {
   --font-sans: 'Inter Variable', ui-sans-serif, system-ui, -apple-system, sans-serif;
-  --font-display: 'Manrope Variable', 'Inter Variable', ui-sans-serif, sans-serif;
+  --font-display: 'Fraunces Variable', 'Manrope Variable', Georgia, 'Times New Roman', serif;
   --font-mono: 'Source Code Pro Variable', ui-monospace, SFMono-Regular, monospace;
 
-  /* Palette de marque, teinte solaire (OKLCH). */
-  --color-brand-50: oklch(0.97 0.02 85);
-  --color-brand-100: oklch(0.94 0.05 84);
-  --color-brand-200: oklch(0.9 0.09 82);
-  --color-brand-300: oklch(0.85 0.13 78);
-  --color-brand-400: oklch(0.8 0.16 72);
-  --color-brand-500: oklch(0.74 0.17 66);
-  --color-brand-600: oklch(0.66 0.16 62);
-  --color-brand-700: oklch(0.56 0.14 58);
-  --color-brand-800: oklch(0.46 0.11 56);
-  --color-brand-900: oklch(0.38 0.08 55);
+  /* Palette de marque, encre bleue (OKLCH) : accent unique et sobre, registre revue scientifique. */
+  --color-brand-50: oklch(0.96 0.015 255);
+  --color-brand-100: oklch(0.91 0.03 255);
+  --color-brand-200: oklch(0.83 0.055 255);
+  --color-brand-300: oklch(0.72 0.08 255);
+  --color-brand-400: oklch(0.6 0.1 255);
+  --color-brand-500: oklch(0.5 0.11 255);
+  --color-brand-600: oklch(0.42 0.11 255);
+  --color-brand-700: oklch(0.35 0.09 256);
+  --color-brand-800: oklch(0.29 0.07 258);
+  --color-brand-900: oklch(0.24 0.05 260);
 
-  /* Accent secondaire, teinte énergie/eau. */
+  /* Accent secondaire, réservé aux touches de données (graphes, points). */
   --color-accent-400: oklch(0.72 0.12 205);
   --color-accent-500: oklch(0.62 0.13 205);
   --color-accent-600: oklch(0.54 0.12 208);
@@ -29,24 +29,24 @@
 /* Jetons sémantiques, valeurs qui basculent en sombre. */
 :root {
   color-scheme: light;
-  --surface: oklch(0.99 0.004 95);
-  --surface-2: oklch(0.965 0.006 95);
-  --surface-3: oklch(0.93 0.008 95);
-  --border: oklch(0.9 0.01 95);
-  --text: oklch(0.24 0.02 90);
-  --text-muted: oklch(0.5 0.02 90);
-  --text-subtle: oklch(0.62 0.02 90);
+  --surface: oklch(0.985 0.008 82);
+  --surface-2: oklch(0.965 0.01 80);
+  --surface-3: oklch(0.93 0.013 78);
+  --border: oklch(0.88 0.013 78);
+  --text: oklch(0.23 0.016 62);
+  --text-muted: oklch(0.46 0.016 62);
+  --text-subtle: oklch(0.6 0.014 64);
 }
 
 [data-theme='dark'] {
   color-scheme: dark;
-  --surface: oklch(0.19 0.015 260);
-  --surface-2: oklch(0.23 0.017 260);
-  --surface-3: oklch(0.28 0.02 260);
-  --border: oklch(0.34 0.02 260);
-  --text: oklch(0.95 0.01 260);
-  --text-muted: oklch(0.74 0.015 260);
-  --text-subtle: oklch(0.6 0.015 260);
+  --surface: oklch(0.16 0.018 262);
+  --surface-2: oklch(0.2 0.02 262);
+  --surface-3: oklch(0.25 0.022 262);
+  --border: oklch(0.31 0.02 262);
+  --text: oklch(0.95 0.008 85);
+  --text-muted: oklch(0.72 0.011 85);
+  --text-subtle: oklch(0.57 0.011 85);
 }
 
 /* Expose les jetons sémantiques comme utilitaires Tailwind (bg-surface, text-text, border-border...). */

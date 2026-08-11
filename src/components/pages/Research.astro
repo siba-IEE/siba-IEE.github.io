@@ -28,7 +28,6 @@ function protectMath(src: string) {
 function restoreMath(html: string, blocks: string[]) {
   return html
     .replace(/@@KMATH(\d+)@@/g, (_m, i) => blocks[Number(i)])
-    // évite un bloc <span class="katex-display"> orphelin dans un <p>
     .replace(/<p>(\s*<span class="katex-display">[\s\S]*?<\/span>\s*)<\/p>/g, '$1');
 }
 const md = (s: string) => {
@@ -39,6 +38,17 @@ const mdi = (s: string) => {
   const { out, blocks } = protectMath(s);
   return restoreMath(marked.parseInline(out) as string, blocks);
 };
+
+// Sépare la première équation en bloc ($$...$$) du reste : elle devient une planche
+// autonome, posée à côté du texte plutôt qu'empilée dessous.
+function extractDisplay(src: string): { rest: string; display: string | null } {
+  const m = src.match(/\$\$[\s\S]+?\$\$/);
+  if (!m || m.index === undefined) return { rest: src, display: null };
+  const display = m[0];
+  const rest = (src.slice(0, m.index) + src.slice(m.index + display.length)).replace(/\n{3,}/g, '\n\n').trim();
+  return { rest, display };
+}
+const stripH = (h: string) => h.replace(/^\$H_\d+\$\s*[·:-]\s*/, '');
 
 const pageTitle = isFr ? 'Travaux de recherche' : 'Research';
 const pageLede = isFr
@@ -53,18 +63,21 @@ const labels = {
   resultsFigs: isFr ? 'Résultats & figures' : 'Results & figures',
   questions: isFr ? 'Questions ouvertes' : 'Open questions',
   progress: isFr ? 'Avancement' : 'Progress',
+  atGlance: isFr ? 'En bref' : 'At a glance',
+  indicators: isFr ? 'Indicateurs' : 'Indicators',
+  result: isFr ? 'Résultat clé' : 'Key result',
 };
 ---
 
 <BaseLayout title={pageTitle} description={pageLede}>
-  {/* En-tête encre : titre + accroche + sommaire des travaux */}
+  {/* En-tête encre : titre + accroche + accès aux travaux */}
   <section class="relative overflow-hidden bg-brand-900 text-white">
     <div
       class="pointer-events-none absolute inset-0 opacity-[0.1] [background-image:linear-gradient(rgba(255,255,255,0.7)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.7)_1px,transparent_1px)] [background-size:44px_44px] [mask-image:radial-gradient(80%_80%_at_20%_0%,black,transparent)]"
       aria-hidden="true"
     >
     </div>
-    <div class="shell relative py-16 sm:py-20">
+    <div class="shell relative py-16 pb-24 sm:py-20 sm:pb-32">
       <h1 class="max-w-3xl font-display text-4xl font-bold tracking-tight text-balance text-white sm:text-5xl">
         {pageTitle}
       </h1>
@@ -88,7 +101,7 @@ const labels = {
     </div>
   </section>
 
-  {/* Un travail = une planche dense : fiche + sommaire en marge, sections numérotées, figures. */}
+  {/* Chaque travail = une planche pleine largeur qui se superpose à la précédente au scroll. */}
   {
     works.map((w, i) => {
       const alt = i % 2 === 1;
@@ -97,49 +110,59 @@ const labels = {
       const hyp = isFr ? w.hypothesesFr : w.hypothesesEn;
       const q = isFr ? w.questionsFr : w.questionsEn;
       const metrics = w.metrics ?? [];
+      const pull = isFr ? w.pullFr : w.pullEn;
       const figs = (w.figures ?? []).map((f, idx) => ({ ...f, n: idx + 1 }));
-      const methodFigs = figs.filter((f) => f.section === 'method');
+      const methodFig = figs.find((f) => f.section === 'method') ?? null;
       const resultFigs = figs.filter((f) => f.section === 'result');
+      const heroFig = resultFigs.find((f) => f.featured) ?? resultFigs[0] ?? null;
+      const plateFigs = resultFigs.filter((f) => f !== heroFig);
+
+      const { rest: methodRest, display: methodDisplay } = extractDisplay(isFr ? w.methodFr : w.methodEn);
+      const { rest: resultsRest, display: resultsDisplay } = extractDisplay(isFr ? w.resultsFr : w.resultsEn);
+
+      const methodHasSide = Boolean(methodFig || methodDisplay);
+      const resultsHasSide = Boolean(heroFig || resultsDisplay);
+      const hypCols = hyp.length >= 4 ? 'lg:grid-cols-2' : hyp.length === 3 ? 'lg:grid-cols-3' : 'sm:grid-cols-2';
+      const plateCols = plateFigs.length >= 3 ? 'sm:grid-cols-2 lg:grid-cols-3' : plateFigs.length === 2 ? 'sm:grid-cols-2' : '';
       const anchor = (key: string) => `travail-${i + 1}-${key}`;
-      const secs = [
-        { key: 'problem', n: '01', label: labels.problem },
-        { key: 'hypotheses', n: '02', label: labels.hypotheses },
-        { key: 'method', n: '03', label: labels.method },
-        { key: 'results', n: '04', label: figs.length > 0 ? labels.resultsFigs : labels.results },
-        { key: 'questions', n: '05', label: labels.questions },
-      ];
 
       return (
-        <section id={`travail-${i + 1}`} class:list={['scroll-mt-20', alt && 'bg-surface-2']}>
-          <div class="math-content shell border-t border-border py-16 sm:py-24">
-            {/* Masthead */}
-            <div class="max-w-3xl">
-              <div class="flex flex-wrap items-center gap-3">
-                <span class="font-mono text-sm font-medium text-brand-500">{wnum}</span>
-                <span class="h-4 w-px bg-border" aria-hidden="true" />
-                <span class="rounded-full bg-surface-3 px-2.5 py-0.5 text-[0.65rem] font-medium tracking-wide text-text-subtle uppercase">
-                  {statusLabels[w.status][lang]}
-                </span>
+        <section
+          id={`travail-${i + 1}`}
+          style={`z-index:${i + 1}`}
+          class:list={[
+            'work relative -mt-8 scroll-mt-20 rounded-t-[1.75rem] pt-16 pb-20 shadow-[0_-18px_44px_-26px_rgba(2,6,23,0.4)] sm:-mt-12 sm:rounded-t-[2.5rem] sm:pt-24 sm:pb-28',
+            alt ? 'bg-surface-2' : 'bg-surface',
+          ]}
+        >
+          <div class="shell">
+            {/* Masthead : titre à gauche, fiche « En bref » à droite */}
+            <div class="grid gap-x-10 gap-y-8 lg:grid-cols-12 lg:items-start">
+              <div class="lg:col-span-7 xl:col-span-8">
+                <div class="flex flex-wrap items-center gap-3">
+                  <span class="font-mono text-sm font-medium text-brand-500">{wnum}</span>
+                  <span class="h-4 w-px bg-border" aria-hidden="true" />
+                  <span class="rounded-full bg-surface-3 px-2.5 py-0.5 text-[0.65rem] font-medium tracking-wide text-text-subtle uppercase">
+                    {statusLabels[w.status][lang]}
+                  </span>
+                </div>
+                <h2 class="mt-4 font-display text-4xl font-bold tracking-tight text-balance sm:text-5xl">
+                  {isFr ? w.titleFr : w.titleEn}
+                </h2>
+                <p class="mt-5 max-w-2xl text-lg leading-relaxed text-text text-pretty">
+                  {isFr ? w.summaryFr : w.summaryEn}
+                </p>
+                <p class="mt-5 max-w-2xl border-l-2 border-brand-400 pl-4 text-sm text-text-muted text-pretty">
+                  <span class="font-semibold text-text">{labels.progress}.</span>{' '}
+                  {isFr ? w.progressFr : w.progressEn}
+                </p>
               </div>
-              <h2 class="mt-4 font-display text-4xl font-bold tracking-tight text-balance sm:text-5xl">
-                {isFr ? w.titleFr : w.titleEn}
-              </h2>
-              <p class="mt-5 text-lg leading-relaxed text-text text-pretty">
-                {isFr ? w.summaryFr : w.summaryEn}
-              </p>
-              <p class="mt-5 border-l-2 border-brand-400 pl-4 text-sm text-text-muted text-pretty">
-                <span class="font-semibold text-text">{labels.progress}.</span>{' '}
-                {isFr ? w.progressFr : w.progressEn}
-              </p>
-            </div>
 
-            {/* Corps : contenu large + marge collante (fiche & sommaire) */}
-            <div class="mt-12 grid gap-x-12 gap-y-10 lg:grid-cols-[minmax(0,1fr)_14rem]">
-              <aside class="space-y-7 lg:order-2 lg:sticky lg:top-24 lg:self-start">
-                {metrics.length > 0 && (
+              {metrics.length > 0 && (
+                <div class="lg:col-span-4 lg:col-start-9 xl:col-span-3 xl:col-start-10">
                   <div class:list={['rounded-2xl p-5 ring-1 ring-border', cardBg]}>
                     <p class="text-[0.7rem] font-semibold tracking-[0.15em] text-text-subtle uppercase">
-                      {isFr ? 'En bref' : 'At a glance'}
+                      {labels.atGlance}
                     </p>
                     <dl class="mt-4 grid grid-cols-2 gap-x-4 gap-y-5">
                       {metrics.map((m) => (
@@ -154,145 +177,166 @@ const labels = {
                       ))}
                     </dl>
                   </div>
-                )}
+                </div>
+              )}
+            </div>
 
-                <nav class="hidden lg:block" aria-label={isFr ? 'Sur cette page' : 'On this page'}>
-                  <p class="text-[0.7rem] font-semibold tracking-[0.15em] text-text-subtle uppercase">
-                    {isFr ? 'Sur cette page' : 'On this page'}
-                  </p>
-                  <ul class="mt-3 border-l border-border">
-                    {secs.map((s) => (
-                      <li>
-                        <a
-                          href={`#${anchor(s.key)}`}
-                          class="-ml-px flex items-baseline gap-2 border-l-2 border-transparent py-1 pl-3 text-sm text-text-muted transition-colors hover:border-brand-400 hover:text-text"
-                        >
-                          <span class="font-mono text-xs text-text-subtle">{s.n}</span>
-                          <span>{s.label}</span>
-                        </a>
-                      </li>
-                    ))}
-                  </ul>
-                </nav>
-              </aside>
-
-              <div class="min-w-0 space-y-12 lg:order-1">
-                {secs.map((s) => (
-                  <div
-                    id={anchor(s.key)}
-                    class="scroll-mt-24 border-t border-border/60 pt-10 first:border-t-0 first:pt-0"
-                  >
-                    <div class="flex items-baseline gap-3">
-                      <span class="font-mono text-sm font-medium text-brand-500">{s.n}</span>
-                      <h3 class="text-xs font-semibold tracking-[0.16em] text-brand-600 uppercase">
-                        {s.label}
-                      </h3>
-                    </div>
-
-                    <div class="mt-5">
-                      {s.key === 'problem' && (
-                        <div
-                          class="prose-r max-w-2xl text-text"
-                          set:html={md(isFr ? w.problemFr : w.problemEn)}
+            {/* Sections en bandes asymétriques */}
+            <div class="mt-16 space-y-16 sm:mt-20 sm:space-y-24">
+              {/* 01 · Problématique + thèse en marge */}
+              <div id={anchor('problem')} class="scroll-mt-24">
+                <div class="flex items-baseline gap-3">
+                  <span class="font-mono text-sm font-medium text-brand-500">01</span>
+                  <h3 class="text-xs font-semibold tracking-[0.16em] text-brand-600 uppercase">{labels.problem}</h3>
+                </div>
+                <div class="mt-6 grid gap-x-12 gap-y-8 lg:grid-cols-12 lg:items-start">
+                  <div class="prose-r text-text lg:col-span-7" set:html={md(isFr ? w.problemFr : w.problemEn)} />
+                  {pull && (
+                    <aside class="lg:col-span-4 lg:col-start-9 lg:sticky lg:top-24">
+                      <figure
+                        class:list={['rounded-2xl border-l-[3px] border-brand-500 py-6 pr-5 pl-6', cardBg]}
+                        data-reveal
+                      >
+                        <span class="block font-display text-4xl leading-none text-brand-400" aria-hidden="true">“</span>
+                        <p
+                          class="mt-1 font-display text-xl font-semibold leading-snug text-balance text-heading"
+                          set:html={mdi(pull)}
                         />
-                      )}
+                      </figure>
+                    </aside>
+                  )}
+                </div>
+              </div>
 
-                      {s.key === 'hypotheses' && (
-                        <ul class="prose-r max-w-2xl space-y-3 text-text">
-                          {hyp.map((h) => (
-                            <li class="grid grid-cols-[auto_1fr] gap-3">
-                              <span
-                                class="mt-2 size-1.5 shrink-0 rounded-full bg-brand-400"
-                                aria-hidden="true"
-                              />
-                              <span set:html={mdi(h)} />
-                            </li>
-                          ))}
-                        </ul>
-                      )}
+              {/* 02 · Hypothèses en cartes */}
+              <div id={anchor('hypotheses')} class="scroll-mt-24">
+                <div class="flex items-baseline gap-3">
+                  <span class="font-mono text-sm font-medium text-brand-500">02</span>
+                  <h3 class="text-xs font-semibold tracking-[0.16em] text-brand-600 uppercase">{labels.hypotheses}</h3>
+                </div>
+                <div class:list={['mt-6 grid gap-5 sm:grid-cols-2', hypCols]}>
+                  {hyp.map((h, idx) => (
+                    <div class="rounded-2xl border border-border p-6" data-reveal style={`--reveal-delay:${idx * 80}ms`}>
+                      <span class="inline-flex items-center rounded-md bg-brand-600/10 px-2 py-1 font-mono text-xs font-semibold text-brand-700">
+                        H{idx + 1}
+                      </span>
+                      <p class="prose-r mt-3 text-text" set:html={mdi(stripH(h))} />
+                    </div>
+                  ))}
+                </div>
+              </div>
 
-                      {s.key === 'method' && (
-                        <>
-                          <div
-                            class="prose-r max-w-2xl text-text"
-                            set:html={md(isFr ? w.methodFr : w.methodEn)}
-                          />
-                          {methodFigs.length > 0 && (
-                            <div class="mt-8 grid gap-x-6 gap-y-9 sm:grid-cols-2">
-                              {methodFigs.map((f) => (
-                                <figure class:list={[f.featured && 'sm:col-span-2']}>
-                                  <div class="rounded-xl bg-white p-3 ring-1 ring-border/80">
-                                    <img
-                                      src={f.src}
-                                      alt=""
-                                      loading="lazy"
-                                      class:list={['mx-auto h-auto w-full', f.featured ? 'max-w-xl' : '']}
-                                    />
-                                  </div>
-                                  <figcaption class="mt-3 grid grid-cols-[auto_1fr] gap-x-3 text-sm leading-relaxed text-text-muted">
-                                    <span class="font-mono text-xs font-medium text-brand-600">
-                                      Fig. {f.n}
-                                    </span>
-                                    <span>{isFr ? f.captionFr : f.captionEn}</span>
-                                  </figcaption>
-                                </figure>
-                              ))}
-                            </div>
-                          )}
-                        </>
-                      )}
-
-                      {s.key === 'results' && (
-                        <>
-                          <div
-                            class="prose-r max-w-2xl text-text"
-                            set:html={md(isFr ? w.resultsFr : w.resultsEn)}
-                          />
-                          {resultFigs.length > 0 && (
-                            <div class="mt-8 grid gap-x-6 gap-y-9 sm:grid-cols-2">
-                              {resultFigs.map((f) => (
-                                <figure class:list={[f.featured && 'sm:col-span-2']}>
-                                  <div class="rounded-xl bg-white p-3 ring-1 ring-border/80">
-                                    <img
-                                      src={f.src}
-                                      alt=""
-                                      loading="lazy"
-                                      class:list={['mx-auto h-auto w-full', f.featured ? 'max-w-xl' : '']}
-                                    />
-                                  </div>
-                                  <figcaption class="mt-3 grid grid-cols-[auto_1fr] gap-x-3 text-sm leading-relaxed text-text-muted">
-                                    <span class="font-mono text-xs font-medium text-brand-600">
-                                      Fig. {f.n}
-                                    </span>
-                                    <span>{isFr ? f.captionFr : f.captionEn}</span>
-                                  </figcaption>
-                                </figure>
-                              ))}
-                            </div>
-                          )}
-                        </>
-                      )}
-
-                      {s.key === 'questions' && (
-                        <ol class="prose-r max-w-2xl space-y-3 text-text">
-                          {q.map((item, qi) => (
-                            <li class="grid grid-cols-[auto_1fr] gap-3">
-                              <span class="mt-0.5 font-mono text-sm text-text-subtle">{qi + 1}.</span>
-                              <span set:html={mdi(item)} />
-                            </li>
-                          ))}
-                        </ol>
+              {/* 03 · Méthode : texte + figure/formule côte à côte */}
+              <div id={anchor('method')} class="scroll-mt-24">
+                <div class="flex items-baseline gap-3">
+                  <span class="font-mono text-sm font-medium text-brand-500">03</span>
+                  <h3 class="text-xs font-semibold tracking-[0.16em] text-brand-600 uppercase">{labels.method}</h3>
+                </div>
+                <div class="mt-6 grid gap-x-12 gap-y-8 lg:grid-cols-12 lg:items-start">
+                  <div
+                    class:list={['prose-r text-text', methodHasSide ? 'lg:col-span-6' : 'lg:col-span-8']}
+                    set:html={md(methodRest)}
+                  />
+                  {methodHasSide && (
+                    <div class="lg:col-span-6 lg:sticky lg:top-24">
+                      {methodFig ? (
+                        <figure data-reveal>
+                          <div class="overflow-hidden rounded-xl bg-white p-3 ring-1 ring-border/80">
+                            <img src={methodFig.src} alt="" loading="lazy" class="mx-auto h-auto w-full" />
+                          </div>
+                          <figcaption class="mt-3 grid grid-cols-[auto_1fr] gap-x-3 text-sm leading-relaxed text-text-muted">
+                            <span class="font-mono text-xs font-medium text-brand-600">Fig. {methodFig.n}</span>
+                            <span>{isFr ? methodFig.captionFr : methodFig.captionEn}</span>
+                          </figcaption>
+                        </figure>
+                      ) : (
+                        <div class:list={['rounded-2xl p-6 ring-1 ring-border', cardBg]} data-reveal>
+                          <p class="text-[0.7rem] font-semibold tracking-[0.15em] text-text-subtle uppercase">
+                            {labels.indicators}
+                          </p>
+                          <div class="prose-r mt-3 text-text" set:html={md(methodDisplay!)} />
+                        </div>
                       )}
                     </div>
+                  )}
+                </div>
+              </div>
+
+              {/* 04 · Résultats : narration + planche maîtresse, puis figures en pied */}
+              <div id={anchor('results')} class="scroll-mt-24">
+                <div class="flex items-baseline gap-3">
+                  <span class="font-mono text-sm font-medium text-brand-500">04</span>
+                  <h3 class="text-xs font-semibold tracking-[0.16em] text-brand-600 uppercase">
+                    {figs.length > 0 ? labels.resultsFigs : labels.results}
+                  </h3>
+                </div>
+                <div class="mt-6 grid gap-x-12 gap-y-8 lg:grid-cols-12 lg:items-start">
+                  <div
+                    class:list={['prose-r text-text', resultsHasSide ? 'lg:col-span-5' : 'lg:col-span-8']}
+                    set:html={md(resultsRest)}
+                  />
+                  {resultsHasSide && (
+                    <div class="lg:col-span-7 lg:sticky lg:top-24">
+                      {heroFig ? (
+                        <figure data-reveal>
+                          <div class="overflow-hidden rounded-xl bg-white p-3 ring-1 ring-border/80">
+                            <img src={heroFig.src} alt="" loading="lazy" class="mx-auto h-auto w-full" />
+                          </div>
+                          <figcaption class="mt-3 grid grid-cols-[auto_1fr] gap-x-3 text-sm leading-relaxed text-text-muted">
+                            <span class="font-mono text-xs font-medium text-brand-600">Fig. {heroFig.n}</span>
+                            <span>{isFr ? heroFig.captionFr : heroFig.captionEn}</span>
+                          </figcaption>
+                        </figure>
+                      ) : (
+                        <div class:list={['rounded-2xl p-6 ring-1 ring-border sm:p-8', cardBg]} data-reveal>
+                          <p class="text-[0.7rem] font-semibold tracking-[0.15em] text-text-subtle uppercase">
+                            {labels.result}
+                          </p>
+                          <div class="prose-r mt-3 text-text" set:html={md(resultsDisplay!)} />
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+
+                {plateFigs.length > 0 && (
+                  <div class:list={['mt-12 grid gap-x-6 gap-y-9', plateCols]}>
+                    {plateFigs.map((f, idx) => (
+                      <figure data-reveal style={`--reveal-delay:${idx * 90}ms`}>
+                        <div class="overflow-hidden rounded-xl bg-white p-3 ring-1 ring-border/80">
+                          <img src={f.src} alt="" loading="lazy" class="mx-auto h-auto w-full" />
+                        </div>
+                        <figcaption class="mt-3 grid grid-cols-[auto_1fr] gap-x-3 text-sm leading-relaxed text-text-muted">
+                          <span class="font-mono text-xs font-medium text-brand-600">Fig. {f.n}</span>
+                          <span>{isFr ? f.captionFr : f.captionEn}</span>
+                        </figcaption>
+                      </figure>
+                    ))}
                   </div>
-                ))}
+                )}
+              </div>
+
+              {/* 05 · Questions ouvertes en deux colonnes */}
+              <div id={anchor('questions')} class="scroll-mt-24">
+                <div class="flex items-baseline gap-3">
+                  <span class="font-mono text-sm font-medium text-brand-500">05</span>
+                  <h3 class="text-xs font-semibold tracking-[0.16em] text-brand-600 uppercase">{labels.questions}</h3>
+                </div>
+                <ol class="mt-6 grid gap-x-12 gap-y-5 sm:grid-cols-2">
+                  {q.map((item, qi) => (
+                    <li class="grid grid-cols-[auto_1fr] gap-3 border-t border-border/60 pt-4">
+                      <span class="font-mono text-sm text-brand-500">{String(qi + 1).padStart(2, '0')}</span>
+                      <span class="prose-r text-text" set:html={mdi(item)} />
+                    </li>
+                  ))}
+                </ol>
 
                 {w.url && (
                   <a
                     href={w.url}
                     target="_blank"
                     rel="noopener"
-                    class="inline-flex text-sm font-medium text-brand-700 hover:underline"
+                    class="mt-8 inline-flex text-sm font-medium text-brand-700 hover:underline"
                   >
                     {isFr ? 'Lire l’article' : 'Read the paper'}
                   </a>

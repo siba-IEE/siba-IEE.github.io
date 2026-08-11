@@ -7,6 +7,8 @@
   "order": 1,
   "progressFr": "Cadrage clos, exécution E0–E6 complète, trois améliorations livrées (loi enrichie à l'aérosol, réplication SARAH-3, carte Afrique de l'Ouest) ; stabilité des poids et rédaction de l'article en cours.",
   "progressEn": "Framing closed, E0–E6 execution complete, three improvements delivered (aerosol-enriched law, SARAH-3 replication, West Africa map); weight stability and article write-up in progress.",
+  "pullFr": "L'intuition dit *la distance*. Les mesures disent *le climat*.",
+  "pullEn": "Intuition says *distance*. The measurements say *climate*.",
   "metrics": [
     { "value": "31", "labelFr": "stations ESMAP·WAPP", "labelEn": "ESMAP·WAPP stations" },
     { "value": "930", "labelFr": "paires source·cible", "labelEn": "source·target pairs" },
@@ -17,7 +19,6 @@
     {
       "src": "/images/recherche/calage-reseau.png",
       "section": "method",
-      "featured": true,
       "captionFr": "Le réseau ESMAP·WAPP : 31 stations couvrant l'Afrique de l'Ouest (haut) et la distribution des 930 distances inter-stations, de 100 à 2 800 km (bas).",
       "captionEn": "The ESMAP·WAPP network: 31 stations across West Africa (top) and the distribution of the 930 inter-station distances, from 100 to 2,800 km (bottom)."
     },
@@ -31,7 +32,6 @@
     {
       "src": "/images/recherche/calage-penalite.png",
       "section": "result",
-      "featured": true,
       "captionFr": "Point à point sur les 930 paires : la pénalité de transfert corrèle avec Δclim (r = +0,38 pour le GHI, +0,26 pour le DNI) et jamais avec la distance (r ≈ +0,05). La loi tient sur tout le nuage.",
       "captionEn": "Point by point over the 930 pairs: the transfer penalty correlates with Δclim (r = +0.38 GHI, +0.26 DNI) and never with distance (r ≈ +0.05). The law holds across the whole cloud."
     },

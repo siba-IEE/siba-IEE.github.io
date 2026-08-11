@@ -7,6 +7,8 @@
   "order": 2,
   "progressFr": "Diagnostic établi sur NASA POWER (34 communes de Guinée) ; extension aux produits fins et rédaction de l'article à venir.",
   "progressEn": "Diagnosis established on NASA POWER (34 communes of Guinea); extension to finer products and article write-up to come.",
+  "pullFr": "Deux communes, une seule maille : une même valeur, et l'information spatiale disparaît.",
+  "pullEn": "Two communes, one cell: a single value, and the spatial information vanishes.",
   "metrics": [
     { "value": "34", "labelFr": "communes de Guinée", "labelEn": "communes of Guinea" },
     { "value": "22", "labelFr": "valeurs distinctes", "labelEn": "distinct values" },

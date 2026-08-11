@@ -243,6 +243,9 @@ export interface Research {
   /** Avancement du chantier, une phrase. */
   progressFr: string;
   progressEn: string;
+  /** Accroche / thèse en une phrase (pull-quote de la problématique). Optionnel. */
+  pullFr?: string;
+  pullEn?: string;
   /** Chiffres clés (fiche technique). Optionnel. */
   metrics?: ResearchMetric[];
   /** Figures rattachées aux sections méthode / résultats. Optionnel. */

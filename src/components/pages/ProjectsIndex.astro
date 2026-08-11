@@ -1,7 +1,6 @@
 ---
 import { marked } from 'marked';
 import BaseLayout from '../../layouts/BaseLayout.astro';
-import { SITE } from '../../lib/site';
 import { getLangFromUrl, useTranslations, localizePath } from '../../lib/i18n';
 import { getProjects, statusLabels, type ProjectKind } from '../../lib/content';
 
@@ -30,7 +29,8 @@ const domainMeta: Record<ProjectKind, { fr: string; en: string; introFr: string;
   tool: {
     fr: 'Outils & logiciels',
     en: 'Tools & software',
-    introFr: 'Les logiciels qui mettent la donnée qualifiée entre les mains des praticiens, du terrain au bureau d’études.',
+    introFr:
+      'Les logiciels qui mettent la donnée qualifiée entre les mains des praticiens, du terrain au bureau d’études.',
     introEn: 'The software that puts qualified data in practitioners’ hands, from the field to the design office.',
   },
 };
@@ -48,14 +48,14 @@ const domains = domainOrder
       aria-hidden="true"
     >
     </div>
-    <div class="shell relative grid gap-10 py-16 lg:grid-cols-[1fr_1fr] lg:gap-16">
+    <div class="shell relative grid gap-10 py-16 sm:py-20 lg:grid-cols-[1fr_1fr] lg:gap-16">
       <div>
-        <h1 class="font-display text-3xl font-bold tracking-tight text-balance sm:text-4xl">
+        <h1 class="font-display text-4xl font-bold tracking-tight text-balance sm:text-5xl">
           {t('projects.pageTitle')}
         </h1>
-        <p class="mt-4 max-w-md text-white/75 text-pretty">{t('projects.pageLede')}</p>
+        <p class="mt-5 max-w-md text-lg text-white/80 text-pretty">{t('projects.pageLede')}</p>
       </div>
-      <div class="lg:pt-2">
+      <div class="lg:pt-3">
         <p class="text-xs font-medium tracking-[0.15em] text-white/50 uppercase">
           {isFr ? 'Explorer' : 'Explore'}
         </p>
@@ -78,45 +78,43 @@ const domains = domainOrder
   {/* Domaines en sections à fonds alternés, chacun détaillé en accordéons */}
   {
     domains.map((d, di) => (
-      <section id={d.kind} class:list={['scroll-mt-20', di % 2 === 0 ? 'bg-surface-2/50' : '']}>
-        <div class="shell border-t border-border py-14 sm:py-16">
-          <div data-reveal class="max-w-2xl">
-            <h2 class="font-display text-2xl font-bold tracking-tight sm:text-3xl">
+      <section id={d.kind} class:list={['scroll-mt-20', di % 2 === 0 ? 'bg-surface-2/40' : '']}>
+        <div class="shell border-t border-border py-16 sm:py-24">
+          <div class="max-w-3xl">
+            <h2 class="font-display text-4xl font-bold tracking-tight text-balance sm:text-5xl">
               {isFr ? d.meta.fr : d.meta.en}
             </h2>
-            <p class="mt-3 text-text-muted text-pretty">{isFr ? d.meta.introFr : d.meta.introEn}</p>
+            <p class="mt-5 text-lg leading-relaxed text-text text-pretty">
+              {isFr ? d.meta.introFr : d.meta.introEn}
+            </p>
           </div>
 
-          <div class="mt-8">
+          <div class="mt-10">
             {d.items.map((project) => {
-              const summary = isFr ? project.summaryFr : project.summaryEn;
               const body = isFr ? project.bodyFr : project.bodyEn;
               const bodyHtml = body ? (marked.parse(body) as string) : '';
               return (
-                <details class="acc group border-t border-border py-6">
-                  <summary class="flex cursor-pointer list-none items-start justify-between gap-6">
-                    <div>
-                      <div class="flex items-center gap-3">
-                        <h3 class="font-display text-lg font-bold tracking-tight sm:text-xl">
-                          {project.title}
-                        </h3>
-                        <span class="rounded-full bg-surface-3 px-2 py-0.5 text-[0.65rem] font-medium tracking-wide text-text-subtle uppercase">
-                          {statusLabels[project.status][lang]}
-                        </span>
-                      </div>
-                      <p class="mt-1.5 max-w-2xl text-sm text-text-muted text-pretty">{summary}</p>
+                <details class="acc group border-t border-border py-7">
+                  <summary class="flex cursor-pointer list-none items-center justify-between gap-6">
+                    <div class="flex flex-wrap items-center gap-3">
+                      <h3 class="font-display text-xl font-bold tracking-tight sm:text-2xl">
+                        {project.title}
+                      </h3>
+                      <span class="rounded-full bg-surface-3 px-2.5 py-0.5 text-[0.65rem] font-medium tracking-wide text-text-subtle uppercase">
+                        {statusLabels[project.status][lang]}
+                      </span>
                     </div>
                     <span
-                      class="mt-1 shrink-0 text-2xl leading-none text-text-subtle transition-transform duration-300 group-open:rotate-45"
+                      class="shrink-0 text-3xl leading-none font-light text-text-subtle transition-transform duration-300 group-open:rotate-45"
                       aria-hidden="true"
                     >
                       +
                     </span>
                   </summary>
 
-                  <div class="acc-body max-w-3xl pt-4 text-text-muted" set:html={bodyHtml} />
+                  <div class="acc-body mt-5 max-w-3xl text-text" set:html={bodyHtml} />
 
-                  <div class="mt-4 flex flex-wrap items-center gap-x-5 gap-y-2 text-sm">
+                  <div class="mt-6 flex flex-wrap items-center gap-x-5 gap-y-2 text-sm">
                     {project.url && (
                       <a
                         href={project.url}
@@ -134,7 +132,7 @@ const domains = domainOrder
                         rel="noopener"
                         class="font-medium text-brand-700 hover:underline"
                       >
-                        {isFr ? 'Code' : 'Code'}
+                        Code
                       </a>
                     )}
                     <a
@@ -143,7 +141,9 @@ const domains = domainOrder
                     >
                       {isFr ? 'Fiche complète' : 'Full page'}
                     </a>
-                    <span class="font-mono text-xs text-text-subtle">{project.stack.slice(0, 5).join(' · ')}</span>
+                    <span class="font-mono text-xs text-text-subtle">
+                      {project.stack.slice(0, 5).join(' · ')}
+                    </span>
                   </div>
                 </details>
               );
@@ -161,8 +161,8 @@ const domains = domainOrder
   }
 
   .acc-body :global(p) {
-    margin-block: 0.6rem;
-    line-height: 1.7;
+    margin-block: 0.75rem;
+    line-height: 1.8;
   }
 
   .acc-body :global(a) {
@@ -172,7 +172,7 @@ const domains = domainOrder
   }
 
   .acc-body :global(ul) {
-    margin-block: 0.6rem;
+    margin-block: 0.75rem;
     padding-left: 1.2rem;
     list-style: disc;
   }

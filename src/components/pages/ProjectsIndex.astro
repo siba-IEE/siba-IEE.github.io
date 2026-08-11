@@ -94,7 +94,7 @@ const domains = domainOrder
               const body = isFr ? project.bodyFr : project.bodyEn;
               const bodyHtml = body ? (marked.parse(body) as string) : '';
               return (
-                <details class="acc group border-t border-border py-7">
+                <details id={project.slug} class="acc group scroll-mt-24 border-t border-border py-7">
                   <summary class="flex cursor-pointer list-none items-center justify-between gap-6">
                     <div class="flex flex-wrap items-center gap-3">
                       <h3 class="font-display text-xl font-bold tracking-tight sm:text-2xl">
@@ -204,3 +204,19 @@ const domains = domainOrder
     list-style: disc;
   }
 </style>
+
+<script>
+  // Un lien /projets#slug (depuis l'accueil) ouvre le dépliant correspondant et s'y cale.
+  const openFromHash = () => {
+    const id = decodeURIComponent(location.hash.slice(1));
+    if (!id) return;
+    const el = document.getElementById(id);
+    if (el instanceof HTMLDetailsElement) {
+      el.open = true;
+      requestAnimationFrame(() => el.scrollIntoView({ block: 'start' }));
+    }
+  };
+  openFromHash();
+  window.addEventListener('hashchange', openFromHash);
+  document.addEventListener('astro:page-load', openFromHash);
+</script>

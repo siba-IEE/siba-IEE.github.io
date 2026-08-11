@@ -302,26 +302,34 @@ const pillars = [
 
       <ul class="mt-8 border-t border-border">
         {
-          [...realisations, ...enCours].map((project) => (
-            <li class="border-b border-border">
-              <a
-                href={localizePath(`/projets/${project.slug}`, lang)}
-                class="group grid gap-1 py-5 sm:grid-cols-[1fr_auto] sm:items-baseline sm:gap-8"
-              >
-                <div>
-                  <span class="font-display text-lg font-bold tracking-tight group-hover:underline">
-                    {project.title}
+          [...realisations, ...enCours].map((project) => {
+            // Lien vers le vrai produit s'il existe (site officiel), sinon vers
+            // l'entrée correspondante dans la page /projets (pas de sous-page).
+            const external = Boolean(project.url);
+            const href = project.url ?? `${localizePath('/projets', lang)}#${project.slug}`;
+            return (
+              <li class="border-b border-border">
+                <a
+                  href={href}
+                  target={external ? '_blank' : undefined}
+                  rel={external ? 'me noopener' : undefined}
+                  class="group grid gap-1 py-5 sm:grid-cols-[1fr_auto] sm:items-baseline sm:gap-8"
+                >
+                  <div>
+                    <span class="font-display text-lg font-bold tracking-tight group-hover:underline">
+                      {project.title}
+                    </span>
+                    <p class="mt-1 max-w-2xl text-sm text-text-muted text-pretty">
+                      {isFr ? project.summaryFr : project.summaryEn}
+                    </p>
+                  </div>
+                  <span class="rounded-full bg-surface-3 px-2.5 py-0.5 text-[0.65rem] font-medium tracking-wide text-text-subtle uppercase sm:justify-self-end">
+                    {statusLabels[project.status][lang]}
                   </span>
-                  <p class="mt-1 max-w-2xl text-sm text-text-muted text-pretty">
-                    {isFr ? project.summaryFr : project.summaryEn}
-                  </p>
-                </div>
-                <span class="rounded-full bg-surface-3 px-2.5 py-0.5 text-[0.65rem] font-medium tracking-wide text-text-subtle uppercase sm:justify-self-end">
-                  {statusLabels[project.status][lang]}
-                </span>
-              </a>
-            </li>
-          ))
+                </a>
+              </li>
+            );
+          })
         }
       </ul>
     </div>

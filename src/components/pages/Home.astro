@@ -102,7 +102,6 @@ const pillars = [
           class="inline-flex items-center gap-2 rounded-full bg-white px-6 py-3 text-sm font-semibold text-brand-900 transition-transform hover:-translate-y-0.5"
         >
           {isFr ? 'Voir mes travaux' : 'See my work'}
-          <span aria-hidden="true">&rarr;</span>
         </a>
         <a
           href={localizePath('/contact', lang)}
@@ -127,7 +126,6 @@ const pillars = [
               class="inline-flex items-center gap-2 rounded-full bg-white px-6 py-3 text-sm font-semibold text-brand-900 transition-transform hover:-translate-y-0.5"
             >
               {t('nav.contact')}
-              <span aria-hidden="true">&rarr;</span>
             </a>
             <a
               href={localizePath('/a-propos', lang)}
@@ -185,7 +183,7 @@ const pillars = [
               <h3 class="font-display text-xl font-bold tracking-tight">{p.title}</h3>
               <p class="flex-1 text-sm text-text-muted text-pretty">{p.desc}</p>
               <span class="text-sm font-medium text-brand-700 group-hover:underline">
-                {isFr ? 'En savoir plus' : 'Learn more'} <span aria-hidden="true">&rarr;</span>
+                {isFr ? 'En savoir plus' : 'Learn more'}
               </span>
             </a>
           ))
@@ -239,7 +237,6 @@ const pillars = [
           class="inline-flex items-center gap-2 rounded-full bg-brand-700 px-5 py-2.5 text-sm font-semibold text-white transition-transform hover:-translate-y-0.5"
         >
           {isFr ? `${publicationCount} références` : `${publicationCount} references`}
-          <span aria-hidden="true">&rarr;</span>
         </a>
         <a
           href={orcidUrl}

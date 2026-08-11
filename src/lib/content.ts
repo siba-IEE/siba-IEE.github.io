@@ -170,7 +170,8 @@ export interface SkillGroup {
   categoryFr: string;
   categoryEn: string;
   order: number;
-  items: string[];
+  itemsFr: string[];
+  itemsEn: string[];
 }
 
 const skillModules = import.meta.glob<{ default: SkillGroup }>('../content/skills/*.json', {

@@ -124,7 +124,7 @@ const skills = getSkills();
               <div>
                 <h3 class="text-sm font-semibold">{lang === 'fr' ? group.categoryFr : group.categoryEn}</h3>
                 <ul class="mt-2 flex flex-wrap gap-1.5">
-                  {group.items.map((item) => (
+                  {(lang === 'fr' ? group.itemsFr : group.itemsEn).map((item) => (
                     <li class="rounded-md bg-surface-2 px-2 py-0.5 text-xs text-text-muted">{item}</li>
                   ))}
                 </ul>

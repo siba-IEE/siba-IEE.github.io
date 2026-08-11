@@ -1,0 +1,7 @@
+{
+  "categoryFr": "Données et recherche solaire",
+  "categoryEn": "Solar data & research",
+  "order": 2,
+  "itemsFr": ["Traitement de données", "pandas", "pvlib", "Incertitude P50/P90", "Qualification de la donnée", "NASA POWER", "PVGIS", "Revue de littérature"],
+  "itemsEn": ["Data processing", "pandas", "pvlib", "P50/P90 uncertainty", "Data qualification", "NASA POWER", "PVGIS", "Literature review"]
+}

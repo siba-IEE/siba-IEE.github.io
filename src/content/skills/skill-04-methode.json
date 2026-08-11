@@ -1,0 +1,7 @@
+{
+  "categoryFr": "Méthode et IA",
+  "categoryEn": "Method & AI",
+  "order": 4,
+  "itemsFr": ["Développement assisté par IA", "LaTeX", "Traçabilité et sources", "Git et PR", "Rigueur scientifique"],
+  "itemsEn": ["AI-assisted development", "LaTeX", "Traceability & sourcing", "Git & PR", "Scientific rigour"]
+}

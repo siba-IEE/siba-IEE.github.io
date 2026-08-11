@@ -1,0 +1,7 @@
+{
+  "categoryFr": "Ingénierie et efficacité énergétique",
+  "categoryEn": "Energy engineering & efficiency",
+  "order": 1,
+  "itemsFr": ["Audit énergétique", "DPE", "Bilan carbone", "EnergyPlus", "OpenStudio", "ClimaWin", "Revit"],
+  "itemsEn": ["Energy audit", "Energy performance (EPC)", "Carbon assessment", "EnergyPlus", "OpenStudio", "ClimaWin", "Revit"]
+}

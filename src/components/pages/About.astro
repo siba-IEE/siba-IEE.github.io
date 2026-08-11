@@ -159,8 +159,15 @@ const skills = getSkills();
         }
       </ul>
       <p class="mt-3 text-sm text-text-subtle">
-        ORCID {SITE.orcid} ·
-        <a href={orcidUrl} target="_blank" rel="me noopener" class="hover:underline">{orcidUrl}</a>
+        ORCID{' '}
+        <a
+          href={orcidUrl}
+          target="_blank"
+          rel="me noopener"
+          class="font-mono hover:text-text hover:underline"
+        >
+          {SITE.orcid}
+        </a>
       </p>
     </div>
   </section>

@@ -112,7 +112,17 @@ const domains = domainOrder
                     </span>
                   </summary>
 
-                  <div class="acc-body mt-5 max-w-3xl text-text" set:html={bodyHtml} />
+                  <div class="mt-5 max-w-3xl">
+                    {project.image && (
+                      <img
+                        src={project.image}
+                        alt={project.title}
+                        loading="lazy"
+                        class="mb-5 w-full rounded-lg border border-border"
+                      />
+                    )}
+                    <div class="acc-body text-text" set:html={bodyHtml} />
+                  </div>
 
                   <div class="mt-6 flex flex-wrap items-center gap-x-5 gap-y-2 text-sm">
                     {project.url && (

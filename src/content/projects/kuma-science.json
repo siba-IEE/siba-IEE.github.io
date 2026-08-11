@@ -11,6 +11,7 @@
   "summaryEn": "Editorial and scientific platform for energy engineering across French-speaking Africa.",
   "stack": ["Astro", "Supabase", "Cloudflare", "TypeScript"],
   "tags": ["Plateforme", "Énergie", "Afrique francophone"],
+  "image": "/images/kuma-science.png",
   "bodyFr": "Le portail public de l’écosystème Kuma : données techniques, méthodologie et outils en libre accès pour l’ingénierie énergétique appliquée en Afrique francophone, calibrés sur les villes pilotes de Guinée. Il réunit le média éditorial, le catalogue de séries (instantanés du dépôt privé Kuma Data Core), les pages méthodologiques et une boutique d’outils.\n\nStack sobre et robuste : Astro en rendu statique et à la demande, Supabase pour les comptes, hébergement Cloudflare, observabilité Sentry, et une chaîne qualité complète (tests, lint, CI).",
   "bodyEn": "The public gateway of the Kuma ecosystem: open technical data, methodology and tools for applied energy engineering across French-speaking Africa, calibrated on Guinea’s pilot cities. It brings together the editorial media, the series catalogue (snapshots of the private Kuma Data Core repository), the methodology pages and a tools shop.\n\nA lean, robust stack: Astro with static and on-demand rendering, Supabase for accounts, Cloudflare hosting, Sentry observability, and a full quality chain (tests, lint, CI)."
 }

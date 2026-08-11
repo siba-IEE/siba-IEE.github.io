@@ -11,6 +11,7 @@
   "summaryEn": "Solar-data reference for Guinea: open, qualified and citable data (DOI).",
   "stack": ["Zenodo", "CC BY 4.0", "DOI"],
   "tags": ["Données", "Recherche", "Solaire"],
+  "image": "/images/rds-guinee.png",
   "bodyFr": "Un référentiel, pas un entrepôt : l’autorité vient de la qualification de chaque donnée, pas du volume. Chaque mesure porte un passeport (source, méthode, niveau de confiance, période de validité, incertitude), et le référentiel dit ce qu’il sait et ce qu’il ne sait pas.\n\nLa Guinée est le pays pilote ; la donnée y est ouverte (CC BY 4.0) et publiée en instantanés versionnés, chacun archivé sur Zenodo avec un DOI persistant. Les niveaux de confiance vont du satellitaire et de la réanalyse (B) au mesuré-sol validé (A), avec un premier point terrain à Kankan.",
   "bodyEn": "A reference, not a warehouse: authority comes from qualifying each datum, not from sheer volume. Every measurement carries a passport (source, method, confidence level, validity window, uncertainty), and the reference states what it knows and what it does not.\n\nGuinea is the pilot country; its data is open (CC BY 4.0) and released as versioned snapshots, each archived on Zenodo with a persistent DOI. Confidence levels range from satellite and reanalysis (B) to validated ground measurement (A), with a first field point in Kankan."
 }

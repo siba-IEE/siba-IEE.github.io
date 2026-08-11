@@ -219,10 +219,26 @@ export interface Research {
   titleEn: string;
   summaryFr: string;
   summaryEn: string;
-  bodyFr: string;
-  bodyEn: string;
   status: ProjectStatus;
   order: number;
+  /** Avancement du chantier, une phrase. */
+  progressFr: string;
+  progressEn: string;
+  /** Problématique / positionnement (markdown, peut contenir du LaTeX $...$). */
+  problemFr: string;
+  problemEn: string;
+  /** Hypothèses testées (liste ; LaTeX autorisé). */
+  hypothesesFr: string[];
+  hypothesesEn: string[];
+  /** Méthode et calculs (markdown ; LaTeX $$...$$ autorisé). */
+  methodFr: string;
+  methodEn: string;
+  /** Résultats / où j'en suis (markdown). */
+  resultsFr: string;
+  resultsEn: string;
+  /** Questions ouvertes / prochaines étapes (liste). */
+  questionsFr: string[];
+  questionsEn: string[];
   /** Lien vers l'article / le DOI si publié. Optionnel. */
   url?: string;
 }

@@ -22,6 +22,7 @@ export const ui = {
   fr: {
     'nav.about': 'À propos',
     'nav.projects': 'Projets',
+    'nav.research': 'Travaux',
     'nav.publications': 'Publications',
     'nav.contact': 'Contact',
     'nav.skipToContent': 'Aller au contenu',
@@ -58,6 +59,7 @@ export const ui = {
   en: {
     'nav.about': 'About',
     'nav.projects': 'Projects',
+    'nav.research': 'Research',
     'nav.publications': 'Publications',
     'nav.contact': 'Contact',
     'nav.skipToContent': 'Skip to content',

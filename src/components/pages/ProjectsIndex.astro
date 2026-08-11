@@ -2,13 +2,12 @@
 import { marked } from 'marked';
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import { getLangFromUrl, useTranslations, localizePath } from '../../lib/i18n';
-import { getProjects, getResearch, statusLabels, type ProjectKind } from '../../lib/content';
+import { getProjects, statusLabels, type ProjectKind } from '../../lib/content';
 
 const lang = getLangFromUrl(Astro.url);
 const t = useTranslations(lang);
 const isFr = lang === 'fr';
 const projects = getProjects();
-const research = getResearch();
 
 // Domaines (regroupement par nature) et leur intro.
 const domainOrder: ProjectKind[] = ['data', 'platform', 'tool'];
@@ -61,14 +60,6 @@ const domains = domainOrder
           {isFr ? 'Explorer' : 'Explore'}
         </p>
         <div class="mt-4 grid gap-3 sm:grid-cols-2">
-          {research.length > 0 && (
-            <a
-              href="#recherche"
-              class="rounded-full bg-white/10 px-4 py-2.5 text-sm font-medium ring-1 ring-white/15 transition-colors hover:bg-white/20"
-            >
-              {isFr ? 'Recherche' : 'Research'}
-            </a>
-          )}
           {
             domains.map((d) => (
               <a
@@ -84,74 +75,10 @@ const domains = domainOrder
     </div>
   </section>
 
-  {/* Recherche · travaux en cours, en accordéons */}
-  {
-    research.length > 0 && (
-      <section id="recherche" class="scroll-mt-20 bg-surface-2">
-        <div class="shell border-t border-border py-16 sm:py-24">
-          <div class="max-w-3xl">
-            <h2 class="font-display text-4xl font-bold tracking-tight text-balance sm:text-5xl">
-              {isFr ? 'Recherche' : 'Research'}
-            </h2>
-            <p class="mt-5 text-lg leading-relaxed text-text text-pretty">
-              {
-                isFr
-                  ? 'Travaux en cours sur la qualification et le transfert spatial de la donnée solaire.'
-                  : 'Ongoing work on the qualification and spatial transfer of solar data.'
-              }
-            </p>
-          </div>
-
-          <div class="mt-10">
-            {research.map((item) => {
-              const body = isFr ? item.bodyFr : item.bodyEn;
-              const bodyHtml = body ? (marked.parse(body) as string) : '';
-              return (
-                <details class="acc group border-t border-border py-7">
-                  <summary class="flex cursor-pointer list-none items-center justify-between gap-6">
-                    <div class="flex flex-wrap items-center gap-3">
-                      <h3 class="font-display text-xl font-bold tracking-tight sm:text-2xl">
-                        {isFr ? item.titleFr : item.titleEn}
-                      </h3>
-                      <span class="rounded-full bg-surface-3 px-2.5 py-0.5 text-[0.65rem] font-medium tracking-wide text-text-subtle uppercase">
-                        {statusLabels[item.status][lang]}
-                      </span>
-                    </div>
-                    <span
-                      class="shrink-0 text-3xl leading-none font-light text-text-subtle transition-transform duration-300 group-open:rotate-45"
-                      aria-hidden="true"
-                    >
-                      +
-                    </span>
-                  </summary>
-
-                  <div class="acc-body mt-5 max-w-3xl text-text" set:html={bodyHtml} />
-
-                  {item.url && (
-                    <div class="mt-6 text-sm">
-                      <a
-                        href={item.url}
-                        target="_blank"
-                        rel="noopener"
-                        class="font-medium text-brand-700 hover:underline"
-                      >
-                        {isFr ? 'Lire' : 'Read'}
-                      </a>
-                    </div>
-                  )}
-                </details>
-              );
-            })}
-          </div>
-        </div>
-      </section>
-    )
-  }
-
   {/* Domaines en sections à fonds alternés, chacun détaillé en accordéons */}
   {
     domains.map((d, di) => (
-      <section id={d.kind} class:list={['scroll-mt-20', di % 2 === 1 ? 'bg-surface-2' : '']}>
+      <section id={d.kind} class:list={['scroll-mt-20', di % 2 === 0 ? 'bg-surface-2' : '']}>
         <div class="shell border-t border-border py-16 sm:py-24">
           <div class="max-w-3xl">
             <h2 class="font-display text-4xl font-bold tracking-tight text-balance sm:text-5xl">

@@ -18,6 +18,7 @@ const switchHref = alternatePath(Astro.url.pathname, other);
 
 const items: { key: UiKey; href: string }[] = [
   { key: 'nav.about', href: localizePath('/a-propos', lang) },
+  { key: 'nav.research', href: localizePath('/travaux', lang) },
   { key: 'nav.projects', href: localizePath('/projets', lang) },
   { key: 'nav.publications', href: localizePath('/publications', lang) },
   { key: 'nav.contact', href: localizePath('/contact', lang) },

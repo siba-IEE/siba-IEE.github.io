@@ -41,6 +41,7 @@
     "@keystatic/core": "^0.6.4",
     "@tailwindcss/vite": "^4.3.3",
     "astro": "^7.2.0",
+    "katex": "^0.18.4",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
     "tailwindcss": "^4.3.3",
@@ -49,6 +50,7 @@
   "devDependencies": {
     "@astrojs/check": "^0.9.10",
     "@playwright/test": "^1.62.1",
+    "@types/katex": "^0.16.8",
     "@typescript-eslint/eslint-plugin": "^8.67.0",
     "@typescript-eslint/parser": "^8.67.0",
     "eslint": "^10.8.1",

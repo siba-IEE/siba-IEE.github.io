@@ -1,0 +1,200 @@
+---
+import { marked } from 'marked';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { getLangFromUrl, useTranslations } from '../../lib/i18n';
+import { getResearch, statusLabels } from '../../lib/content';
+import 'katex/dist/katex.min.css';
+
+const lang = getLangFromUrl(Astro.url);
+const t = useTranslations(lang);
+const isFr = lang === 'fr';
+const works = getResearch();
+
+const md = (s: string) => marked.parse(s) as string;
+const mdi = (s: string) => marked.parseInline(s) as string;
+
+const pageTitle = isFr ? 'Travaux de recherche' : 'Research';
+const pageLede = isFr
+  ? 'Un laboratoire ouvert : mes travaux en cours, leurs méthodes, leurs résultats et leurs questions. On y entre dans le détail.'
+  : 'An open lab: my ongoing work, its methods, results and open questions. This is where we go into the detail.';
+
+const labels = {
+  problem: isFr ? 'Problématique' : 'The problem',
+  hypotheses: isFr ? 'Hypothèses' : 'Hypotheses',
+  method: isFr ? 'Méthode & calculs' : 'Method & maths',
+  results: isFr ? 'Résultats' : 'Results',
+  questions: isFr ? 'Questions ouvertes' : 'Open questions',
+  progress: isFr ? 'Avancement' : 'Progress',
+};
+---
+
+<BaseLayout title={pageTitle} description={pageLede}>
+  {/* En-tête encre + sommaire */}
+  <section class="relative overflow-hidden bg-brand-900 text-white">
+    <div
+      class="pointer-events-none absolute inset-0 opacity-[0.1] [background-image:linear-gradient(rgba(255,255,255,0.7)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.7)_1px,transparent_1px)] [background-size:44px_44px] [mask-image:radial-gradient(80%_80%_at_20%_0%,black,transparent)]"
+      aria-hidden="true"
+    >
+    </div>
+    <div class="shell relative py-16 sm:py-20">
+      <p class="font-mono text-xs tracking-[0.2em] text-accent-400 uppercase">
+        {isFr ? 'Laboratoire ouvert' : 'Open lab'}
+      </p>
+      <h1 class="mt-4 max-w-3xl font-display text-4xl font-bold tracking-tight text-balance text-white sm:text-5xl">
+        {pageTitle}
+      </h1>
+      <p class="mt-5 max-w-2xl text-lg text-white/80 text-pretty">{pageLede}</p>
+
+      {
+        works.length > 1 && (
+          <div class="mt-8 flex flex-wrap gap-3">
+            {works.map((w, i) => (
+              <a
+                href={`#travail-${i + 1}`}
+                class="rounded-full bg-white/10 px-4 py-2.5 text-sm font-medium ring-1 ring-white/15 transition-colors hover:bg-white/20"
+              >
+                {isFr ? w.titleFr : w.titleEn}
+              </a>
+            ))}
+          </div>
+        )
+      }
+    </div>
+  </section>
+
+  {/* Un travail = une section dense, fonds alternés */}
+  {
+    works.map((w, i) => {
+      const hyp = isFr ? w.hypothesesFr : w.hypothesesEn;
+      const q = isFr ? w.questionsFr : w.questionsEn;
+      return (
+        <section id={`travail-${i + 1}`} class:list={['scroll-mt-20', i % 2 === 1 ? 'bg-surface-2' : '']}>
+          <div class="math-content shell border-t border-border py-16 sm:py-24">
+            <div class="max-w-3xl">
+              <div class="flex flex-wrap items-center gap-3">
+                <span class="rounded-full bg-surface-3 px-2.5 py-0.5 text-[0.65rem] font-medium tracking-wide text-text-subtle uppercase">
+                  {statusLabels[w.status][lang]}
+                </span>
+              </div>
+              <h2 class="mt-3 font-display text-4xl font-bold tracking-tight text-balance sm:text-5xl">
+                {isFr ? w.titleFr : w.titleEn}
+              </h2>
+              <p class="mt-5 text-lg leading-relaxed text-text text-pretty">
+                {isFr ? w.summaryFr : w.summaryEn}
+              </p>
+              <p class="mt-4 border-l-2 border-brand-400 pl-4 text-sm text-text-muted text-pretty">
+                <span class="font-semibold text-text">{labels.progress}.</span>{' '}
+                {isFr ? w.progressFr : w.progressEn}
+              </p>
+            </div>
+
+            <div class="mt-12 max-w-3xl space-y-10">
+              <div>
+                <h3 class="text-xs font-semibold tracking-[0.15em] text-brand-600 uppercase">
+                  {labels.problem}
+                </h3>
+                <div class="prose-r mt-3 text-text" set:html={md(isFr ? w.problemFr : w.problemEn)} />
+              </div>
+
+              <div>
+                <h3 class="text-xs font-semibold tracking-[0.15em] text-brand-600 uppercase">
+                  {labels.hypotheses}
+                </h3>
+                <ul class="prose-r mt-3 space-y-2.5 text-text">
+                  {hyp.map((h) => (
+                    <li class="grid grid-cols-[auto_1fr] gap-3">
+                      <span class="mt-2 size-1.5 shrink-0 rounded-full bg-brand-400" aria-hidden="true" />
+                      <span set:html={mdi(h)} />
+                    </li>
+                  ))}
+                </ul>
+              </div>
+
+              <div>
+                <h3 class="text-xs font-semibold tracking-[0.15em] text-brand-600 uppercase">
+                  {labels.method}
+                </h3>
+                <div class="prose-r mt-3 text-text" set:html={md(isFr ? w.methodFr : w.methodEn)} />
+              </div>
+
+              <div>
+                <h3 class="text-xs font-semibold tracking-[0.15em] text-brand-600 uppercase">
+                  {labels.results}
+                </h3>
+                <div class="prose-r mt-3 text-text" set:html={md(isFr ? w.resultsFr : w.resultsEn)} />
+              </div>
+
+              <div>
+                <h3 class="text-xs font-semibold tracking-[0.15em] text-brand-600 uppercase">
+                  {labels.questions}
+                </h3>
+                <ol class="prose-r mt-3 space-y-2.5 text-text">
+                  {q.map((item, qi) => (
+                    <li class="grid grid-cols-[auto_1fr] gap-3">
+                      <span class="mt-0.5 font-mono text-sm text-text-subtle">{qi + 1}.</span>
+                      <span set:html={mdi(item)} />
+                    </li>
+                  ))}
+                </ol>
+              </div>
+
+              {w.url && (
+                <a
+                  href={w.url}
+                  target="_blank"
+                  rel="noopener"
+                  class="inline-flex text-sm font-medium text-brand-700 hover:underline"
+                >
+                  {isFr ? 'Lire l’article' : 'Read the paper'}
+                </a>
+              )}
+            </div>
+          </div>
+        </section>
+      );
+    })
+  }
+</BaseLayout>
+
+<style>
+  .prose-r :global(p) {
+    margin-block: 0.75rem;
+    line-height: 1.8;
+  }
+
+  .prose-r :global(strong) {
+    font-weight: 600;
+    color: var(--heading);
+  }
+
+  .prose-r :global(em) {
+    font-style: italic;
+  }
+
+  /* Équations en bloc : un peu d'air et défilement horizontal si besoin. */
+  .prose-r :global(.katex-display) {
+    margin-block: 1.1rem;
+    overflow-x: auto;
+    overflow-y: hidden;
+    padding-block: 0.25rem;
+  }
+</style>
+
+<script>
+  import renderMathInElement from 'katex/contrib/auto-render';
+
+  const renderMath = () => {
+    document.querySelectorAll<HTMLElement>('.math-content').forEach((el) => {
+      renderMathInElement(el, {
+        delimiters: [
+          { left: '$$', right: '$$', display: true },
+          { left: '$', right: '$', display: false },
+        ],
+        throwOnError: false,
+      });
+    });
+  };
+
+  renderMath();
+  document.addEventListener('astro:page-load', renderMath);
+</script>

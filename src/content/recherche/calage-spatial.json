@@ -1,10 +1,36 @@
 {
   "titleFr": "Calage spatial du rayonnement solaire",
   "titleEn": "Spatial calibration of solar radiation",
-  "summaryFr": "La transférabilité d’un calage au sol est gouvernée par la similarité climatique, pas par la distance géographique.",
-  "summaryEn": "The transferability of a ground calibration is governed by climatic similarity, not by geographic distance.",
-  "bodyFr": "Comment étendre à un territoire le calage au sol du rayonnement solaire mesuré en une station ? Ce travail établit que la transférabilité d’un calage est gouvernée par la **similarité climatique** entre sites (Δclim), et non par leur distance géographique.\n\nLe résultat est validé sur 31 stations et 930 paires, avec deux produits satellitaires indépendants (CAMS, SARAH-3), puis cartographié à l’échelle de l’Afrique de l’Ouest (réseau ESMAP/WAPP, application à la Guinée). Le pipeline est déterministe, traçable jusqu’aux formules, et ré-audité en seconde main.",
-  "bodyEn": "How can a ground calibration of solar radiation measured at one station be extended to a whole territory? This work establishes that the transferability of a calibration is governed by **climatic similarity** between sites (Δclim), not by their geographic distance.\n\nThe result is validated on 31 stations and 930 pairs, with two independent satellite products (CAMS, SARAH-3), then mapped across West Africa (ESMAP/WAPP network, applied to Guinea). The pipeline is deterministic, traceable down to the formulas, and independently re-audited.",
+  "summaryFr": "La transférabilité d'un calage au sol est gouvernée par la similarité climatique entre sites, pas par leur distance géographique.",
+  "summaryEn": "The transferability of a ground calibration is governed by climatic similarity between sites, not by geographic distance.",
   "status": "wip",
-  "order": 1
+  "order": 2,
+  "progressFr": "Cadrage clos, exécution E0–E6 complète, trois améliorations livrées (loi enrichie à l'aérosol, réplication SARAH-3, carte Afrique de l'Ouest) ; stabilité des poids et rédaction de l'article en cours.",
+  "progressEn": "Framing closed, E0–E6 execution complete, three improvements delivered (aerosol-enriched law, SARAH-3 replication, West Africa map); weight stability and article write-up in progress.",
+  "problemFr": "Les produits satellitaires (GHI, DNI) sont biaisés localement ; on les corrige par un calage sur des mesures au sol. Mais les stations de mesure sont rares en Afrique de l'Ouest, et un dimensionnement se fait presque toujours loin de toute station.\n\nLa question : un calage établi en une station est-il transférable ailleurs, et selon quel critère ? L'intuition courante suppose que la proximité géographique gouverne la transférabilité. Ce travail teste l'hypothèse concurrente : c'est la **similarité climatique** entre sites, notée $\\Delta_{\\mathrm{clim}}$, qui la gouverne · deux sites au climat proche mais géographiquement éloignés se calent mieux l'un l'autre que deux voisins de régimes différents.",
+  "problemEn": "Satellite products (GHI, DNI) are locally biased; they are corrected by calibrating against ground measurements. But measurement stations are scarce in West Africa, and sizing is almost always done far from any station.\n\nThe question: is a calibration established at one station transferable elsewhere, and by what criterion? Common intuition assumes geographic proximity governs transferability. This work tests the competing hypothesis: it is the **climatic similarity** between sites, written $\\Delta_{\\mathrm{clim}}$, that governs it · two sites with close climates but geographically distant calibrate one another better than two neighbours with different regimes.",
+  "hypothesesFr": [
+    "La transférabilité d'un calage est gouvernée par la similarité climatique $\\Delta_{\\mathrm{clim}}$ entre sites, non par leur distance géographique.",
+    "Le résidu de transfert croît avec $\\Delta_{\\mathrm{clim}}$, et cette loi est stable d'un produit satellitaire indépendant à l'autre.",
+    "La prise en compte de l'aérosol (AOD) enrichit la loi et réduit le résidu de transfert."
+  ],
+  "hypothesesEn": [
+    "The transferability of a calibration is governed by climatic similarity $\\Delta_{\\mathrm{clim}}$ between sites, not by their geographic distance.",
+    "The transfer residual grows with $\\Delta_{\\mathrm{clim}}$, and this law is stable from one independent satellite product to another.",
+    "Accounting for aerosol (AOD) enriches the law and reduces the transfer residual."
+  ],
+  "methodFr": "Réseau de 31 stations, soit 930 paires source–cible ordonnées. Pour chaque paire, on cale le produit sur la source (correction de biais par appariement de quantiles), on applique ce calage à la cible, et on mesure le résidu. On confronte alors le résidu à deux distances concurrentes : la distance géographique et la distance climatique $\\Delta_{\\mathrm{clim}}$.\n\nOutils : loi résidu–$\\Delta_{\\mathrm{clim}}$, variogramme (climat contre distance), validation croisée station-par-station (LOSO), loi enrichie à l'aérosol par pondération LOO, puis réplication sur un second produit indépendant (SARAH-3 après CAMS) et cartographie sur une grille Afrique de l'Ouest au 1°. Pipeline déterministe, tracé jusqu'aux formules, et ré-audité en seconde main.",
+  "methodEn": "A network of 31 stations, i.e. 930 ordered source–target pairs. For each pair, the product is calibrated on the source (bias correction by quantile matching), the calibration is applied to the target, and the residual is measured. The residual is then compared against two competing distances: geographic distance and climatic distance $\\Delta_{\\mathrm{clim}}$.\n\nTools: residual–$\\Delta_{\\mathrm{clim}}$ law, variogram (climate vs distance), leave-one-station-out cross-validation (LOSO), aerosol-enriched law by LOO weighting, then replication on a second independent product (SARAH-3 after CAMS) and mapping on a 1° West Africa grid. Deterministic pipeline, traced to the formulas, and independently re-audited.",
+  "resultsFr": "La transférabilité est bien gouvernée par $\\Delta_{\\mathrm{clim}}$ et non par la distance : le variogramme climatique structure le résidu là où la distance géographique ne le fait pas. Le résultat est validé sur 31 stations et 930 paires, avec deux produits satellitaires indépendants (CAMS, SARAH-3), puis cartographié à l'échelle de l'Afrique de l'Ouest · application au réseau ESMAP/WAPP, cas de la Guinée, avec une ancre terrain à Kankan (campagne ESMAP/WAPP).\n\nTrois améliorations ont été livrées après l'exécution de base : la loi enrichie à l'aérosol, la réplication indépendante sur SARAH-3, et la carte Afrique de l'Ouest (océan masqué, zoom Guinée).",
+  "resultsEn": "Transferability is indeed governed by $\\Delta_{\\mathrm{clim}}$ and not by distance: the climatic variogram structures the residual where geographic distance does not. The result is validated on 31 stations and 930 pairs, with two independent satellite products (CAMS, SARAH-3), then mapped across West Africa · applied to the ESMAP/WAPP network, the Guinea case, with a field anchor at Kankan (ESMAP/WAPP campaign).\n\nThree improvements were delivered after the baseline run: the aerosol-enriched law, the independent SARAH-3 replication, and the West Africa map (ocean masked, Guinea zoom).",
+  "questionsFr": [
+    "Établir la stabilité des poids $\\Delta_{\\mathrm{clim}}$ et une analyse de sensibilité, pour un résultat défendable en tout point.",
+    "Recoupement indépendant (MiniTab) des estimations avant rédaction de l'article.",
+    "Option d'une campagne de mesure ou d'un second réseau pour renforcer la validation."
+  ],
+  "questionsEn": [
+    "Establish the stability of the $\\Delta_{\\mathrm{clim}}$ weights and a sensitivity analysis, for a result defensible at every point.",
+    "Independent cross-check (MiniTab) of the estimates before writing the article.",
+    "Option of a measurement campaign or a second network to strengthen the validation."
+  ]
 }

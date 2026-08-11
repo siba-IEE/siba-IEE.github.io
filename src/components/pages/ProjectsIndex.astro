@@ -30,7 +30,7 @@ const presentKinds = allKinds.filter((kind) => projects.some((project) => projec
       }
     </div>
 
-    <ul id="project-grid" class="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+    <ul id="project-grid" class="mt-8 grid gap-x-6 gap-y-10 sm:grid-cols-2 lg:grid-cols-3">
       {projects.map((project, i) => <ProjectCard project={project} lang={lang} index={i} />)}
     </ul>
   </section>

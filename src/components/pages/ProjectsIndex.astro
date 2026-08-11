@@ -1,7 +1,7 @@
 ---
 import { marked } from 'marked';
 import BaseLayout from '../../layouts/BaseLayout.astro';
-import { getLangFromUrl, useTranslations, localizePath } from '../../lib/i18n';
+import { getLangFromUrl, useTranslations } from '../../lib/i18n';
 import { getProjects, statusLabels, type ProjectKind } from '../../lib/content';
 
 const lang = getLangFromUrl(Astro.url);
@@ -145,12 +145,6 @@ const domains = domainOrder
                         Code
                       </a>
                     )}
-                    <a
-                      href={localizePath(`/projets/${project.slug}`, lang)}
-                      class="text-text-subtle hover:text-text hover:underline"
-                    >
-                      {isFr ? 'Fiche complète' : 'Full page'}
-                    </a>
                     <span class="font-mono text-xs text-text-subtle">
                       {project.stack.slice(0, 5).join(' · ')}
                     </span>

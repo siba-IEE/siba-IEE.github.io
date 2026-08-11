@@ -66,20 +66,17 @@ const presentKinds = allKinds.filter((kind) => projects.some((project) => projec
 </style>
 
 <script>
-  const grid = document.getElementById('project-grid');
-  const buttons = Array.from(document.querySelectorAll<HTMLButtonElement>('.filter-btn'));
-
-  function applyFilter(filter: string) {
+  // Délégation sur document : le filtre survit aux transitions de page (View Transitions).
+  document.addEventListener('click', (event) => {
+    const button = (event.target as HTMLElement | null)?.closest<HTMLButtonElement>('.filter-btn');
+    if (!button) return;
+    const grid = document.getElementById('project-grid');
+    document
+      .querySelectorAll<HTMLButtonElement>('.filter-btn')
+      .forEach((other) => other.classList.toggle('is-active', other === button));
+    const filter = button.dataset.filter ?? 'all';
     grid?.querySelectorAll<HTMLLIElement>(':scope > li').forEach((item) => {
-      const show = filter === 'all' || item.dataset.kind === filter;
-      item.classList.toggle('hidden', !show);
-    });
-  }
-
-  buttons.forEach((button) => {
-    button.addEventListener('click', () => {
-      buttons.forEach((other) => other.classList.toggle('is-active', other === button));
-      applyFilter(button.dataset.filter ?? 'all');
+      item.classList.toggle('hidden', !(filter === 'all' || item.dataset.kind === filter));
     });
   });
 </script>

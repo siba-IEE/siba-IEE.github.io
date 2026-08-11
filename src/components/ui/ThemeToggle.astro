@@ -36,7 +36,9 @@ const t = useTranslations(getLangFromUrl(Astro.url));
       /* stockage indisponible : on ignore, le thème reste appliqué pour la session. */
     }
   }
-  document.getElementById('theme-toggle')?.addEventListener('click', () => {
-    applyTheme(currentTheme() === 'dark' ? 'light' : 'dark');
+  // Délégation sur document : survit aux transitions de page (View Transitions).
+  document.addEventListener('click', (event) => {
+    const trigger = (event.target as HTMLElement | null)?.closest('#theme-toggle');
+    if (trigger) applyTheme(currentTheme() === 'dark' ? 'light' : 'dark');
   });
 </script>

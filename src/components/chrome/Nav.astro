@@ -100,16 +100,19 @@ const isActive = (href: string) => path === href || path.startsWith(`${href}/`);
 </header>
 
 <script>
-  const toggle = document.getElementById('nav-toggle');
-  const panel = document.getElementById('nav-mobile');
-  toggle?.addEventListener('click', () => {
-    const open = panel?.classList.toggle('hidden') === false;
-    toggle.setAttribute('aria-expanded', String(open));
+  // Délégation sur document : le menu survit aux transitions de page (View Transitions).
+  document.addEventListener('click', (event) => {
+    const target = event.target as HTMLElement | null;
+    const toggle = target?.closest('#nav-toggle');
+    if (toggle) {
+      const panel = document.getElementById('nav-mobile');
+      const open = panel?.classList.toggle('hidden') === false;
+      toggle.setAttribute('aria-expanded', String(open));
+      return;
+    }
+    if (target?.closest('#nav-mobile a')) {
+      document.getElementById('nav-mobile')?.classList.add('hidden');
+      document.getElementById('nav-toggle')?.setAttribute('aria-expanded', 'false');
+    }
   });
-  panel?.querySelectorAll('a').forEach((link) =>
-    link.addEventListener('click', () => {
-      panel.classList.add('hidden');
-      toggle?.setAttribute('aria-expanded', 'false');
-    }),
-  );
 </script>

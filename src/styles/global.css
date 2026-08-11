@@ -36,6 +36,7 @@
   --text: oklch(0.23 0.016 62);
   --text-muted: oklch(0.46 0.016 62);
   --text-subtle: oklch(0.6 0.014 64);
+  --heading: oklch(0.33 0.055 262);
 }
 
 [data-theme='dark'] {
@@ -47,6 +48,7 @@
   --text: oklch(0.95 0.008 85);
   --text-muted: oklch(0.72 0.011 85);
   --text-subtle: oklch(0.57 0.011 85);
+  --heading: oklch(0.95 0.01 88);
 }
 
 /* Expose les jetons sémantiques comme utilitaires Tailwind (bg-surface, text-text, border-border...). */
@@ -58,6 +60,15 @@
   --color-text: var(--text);
   --color-text-muted: var(--text-muted);
   --color-text-subtle: var(--text-subtle);
+  --color-heading: var(--heading);
+}
+
+/* Titres en bleu-encre par défaut (clair) / crème (sombre) ; les bandeaux
+   encre remettent leurs titres en blanc via l'utilitaire text-white. */
+@layer base {
+  :where(h1, h2, h3) {
+    color: var(--heading);
+  }
 }
 
 @layer components {

@@ -41,6 +41,8 @@ export interface ProjectRaw {
   summaryEn: string;
   stack: string[];
   tags: string[];
+  /** Visuel de carte (chemin sous /public, ex. "/images/projets/rds.jpg"). Optionnel. */
+  image?: string;
   bodyFr: string;
   bodyEn: string;
 }

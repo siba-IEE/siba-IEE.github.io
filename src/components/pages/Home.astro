@@ -138,7 +138,7 @@ const pillars = [
         <div class="relative min-h-[22rem] bg-surface-3">
           {
             profile.photo ? (
-              <img src={profile.photo} alt={SITE.name} class="absolute inset-0 size-full object-cover" />
+              <img src={profile.photo} alt={SITE.name} class="absolute inset-0 size-full object-contain" />
             ) : (
               <div class="flex size-full flex-col items-center justify-center gap-2 bg-gradient-to-br from-surface-3 to-brand-100">
                 <span class="font-display text-6xl font-bold text-brand-800/40">S</span>

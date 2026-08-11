@@ -1,0 +1,13 @@
+{
+  "roleFr": "Chercheur, recherche appliquée",
+  "roleEn": "Applied research fellow",
+  "org": "École de technologie supérieure (ÉTS)",
+  "locationFr": "Montréal, Québec",
+  "locationEn": "Montréal, Québec",
+  "start": "2025",
+  "end": "",
+  "current": false,
+  "order": 2,
+  "descFr": "Réduction des émissions de gaz à effet de serre par la flexibilité énergétique du bâtiment (simulation EnergyPlus).",
+  "descEn": "Reducing greenhouse-gas emissions through building energy flexibility (EnergyPlus simulation)."
+}

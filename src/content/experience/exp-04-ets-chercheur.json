@@ -1,0 +1,13 @@
+{
+  "roleFr": "Ingénieur chercheur",
+  "roleEn": "Research engineer",
+  "org": "École de technologie supérieure (ÉTS)",
+  "locationFr": "Montréal, Canada",
+  "locationEn": "Montréal, Canada",
+  "start": "2024",
+  "end": "",
+  "current": false,
+  "order": 4,
+  "descFr": "Collecte et analyse des données d'exploitation de bâtiments du Nord québécois ; étude du contexte environnemental et du cadre réglementaire de la politique énergétique nordique.",
+  "descEn": "Collecting and analysing building-operation data in Northern Québec; study of the environmental context and regulatory framework of northern energy policy."
+}

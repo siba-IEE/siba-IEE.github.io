@@ -1,0 +1,13 @@
+{
+  "roleFr": "Fondateur et ingénieur",
+  "roleEn": "Founder and engineer",
+  "org": "Kuma Science",
+  "locationFr": "Conakry, Guinée",
+  "locationEn": "Conakry, Guinea",
+  "start": "2025",
+  "end": "",
+  "current": true,
+  "order": 1,
+  "descFr": "Construction de référentiels de données solaires ouverts et qualifiés pour l'Afrique de l'Ouest francophone : infrastructure de données, outils de dimensionnement et méthode de qualification de la donnée (recherche, traitement Python, développement assisté par IA).",
+  "descEn": "Building open, qualified solar-data references for French-speaking West Africa: data infrastructure, sizing tools and a data-qualification method (research, Python processing, AI-assisted development)."
+}

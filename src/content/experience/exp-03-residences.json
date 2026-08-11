@@ -1,0 +1,13 @@
+{
+  "roleFr": "Ingénieur efficacité énergétique",
+  "roleEn": "Energy-efficiency engineer",
+  "org": "Les Résidences Yvelines Essonne",
+  "locationFr": "Mantes-la-Jolie, France",
+  "locationEn": "Mantes-la-Jolie, France",
+  "start": "2022",
+  "end": "2025",
+  "current": false,
+  "order": 3,
+  "descFr": "Audits énergétiques, suivi de marchés DPE et audit, réalisation de bilans carbone (ClimaWin, gestion et suivi de projet).",
+  "descEn": "Energy audits, oversight of energy-performance and audit contracts, carbon assessments (ClimaWin, project management)."
+}

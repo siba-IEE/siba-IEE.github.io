@@ -1,0 +1,13 @@
+{
+  "roleFr": "Tuteur académique",
+  "roleEn": "Academic tutor",
+  "org": "Université Claude Bernard Lyon 1",
+  "locationFr": "Lyon, France",
+  "locationEn": "Lyon, France",
+  "start": "2021",
+  "end": "",
+  "current": false,
+  "order": 5,
+  "descFr": "Accompagnement d'étudiants de première année (PCSI) en mathématiques, électrostatique et électromagnétisme.",
+  "descEn": "Supporting first-year (PCSI) students in mathematics, electrostatics and electromagnetism."
+}

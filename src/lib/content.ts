@@ -182,3 +182,28 @@ export function getSkills(): SkillGroup[] {
     .map((mod) => mod.default)
     .sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
 }
+
+/* ---------- Formation ---------- */
+
+export interface Education {
+  titleFr: string;
+  titleEn: string;
+  school: string;
+  locationFr: string;
+  locationEn: string;
+  start: string;
+  end: string;
+  order: number;
+  noteFr: string;
+  noteEn: string;
+}
+
+const educationModules = import.meta.glob<{ default: Education }>('../content/education/*.json', {
+  eager: true,
+});
+
+export function getEducation(): Education[] {
+  return Object.values(educationModules)
+    .map((mod) => mod.default)
+    .sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+}

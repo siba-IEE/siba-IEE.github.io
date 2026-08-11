@@ -17,7 +17,7 @@ test.describe('i18n · routing bilingue', () => {
   test('le sélecteur revient au français', async ({ page }) => {
     await page.goto('/en');
     await page.getByRole('link', { name: 'Français', exact: true }).click();
-    await expect(page).toHaveURL(/localhost:4321\/$/);
+    await expect(page).toHaveURL(/:4321\/$/);
     await expect(page.locator('html')).toHaveAttribute('lang', 'fr-FR');
   });
 

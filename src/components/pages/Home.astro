@@ -209,7 +209,7 @@ const pillars = [
   </section>
 
   {/* Réalisations · abouti */}
-  <section data-reveal class="border-t border-border">
+  <section class="border-t border-border">
     <div class="shell py-12 sm:py-16">
       <h2 class="font-display text-2xl font-bold tracking-tight sm:text-3xl">
         {isFr ? 'Réalisations' : 'Achievements'}
@@ -221,14 +221,14 @@ const pillars = [
             : 'What is shipped, deployed or published, and verifiable.'
         }
       </p>
-      <ul class="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-        {realisations.map((project) => <ProjectCard project={project} lang={lang} />)}
+      <ul class="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-3 [&>li:nth-child(3n+2)]:lg:mt-10">
+        {realisations.map((project, i) => <ProjectCard project={project} lang={lang} index={i} />)}
       </ul>
     </div>
   </section>
 
   {/* Projets · en cours */}
-  <section data-reveal class="border-t border-border bg-surface-2/50">
+  <section class="border-t border-border bg-surface-2/50">
     <div class="shell py-12 sm:py-16">
       <h2 class="font-display text-2xl font-bold tracking-tight sm:text-3xl">
         {isFr ? 'Projets en cours' : 'In progress'}
@@ -236,8 +236,8 @@ const pillars = [
       <p class="mt-3 max-w-2xl text-text-muted text-pretty">
         {isFr ? 'Ce que je construis en ce moment.' : 'What I am building right now.'}
       </p>
-      <ul class="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-        {enCours.map((project) => <ProjectCard project={project} lang={lang} />)}
+      <ul class="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+        {enCours.map((project, i) => <ProjectCard project={project} lang={lang} index={i} />)}
       </ul>
     </div>
   </section>

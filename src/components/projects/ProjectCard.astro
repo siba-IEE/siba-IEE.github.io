@@ -6,14 +6,17 @@ import { localizePath, type Lang } from '../../lib/i18n';
 interface Props {
   project: Project;
   lang: Lang;
+  index?: number;
 }
 
-const { project, lang } = Astro.props;
+const { project, lang, index = 0 } = Astro.props;
 const summary = lang === 'fr' ? project.summaryFr : project.summaryEn;
 ---
 
 <li
   data-kind={project.kind}
+  data-reveal
+  style={`--reveal-delay:${Math.min(index, 6) * 0.07}s`}
   class="group relative flex flex-col overflow-hidden rounded-xl border border-border bg-surface transition-colors hover:border-brand-400"
 >
   <div class="relative aspect-[16/9] overflow-hidden border-b border-border bg-surface-2">

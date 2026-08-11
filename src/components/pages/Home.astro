@@ -18,9 +18,14 @@ const publications = getPublications();
 const prettyType = (type: string) =>
   type.replace(/[-_]/g, ' ').replace(/^\w/, (character) => character.toUpperCase());
 
+// Kuma Data Core et RDS Guinée sont déjà présentés en publications (Zenodo) plus haut :
+// on les retire de la liste de l'accueil pour éviter le doublon (ils restent sur /projets).
+const shownAsPublication = new Set(['kuma-data-core', 'rds-guinee']);
+const homeProjects = projects.filter((p) => !shownAsPublication.has(p.slug));
+
 // Réalisations = abouti (en ligne) ; Projets = en cours.
-const realisations = projects.filter((p) => p.status === 'live');
-const enCours = projects.filter((p) => p.status !== 'live');
+const realisations = homeProjects.filter((p) => p.status === 'live');
+const enCours = homeProjects.filter((p) => p.status !== 'live');
 
 // Accroche de mission (à affiner librement).
 const mission = isFr

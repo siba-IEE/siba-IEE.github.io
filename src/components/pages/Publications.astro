@@ -1,5 +1,6 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
+import PageHeader from '../chrome/PageHeader.astro';
 import { SITE, orcidUrl } from '../../lib/site';
 import { getLangFromUrl, useTranslations } from '../../lib/i18n';
 import { getPublications } from '../../lib/content';
@@ -37,29 +38,27 @@ const jsonLd = {
 ---
 
 <BaseLayout title={t('publications.pageTitle')} description={t('publications.pageLede')} jsonLd={jsonLd}>
-  <section class="shell py-16">
-    <h1 class="font-display text-3xl font-bold tracking-tight sm:text-4xl">
-      {t('publications.pageTitle')}
-    </h1>
-    <p class="mt-4 max-w-2xl text-lg text-text-muted text-pretty">{t('publications.pageLede')}</p>
+  <PageHeader title={t('publications.pageTitle')} lede={t('publications.pageLede')} />
+
+  <section class="shell py-12 sm:py-14">
     <a
       href={orcidUrl}
       target="_blank"
       rel="me noopener"
-      class="mt-4 inline-flex items-center gap-2 text-sm text-brand-700 underline-offset-4 hover:underline"
+      class="inline-flex items-center gap-2 text-sm text-brand-700 underline-offset-4 hover:underline"
     >
       {t('publications.viewOrcid')} · {SITE.orcid}
     </a>
 
     {
       publications.length === 0 ? (
-        <p class="mt-10 text-text-muted">{t('publications.empty')}</p>
+        <p class="mt-8 text-text-muted">{t('publications.empty')}</p>
       ) : (
-        <div class="mt-10 space-y-10">
+        <div class="mt-8 space-y-8">
           {years.map((year) => (
-            <div class="grid gap-4 sm:grid-cols-[6rem_1fr]">
+            <div class="grid gap-3 sm:grid-cols-[5rem_1fr]">
               <h2 class="font-display text-lg font-semibold text-text-subtle">{year}</h2>
-              <ul class="space-y-4">
+              <ul class="space-y-3">
                 {groups.get(year)!.map((publication) => (
                   <li class="border-l-2 border-border pl-4">
                     <h3 class="font-medium text-pretty">

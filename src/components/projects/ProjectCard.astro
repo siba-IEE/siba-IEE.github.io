@@ -14,9 +14,9 @@ const summary = lang === 'fr' ? project.summaryFr : project.summaryEn;
 
 <li
   data-kind={project.kind}
-  class="group relative flex flex-col overflow-hidden rounded-2xl border border-border bg-surface transition-colors hover:border-brand-400"
+  class="group relative flex flex-col overflow-hidden rounded-xl border border-border bg-surface transition-colors hover:border-brand-400"
 >
-  <div class="relative aspect-[16/10] overflow-hidden border-b border-border bg-surface-2">
+  <div class="relative aspect-[16/9] overflow-hidden border-b border-border bg-surface-2">
     {
       project.image ? (
         <img
@@ -26,38 +26,37 @@ const summary = lang === 'fr' ? project.summaryFr : project.summaryEn;
           loading="lazy"
         />
       ) : (
-        <div class="relative flex size-full items-center justify-center bg-brand-900">
+        <div class="absolute inset-0 bg-brand-900">
           <div
-            class="absolute inset-0 opacity-[0.15] [background-image:linear-gradient(rgba(255,255,255,0.6)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.6)_1px,transparent_1px)] [background-size:24px_24px]"
+            class="absolute inset-0 opacity-[0.15] [background-image:linear-gradient(rgba(255,255,255,0.6)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.6)_1px,transparent_1px)] [background-size:20px_20px]"
             aria-hidden="true"
           />
-          <span class="relative font-mono text-xs tracking-[0.2em] text-white/60 uppercase">
-            {kindLabels[project.kind][lang]}
-          </span>
         </div>
       )
     }
     <span
-      class="absolute top-3 right-3 rounded-full bg-white/90 px-2.5 py-0.5 text-xs font-medium text-brand-800 backdrop-blur"
+      class="absolute top-2.5 left-2.5 rounded bg-white/90 px-2 py-0.5 text-[0.65rem] font-medium tracking-wide text-brand-800 uppercase backdrop-blur"
+    >
+      {kindLabels[project.kind][lang]}
+    </span>
+    <span
+      class="absolute top-2.5 right-2.5 rounded bg-brand-700/90 px-2 py-0.5 text-[0.65rem] font-medium text-white backdrop-blur"
     >
       {statusLabels[project.status][lang]}
     </span>
   </div>
 
-  <div class="flex flex-1 flex-col p-6">
-    <span class="text-xs font-medium tracking-wide text-text-subtle uppercase">
-      {kindLabels[project.kind][lang]}
-    </span>
-    <h3 class="mt-2 font-display text-lg font-semibold">
+  <div class="flex flex-1 flex-col p-4">
+    <h3 class="font-display text-base font-semibold leading-snug">
       <a href={localizePath(`/projets/${project.slug}`, lang)} class="after:absolute after:inset-0">
         {project.title}
       </a>
     </h3>
-    <p class="mt-2 flex-1 text-sm text-text-muted text-pretty">{summary}</p>
-    <ul class="mt-4 flex flex-wrap gap-1.5">
+    <p class="mt-1.5 line-clamp-2 flex-1 text-sm text-text-muted text-pretty">{summary}</p>
+    <ul class="mt-3 flex flex-wrap gap-1">
       {
-        project.stack.map((tech) => (
-          <li class="rounded-md bg-surface-3 px-2 py-0.5 font-mono text-xs text-text-muted">{tech}</li>
+        project.stack.slice(0, 4).map((tech) => (
+          <li class="rounded bg-surface-3 px-1.5 py-0.5 font-mono text-[0.65rem] text-text-muted">{tech}</li>
         ))
       }
     </ul>

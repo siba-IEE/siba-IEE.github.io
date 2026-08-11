@@ -1,5 +1,6 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
+import PageHeader from '../chrome/PageHeader.astro';
 import { SITE, orcidUrl, socialLinks } from '../../lib/site';
 import { getLangFromUrl, useTranslations } from '../../lib/i18n';
 import { getProfile, getExperience, getSkills, getEducation } from '../../lib/content';
@@ -16,8 +17,10 @@ const skills = getSkills();
 ---
 
 <BaseLayout title={t('about.pageTitle')} description={bio.slice(0, 155)} ogType="profile">
-  <section class="shell py-16">
-    <div class="grid gap-10 md:grid-cols-[auto_1fr] md:items-start">
+  <PageHeader title={t('about.pageTitle')} lede={role} />
+
+  <section class="shell py-12 sm:py-14">
+    <div class="grid gap-8 md:grid-cols-[auto_1fr] md:items-start">
       <div class="flex items-center gap-5 md:flex-col md:items-start">
         {
           profile.photo ? (
@@ -30,7 +33,7 @@ const skills = getSkills();
             />
           ) : (
             <span
-              class="grid size-28 place-items-center rounded-2xl bg-brand-600 font-display text-4xl font-bold text-white"
+              class="grid size-28 place-items-center rounded-2xl bg-brand-800 font-display text-4xl font-bold text-white"
               aria-hidden="true"
             >
               S
@@ -40,25 +43,25 @@ const skills = getSkills();
       </div>
 
       <div>
-        <h1 class="font-display text-3xl font-bold tracking-tight sm:text-4xl">
-          {t('about.pageTitle')}
-        </h1>
-        <p class="mt-2 text-lg font-medium text-brand-700">{role}</p>
-        <p class="mt-2 text-sm text-text-muted">{SITE.location[lang]}</p>
-        <p class="mt-6 max-w-2xl text-lg leading-relaxed text-text-muted text-pretty">{bio}</p>
+        <p class="text-sm text-text-muted">{SITE.location[lang]}</p>
+        <p class="mt-3 max-w-2xl text-lg leading-relaxed text-text-muted text-pretty">{bio}</p>
       </div>
     </div>
 
     {
       experience.length > 0 && (
-        <div class="mt-14">
+        <div class="mt-12">
           <h2 class="font-display text-xl font-bold tracking-tight">{t('about.experience')}</h2>
-          <ol class="mt-6 space-y-6">
+          <ol class="mt-5 space-y-5">
             {experience.map((item) => (
               <li class="grid gap-2 border-l-2 border-border pl-5 sm:grid-cols-[10rem_1fr]">
                 <p class="text-sm text-text-subtle">
                   {item.start}
-                  {item.current ? ` · ${lang === 'fr' ? 'aujourd’hui' : 'present'}` : item.end ? ` · ${item.end}` : ''}
+                  {item.current
+                    ? ` · ${lang === 'fr' ? 'aujourd’hui' : 'present'}`
+                    : item.end
+                      ? ` · ${item.end}`
+                      : ''}
                 </p>
                 <div>
                   <p class="font-medium">
@@ -83,9 +86,9 @@ const skills = getSkills();
 
     {
       education.length > 0 && (
-        <div class="mt-14">
+        <div class="mt-12">
           <h2 class="font-display text-xl font-bold tracking-tight">{t('about.education')}</h2>
-          <ol class="mt-6 space-y-6">
+          <ol class="mt-5 space-y-5">
             {education.map((item) => (
               <li class="grid gap-2 border-l-2 border-border pl-5 sm:grid-cols-[10rem_1fr]">
                 <p class="text-sm text-text-subtle">
@@ -117,12 +120,14 @@ const skills = getSkills();
 
     {
       skills.length > 0 && (
-        <div class="mt-14">
+        <div class="mt-12">
           <h2 class="font-display text-xl font-bold tracking-tight">{t('about.skills')}</h2>
-          <div class="mt-6 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+          <div class="mt-5 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {skills.map((group) => (
               <div>
-                <h3 class="text-sm font-semibold">{lang === 'fr' ? group.categoryFr : group.categoryEn}</h3>
+                <h3 class="text-sm font-semibold">
+                  {lang === 'fr' ? group.categoryFr : group.categoryEn}
+                </h3>
                 <ul class="mt-2 flex flex-wrap gap-1.5">
                   {(lang === 'fr' ? group.itemsFr : group.itemsEn).map((item) => (
                     <li class="rounded-md bg-surface-2 px-2 py-0.5 text-xs text-text-muted">{item}</li>
@@ -135,9 +140,9 @@ const skills = getSkills();
       )
     }
 
-    <div class="mt-14">
+    <div class="mt-12">
       <h2 class="font-display text-xl font-bold tracking-tight">{t('about.elsewhere')}</h2>
-      <ul class="mt-5 flex flex-wrap gap-3">
+      <ul class="mt-5 flex flex-wrap gap-2.5">
         {
           socialLinks.map((link) => (
             <li>
@@ -145,7 +150,7 @@ const skills = getSkills();
                 href={link.href}
                 target={link.key === 'email' ? undefined : '_blank'}
                 rel={link.key === 'email' ? undefined : 'me noopener'}
-                class="inline-flex items-center gap-2 rounded-lg border border-border px-4 py-2 text-sm font-medium transition-colors hover:bg-surface-2"
+                class="inline-flex items-center gap-2 rounded-full border border-border px-4 py-2 text-sm font-medium transition-colors hover:bg-surface-2"
               >
                 {link.label}
               </a>
@@ -153,7 +158,10 @@ const skills = getSkills();
           ))
         }
       </ul>
-      <p class="mt-3 text-sm text-text-subtle">ORCID {SITE.orcid} · <a href={orcidUrl} target="_blank" rel="me noopener" class="hover:underline">{orcidUrl}</a></p>
+      <p class="mt-3 text-sm text-text-subtle">
+        ORCID {SITE.orcid} ·
+        <a href={orcidUrl} target="_blank" rel="me noopener" class="hover:underline">{orcidUrl}</a>
+      </p>
     </div>
   </section>
 </BaseLayout>

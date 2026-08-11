@@ -1,5 +1,6 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
+import PageHeader from '../chrome/PageHeader.astro';
 import ProjectCard from '../projects/ProjectCard.astro';
 import { getLangFromUrl, useTranslations } from '../../lib/i18n';
 import { getProjects, kindLabels, type ProjectKind } from '../../lib/content';
@@ -13,13 +14,10 @@ const presentKinds = allKinds.filter((kind) => projects.some((project) => projec
 ---
 
 <BaseLayout title={t('projects.pageTitle')} description={t('projects.pageLede')}>
-  <section class="shell py-16">
-    <h1 class="font-display text-3xl font-bold tracking-tight sm:text-4xl">
-      {t('projects.pageTitle')}
-    </h1>
-    <p class="mt-4 max-w-2xl text-lg text-text-muted text-pretty">{t('projects.pageLede')}</p>
+  <PageHeader title={t('projects.pageTitle')} lede={t('projects.pageLede')} />
 
-    <div class="mt-8 flex flex-wrap gap-2" role="group" aria-label={t('projects.pageTitle')}>
+  <section class="shell py-12 sm:py-14">
+    <div class="flex flex-wrap gap-2" role="group" aria-label={t('projects.pageTitle')}>
       <button type="button" class="filter-btn is-active" data-filter="all">
         {t('projects.filterAll')}
       </button>
@@ -32,7 +30,7 @@ const presentKinds = allKinds.filter((kind) => projects.some((project) => projec
       }
     </div>
 
-    <ul id="project-grid" class="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+    <ul id="project-grid" class="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
       {projects.map((project) => <ProjectCard project={project} lang={lang} />)}
     </ul>
   </section>
@@ -41,9 +39,9 @@ const presentKinds = allKinds.filter((kind) => projects.some((project) => projec
 <style>
   .filter-btn {
     border: 1px solid var(--border);
-    border-radius: 0.5rem;
-    padding: 0.375rem 0.85rem;
-    font-size: 0.875rem;
+    border-radius: 9999px;
+    padding: 0.3rem 0.85rem;
+    font-size: 0.8125rem;
     color: var(--text-muted);
     background: transparent;
     cursor: pointer;
@@ -59,7 +57,7 @@ const presentKinds = allKinds.filter((kind) => projects.some((project) => projec
   }
 
   .filter-btn.is-active {
-    background: var(--color-brand-600);
+    background: var(--color-brand-700);
     border-color: transparent;
     color: #fff;
   }

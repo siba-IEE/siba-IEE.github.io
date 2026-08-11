@@ -1,5 +1,6 @@
 ---
 import { marked } from 'marked';
+import katex from 'katex';
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import { getLangFromUrl, useTranslations } from '../../lib/i18n';
 import { getResearch, statusLabels } from '../../lib/content';
@@ -10,26 +11,53 @@ const t = useTranslations(lang);
 const isFr = lang === 'fr';
 const works = getResearch();
 
-const md = (s: string) => marked.parse(s) as string;
-const mdi = (s: string) => marked.parseInline(s) as string;
+// KaTeX est rendu au build, AVANT le markdown : sinon CommonMark « déséchappe »
+// les commandes d'espacement LaTeX (\, \; \{ \}) et casse les formules. On extrait
+// les maths, on les remplace par des jetons neutres, puis on réinjecte le HTML KaTeX.
+function protectMath(src: string) {
+  const blocks: string[] = [];
+  const stash = (tex: string, displayMode: boolean) => {
+    blocks.push(katex.renderToString(tex.trim(), { displayMode, throwOnError: false, strict: false }));
+    return `@@KMATH${blocks.length - 1}@@`;
+  };
+  const out = src
+    .replace(/\$\$([\s\S]+?)\$\$/g, (_m, tex) => stash(tex, true))
+    .replace(/\$([^\n$]+?)\$/g, (_m, tex) => stash(tex, false));
+  return { out, blocks };
+}
+function restoreMath(html: string, blocks: string[]) {
+  return html
+    .replace(/@@KMATH(\d+)@@/g, (_m, i) => blocks[Number(i)])
+    // évite un bloc <span class="katex-display"> orphelin dans un <p>
+    .replace(/<p>(\s*<span class="katex-display">[\s\S]*?<\/span>\s*)<\/p>/g, '$1');
+}
+const md = (s: string) => {
+  const { out, blocks } = protectMath(s);
+  return restoreMath(marked.parse(out) as string, blocks);
+};
+const mdi = (s: string) => {
+  const { out, blocks } = protectMath(s);
+  return restoreMath(marked.parseInline(out) as string, blocks);
+};
 
 const pageTitle = isFr ? 'Travaux de recherche' : 'Research';
 const pageLede = isFr
-  ? 'Un laboratoire ouvert : mes travaux en cours, leurs méthodes, leurs résultats et leurs questions. On y entre dans le détail.'
-  : 'An open lab: my ongoing work, its methods, results and open questions. This is where we go into the detail.';
+  ? 'Un laboratoire ouvert : mes travaux en cours, leurs méthodes, leurs figures et leurs questions. On y entre dans le détail.'
+  : 'An open lab: my ongoing work, its methods, figures and open questions. This is where we go into the detail.';
 
 const labels = {
   problem: isFr ? 'Problématique' : 'The problem',
   hypotheses: isFr ? 'Hypothèses' : 'Hypotheses',
   method: isFr ? 'Méthode & calculs' : 'Method & maths',
   results: isFr ? 'Résultats' : 'Results',
+  resultsFigs: isFr ? 'Résultats & figures' : 'Results & figures',
   questions: isFr ? 'Questions ouvertes' : 'Open questions',
   progress: isFr ? 'Avancement' : 'Progress',
 };
 ---
 
 <BaseLayout title={pageTitle} description={pageLede}>
-  {/* En-tête encre + sommaire */}
+  {/* En-tête encre : titre + accroche + sommaire des travaux */}
   <section class="relative overflow-hidden bg-brand-900 text-white">
     <div
       class="pointer-events-none absolute inset-0 opacity-[0.1] [background-image:linear-gradient(rgba(255,255,255,0.7)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.7)_1px,transparent_1px)] [background-size:44px_44px] [mask-image:radial-gradient(80%_80%_at_20%_0%,black,transparent)]"
@@ -37,10 +65,7 @@ const labels = {
     >
     </div>
     <div class="shell relative py-16 sm:py-20">
-      <p class="font-mono text-xs tracking-[0.2em] text-accent-400 uppercase">
-        {isFr ? 'Laboratoire ouvert' : 'Open lab'}
-      </p>
-      <h1 class="mt-4 max-w-3xl font-display text-4xl font-bold tracking-tight text-balance text-white sm:text-5xl">
+      <h1 class="max-w-3xl font-display text-4xl font-bold tracking-tight text-balance text-white sm:text-5xl">
         {pageTitle}
       </h1>
       <p class="mt-5 max-w-2xl text-lg text-white/80 text-pretty">{pageLede}</p>
@@ -51,8 +76,9 @@ const labels = {
             {works.map((w, i) => (
               <a
                 href={`#travail-${i + 1}`}
-                class="rounded-full bg-white/10 px-4 py-2.5 text-sm font-medium ring-1 ring-white/15 transition-colors hover:bg-white/20"
+                class="group inline-flex items-center gap-2 rounded-full bg-white/10 px-4 py-2.5 text-sm font-medium ring-1 ring-white/15 transition-colors hover:bg-white/20"
               >
+                <span class="font-mono text-xs text-accent-300">{String(i + 1).padStart(2, '0')}</span>
                 {isFr ? w.titleFr : w.titleEn}
               </a>
             ))}
@@ -62,92 +88,216 @@ const labels = {
     </div>
   </section>
 
-  {/* Un travail = une section dense, fonds alternés */}
+  {/* Un travail = une planche dense : fiche + sommaire en marge, sections numérotées, figures. */}
   {
     works.map((w, i) => {
+      const alt = i % 2 === 1;
+      const wnum = String(i + 1).padStart(2, '0');
+      const cardBg = alt ? 'bg-surface' : 'bg-surface-2';
       const hyp = isFr ? w.hypothesesFr : w.hypothesesEn;
       const q = isFr ? w.questionsFr : w.questionsEn;
+      const metrics = w.metrics ?? [];
+      const figs = (w.figures ?? []).map((f, idx) => ({ ...f, n: idx + 1 }));
+      const methodFigs = figs.filter((f) => f.section === 'method');
+      const resultFigs = figs.filter((f) => f.section === 'result');
+      const anchor = (key: string) => `travail-${i + 1}-${key}`;
+      const secs = [
+        { key: 'problem', n: '01', label: labels.problem },
+        { key: 'hypotheses', n: '02', label: labels.hypotheses },
+        { key: 'method', n: '03', label: labels.method },
+        { key: 'results', n: '04', label: figs.length > 0 ? labels.resultsFigs : labels.results },
+        { key: 'questions', n: '05', label: labels.questions },
+      ];
+
       return (
-        <section id={`travail-${i + 1}`} class:list={['scroll-mt-20', i % 2 === 1 ? 'bg-surface-2' : '']}>
+        <section id={`travail-${i + 1}`} class:list={['scroll-mt-20', alt && 'bg-surface-2']}>
           <div class="math-content shell border-t border-border py-16 sm:py-24">
+            {/* Masthead */}
             <div class="max-w-3xl">
               <div class="flex flex-wrap items-center gap-3">
+                <span class="font-mono text-sm font-medium text-brand-500">{wnum}</span>
+                <span class="h-4 w-px bg-border" aria-hidden="true" />
                 <span class="rounded-full bg-surface-3 px-2.5 py-0.5 text-[0.65rem] font-medium tracking-wide text-text-subtle uppercase">
                   {statusLabels[w.status][lang]}
                 </span>
               </div>
-              <h2 class="mt-3 font-display text-4xl font-bold tracking-tight text-balance sm:text-5xl">
+              <h2 class="mt-4 font-display text-4xl font-bold tracking-tight text-balance sm:text-5xl">
                 {isFr ? w.titleFr : w.titleEn}
               </h2>
               <p class="mt-5 text-lg leading-relaxed text-text text-pretty">
                 {isFr ? w.summaryFr : w.summaryEn}
               </p>
-              <p class="mt-4 border-l-2 border-brand-400 pl-4 text-sm text-text-muted text-pretty">
+              <p class="mt-5 border-l-2 border-brand-400 pl-4 text-sm text-text-muted text-pretty">
                 <span class="font-semibold text-text">{labels.progress}.</span>{' '}
                 {isFr ? w.progressFr : w.progressEn}
               </p>
             </div>
 
-            <div class="mt-12 max-w-3xl space-y-10">
-              <div>
-                <h3 class="text-xs font-semibold tracking-[0.15em] text-brand-600 uppercase">
-                  {labels.problem}
-                </h3>
-                <div class="prose-r mt-3 text-text" set:html={md(isFr ? w.problemFr : w.problemEn)} />
-              </div>
+            {/* Corps : contenu large + marge collante (fiche & sommaire) */}
+            <div class="mt-12 grid gap-x-12 gap-y-10 lg:grid-cols-[minmax(0,1fr)_14rem]">
+              <aside class="space-y-7 lg:order-2 lg:sticky lg:top-24 lg:self-start">
+                {metrics.length > 0 && (
+                  <div class:list={['rounded-2xl p-5 ring-1 ring-border', cardBg]}>
+                    <p class="text-[0.7rem] font-semibold tracking-[0.15em] text-text-subtle uppercase">
+                      {isFr ? 'En bref' : 'At a glance'}
+                    </p>
+                    <dl class="mt-4 grid grid-cols-2 gap-x-4 gap-y-5">
+                      {metrics.map((m) => (
+                        <div>
+                          <dd class="font-display text-[1.6rem] leading-none font-bold tracking-tight text-heading">
+                            {m.value}
+                          </dd>
+                          <dt class="mt-1.5 text-xs leading-snug text-text-muted">
+                            {isFr ? m.labelFr : m.labelEn}
+                          </dt>
+                        </div>
+                      ))}
+                    </dl>
+                  </div>
+                )}
 
-              <div>
-                <h3 class="text-xs font-semibold tracking-[0.15em] text-brand-600 uppercase">
-                  {labels.hypotheses}
-                </h3>
-                <ul class="prose-r mt-3 space-y-2.5 text-text">
-                  {hyp.map((h) => (
-                    <li class="grid grid-cols-[auto_1fr] gap-3">
-                      <span class="mt-2 size-1.5 shrink-0 rounded-full bg-brand-400" aria-hidden="true" />
-                      <span set:html={mdi(h)} />
-                    </li>
-                  ))}
-                </ul>
-              </div>
+                <nav class="hidden lg:block" aria-label={isFr ? 'Sur cette page' : 'On this page'}>
+                  <p class="text-[0.7rem] font-semibold tracking-[0.15em] text-text-subtle uppercase">
+                    {isFr ? 'Sur cette page' : 'On this page'}
+                  </p>
+                  <ul class="mt-3 border-l border-border">
+                    {secs.map((s) => (
+                      <li>
+                        <a
+                          href={`#${anchor(s.key)}`}
+                          class="-ml-px flex items-baseline gap-2 border-l-2 border-transparent py-1 pl-3 text-sm text-text-muted transition-colors hover:border-brand-400 hover:text-text"
+                        >
+                          <span class="font-mono text-xs text-text-subtle">{s.n}</span>
+                          <span>{s.label}</span>
+                        </a>
+                      </li>
+                    ))}
+                  </ul>
+                </nav>
+              </aside>
 
-              <div>
-                <h3 class="text-xs font-semibold tracking-[0.15em] text-brand-600 uppercase">
-                  {labels.method}
-                </h3>
-                <div class="prose-r mt-3 text-text" set:html={md(isFr ? w.methodFr : w.methodEn)} />
-              </div>
+              <div class="min-w-0 space-y-12 lg:order-1">
+                {secs.map((s) => (
+                  <div
+                    id={anchor(s.key)}
+                    class="scroll-mt-24 border-t border-border/60 pt-10 first:border-t-0 first:pt-0"
+                  >
+                    <div class="flex items-baseline gap-3">
+                      <span class="font-mono text-sm font-medium text-brand-500">{s.n}</span>
+                      <h3 class="text-xs font-semibold tracking-[0.16em] text-brand-600 uppercase">
+                        {s.label}
+                      </h3>
+                    </div>
 
-              <div>
-                <h3 class="text-xs font-semibold tracking-[0.15em] text-brand-600 uppercase">
-                  {labels.results}
-                </h3>
-                <div class="prose-r mt-3 text-text" set:html={md(isFr ? w.resultsFr : w.resultsEn)} />
-              </div>
+                    <div class="mt-5">
+                      {s.key === 'problem' && (
+                        <div
+                          class="prose-r max-w-2xl text-text"
+                          set:html={md(isFr ? w.problemFr : w.problemEn)}
+                        />
+                      )}
 
-              <div>
-                <h3 class="text-xs font-semibold tracking-[0.15em] text-brand-600 uppercase">
-                  {labels.questions}
-                </h3>
-                <ol class="prose-r mt-3 space-y-2.5 text-text">
-                  {q.map((item, qi) => (
-                    <li class="grid grid-cols-[auto_1fr] gap-3">
-                      <span class="mt-0.5 font-mono text-sm text-text-subtle">{qi + 1}.</span>
-                      <span set:html={mdi(item)} />
-                    </li>
-                  ))}
-                </ol>
-              </div>
+                      {s.key === 'hypotheses' && (
+                        <ul class="prose-r max-w-2xl space-y-3 text-text">
+                          {hyp.map((h) => (
+                            <li class="grid grid-cols-[auto_1fr] gap-3">
+                              <span
+                                class="mt-2 size-1.5 shrink-0 rounded-full bg-brand-400"
+                                aria-hidden="true"
+                              />
+                              <span set:html={mdi(h)} />
+                            </li>
+                          ))}
+                        </ul>
+                      )}
 
-              {w.url && (
-                <a
-                  href={w.url}
-                  target="_blank"
-                  rel="noopener"
-                  class="inline-flex text-sm font-medium text-brand-700 hover:underline"
-                >
-                  {isFr ? 'Lire l’article' : 'Read the paper'}
-                </a>
-              )}
+                      {s.key === 'method' && (
+                        <>
+                          <div
+                            class="prose-r max-w-2xl text-text"
+                            set:html={md(isFr ? w.methodFr : w.methodEn)}
+                          />
+                          {methodFigs.length > 0 && (
+                            <div class="mt-8 grid gap-x-6 gap-y-9 sm:grid-cols-2">
+                              {methodFigs.map((f) => (
+                                <figure class:list={[f.featured && 'sm:col-span-2']}>
+                                  <div class="rounded-xl bg-white p-3 ring-1 ring-border/80">
+                                    <img
+                                      src={f.src}
+                                      alt=""
+                                      loading="lazy"
+                                      class:list={['mx-auto h-auto w-full', f.featured ? 'max-w-xl' : '']}
+                                    />
+                                  </div>
+                                  <figcaption class="mt-3 grid grid-cols-[auto_1fr] gap-x-3 text-sm leading-relaxed text-text-muted">
+                                    <span class="font-mono text-xs font-medium text-brand-600">
+                                      Fig. {f.n}
+                                    </span>
+                                    <span>{isFr ? f.captionFr : f.captionEn}</span>
+                                  </figcaption>
+                                </figure>
+                              ))}
+                            </div>
+                          )}
+                        </>
+                      )}
+
+                      {s.key === 'results' && (
+                        <>
+                          <div
+                            class="prose-r max-w-2xl text-text"
+                            set:html={md(isFr ? w.resultsFr : w.resultsEn)}
+                          />
+                          {resultFigs.length > 0 && (
+                            <div class="mt-8 grid gap-x-6 gap-y-9 sm:grid-cols-2">
+                              {resultFigs.map((f) => (
+                                <figure class:list={[f.featured && 'sm:col-span-2']}>
+                                  <div class="rounded-xl bg-white p-3 ring-1 ring-border/80">
+                                    <img
+                                      src={f.src}
+                                      alt=""
+                                      loading="lazy"
+                                      class:list={['mx-auto h-auto w-full', f.featured ? 'max-w-xl' : '']}
+                                    />
+                                  </div>
+                                  <figcaption class="mt-3 grid grid-cols-[auto_1fr] gap-x-3 text-sm leading-relaxed text-text-muted">
+                                    <span class="font-mono text-xs font-medium text-brand-600">
+                                      Fig. {f.n}
+                                    </span>
+                                    <span>{isFr ? f.captionFr : f.captionEn}</span>
+                                  </figcaption>
+                                </figure>
+                              ))}
+                            </div>
+                          )}
+                        </>
+                      )}
+
+                      {s.key === 'questions' && (
+                        <ol class="prose-r max-w-2xl space-y-3 text-text">
+                          {q.map((item, qi) => (
+                            <li class="grid grid-cols-[auto_1fr] gap-3">
+                              <span class="mt-0.5 font-mono text-sm text-text-subtle">{qi + 1}.</span>
+                              <span set:html={mdi(item)} />
+                            </li>
+                          ))}
+                        </ol>
+                      )}
+                    </div>
+                  </div>
+                ))}
+
+                {w.url && (
+                  <a
+                    href={w.url}
+                    target="_blank"
+                    rel="noopener"
+                    class="inline-flex text-sm font-medium text-brand-700 hover:underline"
+                  >
+                    {isFr ? 'Lire l’article' : 'Read the paper'}
+                  </a>
+                )}
+              </div>
             </div>
           </div>
         </section>
@@ -179,22 +329,3 @@ const labels = {
     padding-block: 0.25rem;
   }
 </style>
-
-<script>
-  import renderMathInElement from 'katex/contrib/auto-render';
-
-  const renderMath = () => {
-    document.querySelectorAll<HTMLElement>('.math-content').forEach((el) => {
-      renderMathInElement(el, {
-        delimiters: [
-          { left: '$$', right: '$$', display: true },
-          { left: '$', right: '$', display: false },
-        ],
-        throwOnError: false,
-      });
-    });
-  };
-
-  renderMath();
-  document.addEventListener('astro:page-load', renderMath);
-</script>

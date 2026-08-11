@@ -214,6 +214,25 @@ export function getEducation(): Education[] {
 
 /* ---------- Recherche (travaux) ---------- */
 
+/** Chiffre clé de la fiche technique (ex. « 31 stations »). */
+export interface ResearchMetric {
+  value: string;
+  labelFr: string;
+  labelEn: string;
+}
+
+/** Figure (carte, courbe) rattachée à une section du travail. */
+export interface ResearchFigure {
+  /** Chemin sous /public (ex. "/images/recherche/calage-variogramme.png"). */
+  src: string;
+  /** Section d'ancrage : la figure s'affiche sous cette section. */
+  section: 'method' | 'result';
+  captionFr: string;
+  captionEn: string;
+  /** Figure maîtresse : occupe toute la largeur de la planche. */
+  featured?: boolean;
+}
+
 export interface Research {
   titleFr: string;
   titleEn: string;
@@ -224,6 +243,10 @@ export interface Research {
   /** Avancement du chantier, une phrase. */
   progressFr: string;
   progressEn: string;
+  /** Chiffres clés (fiche technique). Optionnel. */
+  metrics?: ResearchMetric[];
+  /** Figures rattachées aux sections méthode / résultats. Optionnel. */
+  figures?: ResearchFigure[];
   /** Problématique / positionnement (markdown, peut contenir du LaTeX $...$). */
   problemFr: string;
   problemEn: string;

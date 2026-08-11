@@ -1,5 +1,6 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
+import OrcidIcon from '../ui/OrcidIcon.astro';
 import { SITE, orcidUrl } from '../../lib/site';
 import { getLangFromUrl, localizePath, useTranslations } from '../../lib/i18n';
 import { getProfile, getProjects, getPublications, statusLabels } from '../../lib/content';
@@ -13,7 +14,9 @@ const bio = (isFr ? profile.bioFr : profile.bioEn) || SITE.bio[lang];
 
 const projects = getProjects();
 const publications = getPublications();
-const publicationCount = publications.length;
+
+const prettyType = (type: string) =>
+  type.replace(/[-_]/g, ' ').replace(/^\w/, (character) => character.toUpperCase());
 
 // Réalisations = abouti (en ligne) ; Projets = en cours.
 const realisations = projects.filter((p) => p.status === 'live');
@@ -34,7 +37,7 @@ const pillars = [
     desc: isFr
       ? 'Des méthodes de qualification et de transfert de la donnée solaire (calage spatial, incertitude, dégénérescence de pixel), validées et publiées.'
       : 'Methods to qualify and transfer solar data (spatial calibration, uncertainty, pixel degeneracy), validated and published.',
-    href: localizePath('/publications', lang),
+    href: localizePath('/travaux', lang),
   },
   {
     n: '02',
@@ -122,6 +125,15 @@ const pillars = [
             >
               {t('about.pageTitle')}
             </a>
+            <a
+              href={orcidUrl}
+              target="_blank"
+              rel="me noopener"
+              class="inline-flex items-center gap-2 rounded-full bg-white/10 px-4 py-2.5 text-sm font-medium text-white/85 ring-1 ring-white/15 transition-colors hover:bg-white/15"
+            >
+              <OrcidIcon class="size-4" />
+              <span class="font-mono text-xs tracking-tight">{SITE.orcid}</span>
+            </a>
           </div>
         </div>
         <div class="relative min-h-[22rem] bg-surface-3">
@@ -186,6 +198,88 @@ const pillars = [
     </div>
   </section>
 
+  {/* Publications · cartes, synchronisées depuis ORCID (sans photos) */}
+  <section data-reveal class="border-t border-border">
+    <div class="shell py-12 sm:py-16">
+      <div class="flex flex-wrap items-end justify-between gap-4">
+        <div>
+          <h2 class="font-display text-2xl font-bold tracking-tight sm:text-3xl">{t('nav.publications')}</h2>
+          <p class="mt-3 max-w-2xl text-text-muted text-pretty">{t('publications.pageLede')}</p>
+        </div>
+        <a
+          href={orcidUrl}
+          target="_blank"
+          rel="me noopener"
+          class="inline-flex items-center gap-2 text-sm font-medium text-brand-700 underline-offset-4 hover:underline"
+        >
+          <OrcidIcon class="size-4" />
+          {t('publications.viewOrcid')}
+        </a>
+      </div>
+
+      {
+        publications.length === 0 ? (
+          <p class="mt-8 text-text-muted">{t('publications.empty')}</p>
+        ) : (
+          <div class="mt-8 grid gap-4 sm:grid-cols-2">
+            {publications.map((pub) => (
+              <article class="flex flex-col rounded-2xl border border-border p-6 transition-colors hover:border-brand-300">
+                <div class="flex items-center gap-2 text-xs">
+                  <span class="rounded bg-surface-2 px-2 py-0.5 font-medium text-text-muted">
+                    {prettyType(pub.type)}
+                  </span>
+                  {pub.year && <span class="font-mono text-text-subtle">{pub.year}</span>}
+                </div>
+                <h3 class="mt-3 font-display text-lg font-bold leading-snug tracking-tight text-pretty">
+                  {pub.url ? (
+                    <a
+                      href={pub.url}
+                      target="_blank"
+                      rel="noopener"
+                      class="underline-offset-4 hover:text-brand-700 hover:underline"
+                    >
+                      {pub.title}
+                    </a>
+                  ) : (
+                    pub.title
+                  )}
+                </h3>
+                {pub.venue && <p class="mt-2 text-sm text-text-muted text-pretty">{pub.venue}</p>}
+                {pub.authors.length > 0 && (
+                  <p class="mt-1 text-xs text-text-subtle text-pretty">{pub.authors.join(', ')}</p>
+                )}
+                {(pub.doi || pub.url) && (
+                  <div class="mt-auto flex flex-wrap items-center gap-x-4 gap-y-1 pt-4 text-sm">
+                    {pub.doi && (
+                      <a
+                        href={`https://doi.org/${pub.doi}`}
+                        target="_blank"
+                        rel="noopener"
+                        class="font-mono text-xs text-brand-700 hover:underline"
+                      >
+                        DOI
+                      </a>
+                    )}
+                    {pub.url && (
+                      <a
+                        href={pub.url}
+                        target="_blank"
+                        rel="noopener"
+                        class="font-medium text-brand-700 hover:underline"
+                      >
+                        {isFr ? 'Lire' : 'Read'}
+                      </a>
+                    )}
+                  </div>
+                )}
+              </article>
+            ))}
+          </div>
+        )
+      }
+    </div>
+  </section>
+
   {/* Réalisations & projets · aperçu en liste, détail sur /projets */}
   <section class="border-t border-border">
     <div class="shell py-12 sm:py-16">
@@ -225,30 +319,6 @@ const pillars = [
           ))
         }
       </ul>
-    </div>
-  </section>
-
-  {/* Publications / reconnaissance */}
-  <section data-reveal class="border-t border-border">
-    <div class="shell py-12 sm:py-16">
-      <h2 class="font-display text-2xl font-bold tracking-tight sm:text-3xl">{t('nav.publications')}</h2>
-      <p class="mt-4 max-w-2xl text-text-muted text-pretty">{t('publications.pageLede')}</p>
-      <div class="mt-8 flex flex-wrap items-center gap-4">
-        <a
-          href={localizePath('/publications', lang)}
-          class="inline-flex items-center gap-2 rounded-full bg-brand-700 px-5 py-2.5 text-sm font-semibold text-white transition-transform hover:-translate-y-0.5"
-        >
-          {isFr ? `${publicationCount} références` : `${publicationCount} references`}
-        </a>
-        <a
-          href={orcidUrl}
-          target="_blank"
-          rel="me noopener"
-          class="font-mono text-sm text-brand-700 underline-offset-4 hover:underline"
-        >
-          ORCID {SITE.orcid}
-        </a>
-      </div>
     </div>
   </section>
 

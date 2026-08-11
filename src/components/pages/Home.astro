@@ -15,7 +15,6 @@ const bio = (isFr ? profile.bioFr : profile.bioEn) || SITE.bio[lang];
 const projects = getProjects();
 const publications = getPublications();
 const publicationCount = publications.length;
-const peerReviewed = publications.filter((p) => p.type === 'journal-article').length;
 
 // Réalisations = abouti (en ligne) ; Projets = en cours.
 const realisations = projects.filter((p) => p.status === 'live');
@@ -28,15 +27,6 @@ const mission = isFr
 const missionLede = isFr
   ? 'Chercheur et ingénieur, je bâtis les données, méthodes et outils du solaire ouest-africain.'
   : 'A researcher and engineer building the data, methods and tools of West African solar.';
-
-const stats = [
-  {
-    value: String(projects.length),
-    label: isFr ? 'projets dans l’écosystème Kuma' : 'projects in the Kuma ecosystem',
-  },
-  { value: String(peerReviewed), label: isFr ? 'articles évalués par les pairs' : 'peer-reviewed articles' },
-  { value: '15', label: isFr ? 'sources de données qualifiées' : 'qualified data sources' },
-];
 
 const pillars = [
   {
@@ -138,7 +128,7 @@ const pillars = [
         <div class="relative min-h-[22rem] bg-surface-3">
           {
             profile.photo ? (
-              <img src={profile.photo} alt={SITE.name} class="absolute inset-0 size-full object-contain" />
+              <img src={profile.photo} alt={SITE.name} class="absolute inset-0 size-full object-cover object-top" />
             ) : (
               <div class="flex size-full flex-col items-center justify-center gap-2 bg-gradient-to-br from-surface-3 to-brand-100">
                 <span class="font-display text-6xl font-bold text-brand-800/40">S</span>
@@ -150,22 +140,6 @@ const pillars = [
           }
         </div>
       </div>
-
-      <dl class="mt-10 grid grid-cols-3 gap-6 border-t border-border pt-8">
-        {
-          stats.map((s) => (
-            <div>
-              <dt
-                class="font-display text-4xl font-bold tracking-tight text-brand-700 tabular-nums sm:text-5xl"
-                data-count={s.value}
-              >
-                0
-              </dt>
-              <dd class="mt-1.5 text-sm text-text-muted text-pretty">{s.label}</dd>
-            </div>
-          ))
-        }
-      </dl>
     </div>
   </section>
 
@@ -289,55 +263,4 @@ const pillars = [
     </div>
   </section>
 
-  <script>
-    const animateCount = (el: HTMLElement) => {
-      const target = parseInt(el.dataset.count || '0', 10);
-      if (Number.isNaN(target)) {
-        el.textContent = el.dataset.count || '';
-        return;
-      }
-      if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-        el.textContent = String(target);
-        return;
-      }
-      const duration = 1100;
-      let startTime = 0;
-      const tick = (now: number) => {
-        if (!startTime) startTime = now;
-        const t = Math.min((now - startTime) / duration, 1);
-        const eased = 1 - Math.pow(1 - t, 3);
-        el.textContent = String(Math.round(eased * target));
-        if (t < 1) requestAnimationFrame(tick);
-      };
-      requestAnimationFrame(tick);
-    };
-
-    const initCounters = () => {
-      const els = document.querySelectorAll<HTMLElement>('[data-count]:not([data-counted])');
-      if (!('IntersectionObserver' in window)) {
-        els.forEach((el) => {
-          el.textContent = el.dataset.count || '';
-          el.setAttribute('data-counted', '');
-        });
-        return;
-      }
-      const io = new IntersectionObserver(
-        (entries, obs) => {
-          entries.forEach((entry) => {
-            if (entry.isIntersecting) {
-              const el = entry.target as HTMLElement;
-              el.setAttribute('data-counted', '');
-              animateCount(el);
-              obs.unobserve(el);
-            }
-          });
-        },
-        { threshold: 0.6 },
-      );
-      els.forEach((el) => io.observe(el));
-    };
-
-    initCounters();
-    document.addEventListener('astro:page-load', initCounters);
-  </script>
 </BaseLayout>

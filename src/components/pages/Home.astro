@@ -1,9 +1,8 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
-import ProjectCard from '../projects/ProjectCard.astro';
 import { SITE, orcidUrl } from '../../lib/site';
 import { getLangFromUrl, localizePath, useTranslations } from '../../lib/i18n';
-import { getProfile, getProjects, getPublications } from '../../lib/content';
+import { getProfile, getProjects, getPublications, statusLabels } from '../../lib/content';
 
 const lang = getLangFromUrl(Astro.url);
 const t = useTranslations(lang);
@@ -187,36 +186,44 @@ const pillars = [
     </div>
   </section>
 
-  {/* Réalisations · abouti */}
+  {/* Réalisations & projets · aperçu en liste, détail sur /projets */}
   <section class="border-t border-border">
     <div class="shell py-12 sm:py-16">
-      <h2 class="font-display text-2xl font-bold tracking-tight sm:text-3xl">
-        {isFr ? 'Réalisations' : 'Achievements'}
-      </h2>
-      <p class="mt-3 max-w-2xl text-text-muted text-pretty">
-        {
-          isFr
-            ? 'Ce qui est livré, déployé ou publié, et vérifiable.'
-            : 'What is shipped, deployed or published, and verifiable.'
-        }
-      </p>
-      <ul class="mt-8 grid gap-x-6 gap-y-10 sm:grid-cols-2 lg:grid-cols-3">
-        {realisations.map((project, i) => <ProjectCard project={project} lang={lang} index={i} />)}
-      </ul>
-    </div>
-  </section>
+      <div class="flex flex-wrap items-end justify-between gap-4">
+        <h2 class="font-display text-2xl font-bold tracking-tight sm:text-3xl">
+          {isFr ? 'Réalisations & projets' : 'Work & projects'}
+        </h2>
+        <a
+          href={localizePath('/projets', lang)}
+          class="text-sm font-medium text-brand-700 hover:underline"
+        >
+          {isFr ? 'Tout voir en détail' : 'See it all in detail'}
+        </a>
+      </div>
 
-  {/* Projets · en cours */}
-  <section class="border-t border-border bg-surface-2/50">
-    <div class="shell py-12 sm:py-16">
-      <h2 class="font-display text-2xl font-bold tracking-tight sm:text-3xl">
-        {isFr ? 'Projets en cours' : 'In progress'}
-      </h2>
-      <p class="mt-3 max-w-2xl text-text-muted text-pretty">
-        {isFr ? 'Ce que je construis en ce moment.' : 'What I am building right now.'}
-      </p>
-      <ul class="mt-8 grid gap-x-6 gap-y-10 sm:grid-cols-2 lg:grid-cols-3">
-        {enCours.map((project, i) => <ProjectCard project={project} lang={lang} index={i} />)}
+      <ul class="mt-8 border-t border-border">
+        {
+          [...realisations, ...enCours].map((project) => (
+            <li class="border-b border-border">
+              <a
+                href={localizePath(`/projets/${project.slug}`, lang)}
+                class="group grid gap-1 py-5 sm:grid-cols-[1fr_auto] sm:items-baseline sm:gap-8"
+              >
+                <div>
+                  <span class="font-display text-lg font-bold tracking-tight group-hover:underline">
+                    {project.title}
+                  </span>
+                  <p class="mt-1 max-w-2xl text-sm text-text-muted text-pretty">
+                    {isFr ? project.summaryFr : project.summaryEn}
+                  </p>
+                </div>
+                <span class="rounded-full bg-surface-3 px-2.5 py-0.5 text-[0.65rem] font-medium tracking-wide text-text-subtle uppercase sm:justify-self-end">
+                  {statusLabels[project.status][lang]}
+                </span>
+              </a>
+            </li>
+          ))
+        }
       </ul>
     </div>
   </section>

@@ -1,0 +1,16 @@
+{
+  "title": "Kuma Solaire",
+  "kind": "tool",
+  "status": "wip",
+  "featured": false,
+  "order": 6,
+  "year": "2026",
+  "url": null,
+  "repo": null,
+  "summaryFr": "Application mobile de dimensionnement solaire, bâtie sur un moteur de calcul pur et vérifiable.",
+  "summaryEn": "Mobile solar-sizing app, built on a pure, verifiable calculation engine.",
+  "stack": ["Expo", "React Native", "TypeScript"],
+  "tags": ["Outil", "Mobile", "Solaire"],
+  "bodyFr": "Application mobile de dimensionnement solaire pour le terrain, construite en monorepo TypeScript autour d’un moteur de calcul pur (isolé de l’interface par une règle d’imports stricte) et d’une page de vérification. Pensée pour les réseaux mobiles et les usages de terrain en Afrique de l’Ouest.",
+  "bodyEn": "A mobile solar-sizing app for the field, built as a TypeScript monorepo around a pure calculation engine (isolated from the UI by a strict import rule) and a verification page. Designed for mobile networks and field use in West Africa."
+}

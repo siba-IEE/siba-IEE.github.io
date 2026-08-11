@@ -14,7 +14,8 @@ const lang = getLangFromUrl(Astro.url);
 const t = useTranslations(lang);
 
 const summary = lang === 'fr' ? project.summaryFr : project.summaryEn;
-const bodyHtml = project.body ? (marked.parse(project.body) as string) : '';
+const body = lang === 'fr' ? project.bodyFr : project.bodyEn;
+const bodyHtml = body ? (marked.parse(body) as string) : '';
 
 const jsonLd = {
   '@context': 'https://schema.org',

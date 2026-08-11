@@ -41,7 +41,8 @@ export interface ProjectRaw {
   summaryEn: string;
   stack: string[];
   tags: string[];
-  body: string;
+  bodyFr: string;
+  bodyEn: string;
 }
 
 export interface Project extends ProjectRaw {

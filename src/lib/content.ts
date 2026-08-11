@@ -211,3 +211,28 @@ export function getEducation(): Education[] {
     .map((mod) => mod.default)
     .sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
 }
+
+/* ---------- Recherche (travaux) ---------- */
+
+export interface Research {
+  titleFr: string;
+  titleEn: string;
+  summaryFr: string;
+  summaryEn: string;
+  bodyFr: string;
+  bodyEn: string;
+  status: ProjectStatus;
+  order: number;
+  /** Lien vers l'article / le DOI si publié. Optionnel. */
+  url?: string;
+}
+
+const researchModules = import.meta.glob<{ default: Research }>('../content/recherche/*.json', {
+  eager: true,
+});
+
+export function getResearch(): Research[] {
+  return Object.values(researchModules)
+    .map((mod) => mod.default)
+    .sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+}

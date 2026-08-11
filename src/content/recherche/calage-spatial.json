@@ -1,0 +1,10 @@
+{
+  "titleFr": "Calage spatial du rayonnement solaire",
+  "titleEn": "Spatial calibration of solar radiation",
+  "summaryFr": "La transférabilité d’un calage au sol est gouvernée par la similarité climatique, pas par la distance géographique.",
+  "summaryEn": "The transferability of a ground calibration is governed by climatic similarity, not by geographic distance.",
+  "bodyFr": "Comment étendre à un territoire le calage au sol du rayonnement solaire mesuré en une station ? Ce travail établit que la transférabilité d’un calage est gouvernée par la **similarité climatique** entre sites (Δclim), et non par leur distance géographique.\n\nLe résultat est validé sur 31 stations et 930 paires, avec deux produits satellitaires indépendants (CAMS, SARAH-3), puis cartographié à l’échelle de l’Afrique de l’Ouest (réseau ESMAP/WAPP, application à la Guinée). Le pipeline est déterministe, traçable jusqu’aux formules, et ré-audité en seconde main.",
+  "bodyEn": "How can a ground calibration of solar radiation measured at one station be extended to a whole territory? This work establishes that the transferability of a calibration is governed by **climatic similarity** between sites (Δclim), not by their geographic distance.\n\nThe result is validated on 31 stations and 930 pairs, with two independent satellite products (CAMS, SARAH-3), then mapped across West Africa (ESMAP/WAPP network, applied to Guinea). The pipeline is deterministic, traceable down to the formulas, and independently re-audited.",
+  "status": "wip",
+  "order": 1
+}

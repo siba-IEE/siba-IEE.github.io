@@ -1,0 +1,10 @@
+{
+  "titleFr": "Dégénérescence de pixel des produits solaires",
+  "titleEn": "Pixel degeneracy of solar products",
+  "summaryFr": "Nommer et quantifier le cas où un produit satellitaire attribue la même valeur à des sites réellement distincts.",
+  "summaryEn": "Naming and quantifying the case where a satellite product assigns the same value to genuinely distinct sites.",
+  "bodyFr": "Deux sites réels qui tombent dans la même maille reçoivent, à l’octet près, la même série d’un produit satellitaire · Kindia et Mamou, distantes de 92 km et de 378 m d’altitude, reçoivent des séries NASA POWER identiques. Ce travail nomme et quantifie ce phénomène, la **dégénérescence de pixel**, sur les 34 communes du référentiel guinéen et quatre produits (NASA POWER, ERA5, SARAH-3, CAMS).\n\nIl mesure quelle fraction de l’information spatiale un produit efface, et où. Là où NASA POWER · le plus mobilisé en préfaisabilité, et le plus grossier · confond des communes de climats et d’altitudes différents, une étude qui s’y fie fait un choix de modèle, pas une mesure. Cadre formel avec indicateurs de dégénérescence, diagnostic seul.",
+  "bodyEn": "Two real sites that fall into the same grid cell receive, to the byte, the same series from a satellite product · Kindia and Mamou, 92 km apart and 378 m in altitude, get identical NASA POWER series. This work names and quantifies that phenomenon, **pixel degeneracy**, across the 34 communes of the Guinean reference and four products (NASA POWER, ERA5, SARAH-3, CAMS).\n\nIt measures how much spatial information a product erases, and where. Where NASA POWER · the most used in pre-feasibility, and the coarsest · conflates communes of different climates and altitudes, a study relying on it makes a modelling choice, not a measurement. A formal framework with degeneracy indicators, diagnosis only.",
+  "status": "wip",
+  "order": 2
+}

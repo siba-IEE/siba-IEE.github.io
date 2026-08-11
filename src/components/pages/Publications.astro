@@ -1,0 +1,104 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { SITE, orcidUrl } from '../../lib/site';
+import { getLangFromUrl, useTranslations } from '../../lib/i18n';
+import { getPublications } from '../../lib/content';
+
+const lang = getLangFromUrl(Astro.url);
+const t = useTranslations(lang);
+const publications = getPublications();
+
+// Regroupe par année (décroissant), "Sans date" en dernier.
+const groups = new Map<string, typeof publications>();
+for (const publication of publications) {
+  const key = publication.year ?? '·';
+  if (!groups.has(key)) groups.set(key, []);
+  groups.get(key)!.push(publication);
+}
+const years = [...groups.keys()].sort((a, b) => Number(b) - Number(a));
+
+const prettyType = (type: string) =>
+  type.replace(/[-_]/g, ' ').replace(/^\w/, (character) => character.toUpperCase());
+
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'ItemList',
+  itemListElement: publications.map((publication, index) => ({
+    '@type': 'ListItem',
+    position: index + 1,
+    item: {
+      '@type': 'CreativeWork',
+      name: publication.title,
+      ...(publication.url ? { url: publication.url } : {}),
+      ...(publication.year ? { datePublished: publication.year } : {}),
+    },
+  })),
+};
+---
+
+<BaseLayout title={t('publications.pageTitle')} description={t('publications.pageLede')} jsonLd={jsonLd}>
+  <section class="shell py-16">
+    <h1 class="font-display text-3xl font-bold tracking-tight sm:text-4xl">
+      {t('publications.pageTitle')}
+    </h1>
+    <p class="mt-4 max-w-2xl text-lg text-text-muted text-pretty">{t('publications.pageLede')}</p>
+    <a
+      href={orcidUrl}
+      target="_blank"
+      rel="me noopener"
+      class="mt-4 inline-flex items-center gap-2 text-sm text-brand-700 underline-offset-4 hover:underline"
+    >
+      {t('publications.viewOrcid')} · {SITE.orcid}
+    </a>
+
+    {
+      publications.length === 0 ? (
+        <p class="mt-10 text-text-muted">{t('publications.empty')}</p>
+      ) : (
+        <div class="mt-10 space-y-10">
+          {years.map((year) => (
+            <div class="grid gap-4 sm:grid-cols-[6rem_1fr]">
+              <h2 class="font-display text-lg font-semibold text-text-subtle">{year}</h2>
+              <ul class="space-y-4">
+                {groups.get(year)!.map((publication) => (
+                  <li class="border-l-2 border-border pl-4">
+                    <h3 class="font-medium text-pretty">
+                      {publication.url ? (
+                        <a
+                          href={publication.url}
+                          target="_blank"
+                          rel="noopener"
+                          class="underline-offset-4 hover:text-brand-700 hover:underline"
+                        >
+                          {publication.title}
+                        </a>
+                      ) : (
+                        publication.title
+                      )}
+                    </h3>
+                    <div class="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-text-muted">
+                      {publication.venue && <span>{publication.venue}</span>}
+                      <span class="rounded bg-surface-2 px-2 py-0.5 text-xs">
+                        {prettyType(publication.type)}
+                      </span>
+                      {publication.doi && (
+                        <a
+                          href={`https://doi.org/${publication.doi}`}
+                          target="_blank"
+                          rel="noopener"
+                          class="font-mono text-xs text-brand-700 hover:underline"
+                        >
+                          DOI
+                        </a>
+                      )}
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
+        </div>
+      )
+    }
+  </section>
+</BaseLayout>

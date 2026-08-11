@@ -1,7 +1,7 @@
 ---
 import type { Project } from '../../lib/content';
 import { kindLabels, statusLabels } from '../../lib/content';
-import type { Lang } from '../../lib/i18n';
+import { localizePath, type Lang } from '../../lib/i18n';
 
 interface Props {
   project: Project;
@@ -25,7 +25,7 @@ const summary = lang === 'fr' ? project.summaryFr : project.summaryEn;
     </span>
   </div>
   <h3 class="mt-3 font-display text-lg font-semibold">
-    <a href={`/projets/${project.slug}`} class="after:absolute after:inset-0">{project.title}</a>
+    <a href={localizePath(`/projets/${project.slug}`, lang)} class="after:absolute after:inset-0">{project.title}</a>
   </h3>
   <p class="mt-2 flex-1 text-sm text-text-muted text-pretty">{summary}</p>
   <ul class="mt-4 flex flex-wrap gap-1.5">

@@ -1,16 +1,26 @@
 ---
 import ThemeToggle from '../ui/ThemeToggle.astro';
-import { getLangFromUrl, useTranslations, type UiKey } from '../../lib/i18n';
+import {
+  getLangFromUrl,
+  useTranslations,
+  localizePath,
+  alternatePath,
+  type UiKey,
+  type Lang,
+} from '../../lib/i18n';
 
 const lang = getLangFromUrl(Astro.url);
 const t = useTranslations(lang);
 const path = Astro.url.pathname.replace(/\/$/, '') || '/';
 
+const other: Lang = lang === 'fr' ? 'en' : 'fr';
+const switchHref = alternatePath(Astro.url.pathname, other);
+
 const items: { key: UiKey; href: string }[] = [
-  { key: 'nav.about', href: '/a-propos' },
-  { key: 'nav.projects', href: '/projets' },
-  { key: 'nav.publications', href: '/publications' },
-  { key: 'nav.contact', href: '/contact' },
+  { key: 'nav.about', href: localizePath('/a-propos', lang) },
+  { key: 'nav.projects', href: localizePath('/projets', lang) },
+  { key: 'nav.publications', href: localizePath('/publications', lang) },
+  { key: 'nav.contact', href: localizePath('/contact', lang) },
 ];
 
 const isActive = (href: string) => path === href || path.startsWith(`${href}/`);
@@ -20,7 +30,7 @@ const isActive = (href: string) => path === href || path.startsWith(`${href}/`);
   class="sticky top-0 z-40 border-b border-border/70 bg-surface/80 backdrop-blur-md supports-[backdrop-filter]:bg-surface/60"
 >
   <nav class="shell flex h-16 items-center justify-between gap-4" aria-label="Principale">
-    <a href="/" class="group inline-flex items-center gap-2.5" aria-label="Accueil">
+    <a href={localizePath('/', lang)} class="group inline-flex items-center gap-2.5" aria-label="Accueil">
       <span
         class="grid size-9 place-items-center rounded-lg bg-brand-600 font-display text-sm font-bold text-white shadow-sm transition-transform group-hover:-rotate-6"
       >
@@ -47,6 +57,14 @@ const isActive = (href: string) => path === href || path.startsWith(`${href}/`);
     </div>
 
     <div class="flex items-center gap-2">
+      <a
+        href={switchHref}
+        hreflang={other}
+        aria-label={t('lang.switch')}
+        class="inline-flex h-9 items-center justify-center rounded-lg border border-border px-3 text-sm font-medium text-text-muted transition-colors hover:bg-surface-2 hover:text-text"
+      >
+        {other.toUpperCase()}
+      </a>
       <ThemeToggle />
       <button
         type="button"

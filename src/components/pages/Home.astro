@@ -1,0 +1,151 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import ProjectCard from '../projects/ProjectCard.astro';
+import { SITE, orcidUrl } from '../../lib/site';
+import { getLangFromUrl, localizePath, useTranslations } from '../../lib/i18n';
+import { getProfile, getProjects, getPublications } from '../../lib/content';
+
+const lang = getLangFromUrl(Astro.url);
+const t = useTranslations(lang);
+
+const profile = getProfile();
+const role = (lang === 'fr' ? profile.roleFr : profile.roleEn) || SITE.role[lang];
+const tagline = (lang === 'fr' ? profile.taglineFr : profile.taglineEn) || SITE.tagline[lang];
+const bio = (lang === 'fr' ? profile.bioFr : profile.bioEn) || SITE.bio[lang];
+
+const projects = getProjects();
+const publicationCount = getPublications().length;
+---
+
+<BaseLayout description={tagline}>
+  {/* Hero */}
+  <section class="relative overflow-hidden">
+    <div
+      class="pointer-events-none absolute inset-0 -z-10 opacity-70 [mask-image:radial-gradient(70%_60%_at_50%_0%,black,transparent)]"
+      aria-hidden="true"
+    >
+      <div
+        class="absolute -top-24 left-1/2 size-[42rem] -translate-x-1/2 rounded-full bg-brand-400/25 blur-3xl"
+      >
+      </div>
+    </div>
+
+    <div class="shell pt-20 pb-16 sm:pt-28">
+      <p
+        class="inline-flex items-center gap-2 rounded-full border border-border bg-surface-2 px-3 py-1 text-xs font-medium text-text-muted"
+      >
+        <span class="relative flex size-2">
+          <span class="absolute inline-flex size-full animate-ping rounded-full bg-brand-500 opacity-75"
+          ></span>
+          <span class="relative inline-flex size-2 rounded-full bg-brand-500"></span>
+        </span>
+        {t('hero.availability')}
+      </p>
+
+      <h1 class="mt-6 font-display text-4xl font-bold tracking-tight text-balance sm:text-6xl">
+        {SITE.name}
+      </h1>
+      <p class="mt-3 text-lg font-medium text-brand-700 sm:text-xl">{role}</p>
+      <p class="mt-5 max-w-2xl text-lg text-text-muted text-pretty">{tagline}</p>
+
+      <div class="mt-8 flex flex-wrap items-center gap-3">
+        <a
+          href={localizePath('/projets', lang)}
+          class="inline-flex items-center gap-2 rounded-lg bg-brand-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-brand-700"
+        >
+          {t('hero.cta.projects')}
+        </a>
+        <a
+          href={localizePath('/contact', lang)}
+          class="inline-flex items-center gap-2 rounded-lg border border-border px-5 py-2.5 text-sm font-semibold text-text transition-colors hover:bg-surface-2"
+        >
+          {t('hero.cta.contact')}
+        </a>
+      </div>
+
+      <div class="mt-8 flex flex-wrap items-center gap-x-5 gap-y-2 text-sm text-text-muted">
+        <a href={SITE.github} target="_blank" rel="me noopener" class="hover:text-text">GitHub</a>
+        <a href={SITE.linkedin} target="_blank" rel="me noopener" class="hover:text-text">LinkedIn</a>
+        <a href={orcidUrl} target="_blank" rel="me noopener" class="hover:text-text">ORCID</a>
+      </div>
+    </div>
+  </section>
+
+  {/* À propos */}
+  <section id="a-propos" class="scroll-mt-20 border-t border-border/60">
+    <div class="shell py-16">
+      <h2 class="font-display text-2xl font-bold tracking-tight">{t('nav.about')}</h2>
+      <p class="mt-5 max-w-3xl text-lg leading-relaxed text-text-muted text-pretty">{bio}</p>
+      <a
+        href={localizePath('/a-propos', lang)}
+        class="mt-6 inline-flex items-center gap-1 text-sm font-medium text-brand-700 hover:underline"
+      >
+        {t('about.pageTitle')}
+        <span aria-hidden="true">&rarr;</span>
+      </a>
+    </div>
+  </section>
+
+  {/* Projets */}
+  <section id="projets" class="scroll-mt-20 border-t border-border/60 bg-surface-2/40">
+    <div class="shell py-16">
+      <div class="flex flex-wrap items-end justify-between gap-4">
+        <div class="max-w-2xl">
+          <h2 class="font-display text-2xl font-bold tracking-tight">
+            {t('section.projects.title')}
+          </h2>
+          <p class="mt-3 text-text-muted">{t('section.projects.lede')}</p>
+        </div>
+        <a
+          href={localizePath('/projets', lang)}
+          class="text-sm font-medium text-brand-700 hover:underline"
+        >
+          {t('section.projects.all')}
+          <span aria-hidden="true">&rarr;</span>
+        </a>
+      </div>
+
+      <ul class="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+        {projects.map((project) => <ProjectCard project={project} lang={lang} />)}
+      </ul>
+    </div>
+  </section>
+
+  {/* Publications */}
+  <section id="publications" class="scroll-mt-20 border-t border-border/60">
+    <div class="shell py-16">
+      <h2 class="font-display text-2xl font-bold tracking-tight">{t('nav.publications')}</h2>
+      <p class="mt-4 max-w-2xl text-text-muted">{t('publications.pageLede')}</p>
+      <div class="mt-6 flex flex-wrap items-center gap-4">
+        <a
+          href={localizePath('/publications', lang)}
+          class="inline-flex items-center gap-2 rounded-lg border border-border px-4 py-2 text-sm font-semibold transition-colors hover:bg-surface-2"
+        >
+          {t('nav.publications')} ({publicationCount})
+        </a>
+        <a
+          href={orcidUrl}
+          target="_blank"
+          rel="me noopener"
+          class="text-sm text-brand-700 underline-offset-4 hover:underline"
+        >
+          ORCID {SITE.orcid}
+        </a>
+      </div>
+    </div>
+  </section>
+
+  {/* Contact */}
+  <section id="contact" class="scroll-mt-20 border-t border-border/60 bg-surface-2/40">
+    <div class="shell py-16">
+      <h2 class="font-display text-2xl font-bold tracking-tight">{t('nav.contact')}</h2>
+      <p class="mt-4 max-w-2xl text-text-muted">{t('contact.pageLede')}</p>
+      <a
+        href={`mailto:${SITE.email}`}
+        class="mt-5 inline-flex items-center gap-2 rounded-lg bg-brand-600 px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-brand-700"
+      >
+        {SITE.email}
+      </a>
+    </div>
+  </section>
+</BaseLayout>

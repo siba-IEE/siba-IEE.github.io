@@ -112,3 +112,18 @@ export function localizePath(path: string, lang: Lang): string {
   const clean = path.startsWith('/') ? path : `/${path}`;
   return lang === defaultLang ? clean : `/${lang}${clean === '/' ? '' : clean}`;
 }
+
+/** Retire le préfixe de locale d'un chemin (renvoie le chemin « français »). */
+export function unlocalizePath(pathname: string): string {
+  const clean = pathname.replace(/\/$/, '') || '/';
+  const stripped = clean.replace(/^\/en(?=\/|$)/, '') || '/';
+  return stripped;
+}
+
+/**
+ * Traduit le chemin courant vers l'autre langue, en préservant la page.
+ * Sert au sélecteur de langue (ex. /projets ⇄ /en/projets).
+ */
+export function alternatePath(pathname: string, target: Lang): string {
+  return localizePath(unlocalizePath(pathname), target);
+}

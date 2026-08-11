@@ -1,6 +1,6 @@
 ---
-import ProjectDetail from '../../components/pages/ProjectDetail.astro';
-import { getProjects } from '../../lib/content';
+import ProjectDetail from '../../../components/pages/ProjectDetail.astro';
+import { getProjects } from '../../../lib/content';
 
 export function getStaticPaths() {
   return getProjects().map((project) => ({

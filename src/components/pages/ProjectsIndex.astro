@@ -1,80 +1,179 @@
 ---
+import { marked } from 'marked';
 import BaseLayout from '../../layouts/BaseLayout.astro';
-import PageHeader from '../chrome/PageHeader.astro';
-import ProjectCard from '../projects/ProjectCard.astro';
-import { getLangFromUrl, useTranslations } from '../../lib/i18n';
-import { getProjects, kindLabels, type ProjectKind } from '../../lib/content';
+import { SITE } from '../../lib/site';
+import { getLangFromUrl, useTranslations, localizePath } from '../../lib/i18n';
+import { getProjects, statusLabels, type ProjectKind } from '../../lib/content';
 
 const lang = getLangFromUrl(Astro.url);
 const t = useTranslations(lang);
+const isFr = lang === 'fr';
 const projects = getProjects();
 
-const allKinds: ProjectKind[] = ['platform', 'data', 'tool'];
-const presentKinds = allKinds.filter((kind) => projects.some((project) => project.kind === kind));
+// Domaines (regroupement par nature) et leur intro.
+const domainOrder: ProjectKind[] = ['data', 'platform', 'tool'];
+const domainMeta: Record<ProjectKind, { fr: string; en: string; introFr: string; introEn: string }> = {
+  data: {
+    fr: 'Données & recherche',
+    en: 'Data & research',
+    introFr:
+      'Les référentiels et l’infrastructure qui rendent la donnée solaire ouest-africaine mesurable, qualifiée et traçable.',
+    introEn:
+      'The references and infrastructure that make West African solar data measurable, qualified and traceable.',
+  },
+  platform: {
+    fr: 'Plateformes',
+    en: 'Platforms',
+    introFr: 'Les portails qui rendent la donnée, la méthode et les outils accessibles en libre accès.',
+    introEn: 'The portals that make the data, methods and tools openly accessible.',
+  },
+  tool: {
+    fr: 'Outils & logiciels',
+    en: 'Tools & software',
+    introFr: 'Les logiciels qui mettent la donnée qualifiée entre les mains des praticiens, du terrain au bureau d’études.',
+    introEn: 'The software that puts qualified data in practitioners’ hands, from the field to the design office.',
+  },
+};
+
+const domains = domainOrder
+  .map((kind) => ({ kind, meta: domainMeta[kind], items: projects.filter((p) => p.kind === kind) }))
+  .filter((d) => d.items.length > 0);
 ---
 
 <BaseLayout title={t('projects.pageTitle')} description={t('projects.pageLede')}>
-  <PageHeader title={t('projects.pageTitle')} lede={t('projects.pageLede')} />
-
-  <section class="shell py-12 sm:py-14">
-    <div class="flex flex-wrap gap-2" role="group" aria-label={t('projects.pageTitle')}>
-      <button type="button" class="filter-btn is-active" data-filter="all">
-        {t('projects.filterAll')}
-      </button>
-      {
-        presentKinds.map((kind) => (
-          <button type="button" class="filter-btn" data-filter={kind}>
-            {kindLabels[kind][lang]}
-          </button>
-        ))
-      }
+  {/* En-tête encre : titre + accroche + liens vers les domaines */}
+  <section class="relative overflow-hidden bg-brand-900 text-white">
+    <div
+      class="pointer-events-none absolute inset-0 opacity-[0.1] [background-image:linear-gradient(rgba(255,255,255,0.7)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.7)_1px,transparent_1px)] [background-size:44px_44px] [mask-image:radial-gradient(80%_80%_at_20%_0%,black,transparent)]"
+      aria-hidden="true"
+    >
     </div>
-
-    <ul id="project-grid" class="mt-8 grid gap-x-6 gap-y-10 sm:grid-cols-2 lg:grid-cols-3">
-      {projects.map((project, i) => <ProjectCard project={project} lang={lang} index={i} />)}
-    </ul>
+    <div class="shell relative grid gap-10 py-16 lg:grid-cols-[1fr_1fr] lg:gap-16">
+      <div>
+        <h1 class="font-display text-3xl font-bold tracking-tight text-balance sm:text-4xl">
+          {t('projects.pageTitle')}
+        </h1>
+        <p class="mt-4 max-w-md text-white/75 text-pretty">{t('projects.pageLede')}</p>
+      </div>
+      <div class="lg:pt-2">
+        <p class="text-xs font-medium tracking-[0.15em] text-white/50 uppercase">
+          {isFr ? 'Explorer' : 'Explore'}
+        </p>
+        <div class="mt-4 grid gap-3 sm:grid-cols-2">
+          {
+            domains.map((d) => (
+              <a
+                href={`#${d.kind}`}
+                class="rounded-full bg-white/10 px-4 py-2.5 text-sm font-medium ring-1 ring-white/15 transition-colors hover:bg-white/20"
+              >
+                {isFr ? d.meta.fr : d.meta.en}
+              </a>
+            ))
+          }
+        </div>
+      </div>
+    </div>
   </section>
+
+  {/* Domaines en sections à fonds alternés, chacun détaillé en accordéons */}
+  {
+    domains.map((d, di) => (
+      <section id={d.kind} class:list={['scroll-mt-20', di % 2 === 0 ? 'bg-surface-2/50' : '']}>
+        <div class="shell border-t border-border py-14 sm:py-16">
+          <div data-reveal class="max-w-2xl">
+            <h2 class="font-display text-2xl font-bold tracking-tight sm:text-3xl">
+              {isFr ? d.meta.fr : d.meta.en}
+            </h2>
+            <p class="mt-3 text-text-muted text-pretty">{isFr ? d.meta.introFr : d.meta.introEn}</p>
+          </div>
+
+          <div class="mt-8">
+            {d.items.map((project) => {
+              const summary = isFr ? project.summaryFr : project.summaryEn;
+              const body = isFr ? project.bodyFr : project.bodyEn;
+              const bodyHtml = body ? (marked.parse(body) as string) : '';
+              return (
+                <details class="acc group border-t border-border py-6">
+                  <summary class="flex cursor-pointer list-none items-start justify-between gap-6">
+                    <div>
+                      <div class="flex items-center gap-3">
+                        <h3 class="font-display text-lg font-bold tracking-tight sm:text-xl">
+                          {project.title}
+                        </h3>
+                        <span class="rounded-full bg-surface-3 px-2 py-0.5 text-[0.65rem] font-medium tracking-wide text-text-subtle uppercase">
+                          {statusLabels[project.status][lang]}
+                        </span>
+                      </div>
+                      <p class="mt-1.5 max-w-2xl text-sm text-text-muted text-pretty">{summary}</p>
+                    </div>
+                    <span
+                      class="mt-1 shrink-0 text-2xl leading-none text-text-subtle transition-transform duration-300 group-open:rotate-45"
+                      aria-hidden="true"
+                    >
+                      +
+                    </span>
+                  </summary>
+
+                  <div class="acc-body max-w-3xl pt-4 text-text-muted" set:html={bodyHtml} />
+
+                  <div class="mt-4 flex flex-wrap items-center gap-x-5 gap-y-2 text-sm">
+                    {project.url && (
+                      <a
+                        href={project.url}
+                        target="_blank"
+                        rel="me noopener"
+                        class="font-medium text-brand-700 hover:underline"
+                      >
+                        {isFr ? 'Visiter' : 'Visit'}
+                      </a>
+                    )}
+                    {project.repo && (
+                      <a
+                        href={project.repo}
+                        target="_blank"
+                        rel="noopener"
+                        class="font-medium text-brand-700 hover:underline"
+                      >
+                        {isFr ? 'Code' : 'Code'}
+                      </a>
+                    )}
+                    <a
+                      href={localizePath(`/projets/${project.slug}`, lang)}
+                      class="text-text-subtle hover:text-text hover:underline"
+                    >
+                      {isFr ? 'Fiche complète' : 'Full page'}
+                    </a>
+                    <span class="font-mono text-xs text-text-subtle">{project.stack.slice(0, 5).join(' · ')}</span>
+                  </div>
+                </details>
+              );
+            })}
+          </div>
+        </div>
+      </section>
+    ))
+  }
 </BaseLayout>
 
 <style>
-  .filter-btn {
-    border: 1px solid var(--border);
-    border-radius: 9999px;
-    padding: 0.3rem 0.85rem;
-    font-size: 0.8125rem;
-    color: var(--text-muted);
-    background: transparent;
-    cursor: pointer;
-    transition:
-      background-color 0.15s,
-      color 0.15s,
-      border-color 0.15s;
+  .acc > summary::-webkit-details-marker {
+    display: none;
   }
 
-  .filter-btn:hover {
-    background: var(--surface-2);
-    color: var(--text);
+  .acc-body :global(p) {
+    margin-block: 0.6rem;
+    line-height: 1.7;
   }
 
-  .filter-btn.is-active {
-    background: var(--color-brand-700);
-    border-color: transparent;
-    color: #fff;
+  .acc-body :global(a) {
+    color: var(--color-brand-700);
+    text-underline-offset: 3px;
+    text-decoration: underline;
+  }
+
+  .acc-body :global(ul) {
+    margin-block: 0.6rem;
+    padding-left: 1.2rem;
+    list-style: disc;
   }
 </style>
-
-<script>
-  // Délégation sur document : le filtre survit aux transitions de page (View Transitions).
-  document.addEventListener('click', (event) => {
-    const button = (event.target as HTMLElement | null)?.closest<HTMLButtonElement>('.filter-btn');
-    if (!button) return;
-    const grid = document.getElementById('project-grid');
-    document
-      .querySelectorAll<HTMLButtonElement>('.filter-btn')
-      .forEach((other) => other.classList.toggle('is-active', other === button));
-    const filter = button.dataset.filter ?? 'all';
-    grid?.querySelectorAll<HTMLLIElement>(':scope > li').forEach((item) => {
-      item.classList.toggle('hidden', !(filter === 'all' || item.dataset.kind === filter));
-    });
-  });
-</script>

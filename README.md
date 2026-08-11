@@ -40,6 +40,16 @@ Portfolio personnel de Siba Kalivogui, ingénieur en efficacité énergétique e
 - `src/pages` : pages du site
 - `scripts` : génération de snapshots et garde-fous
 
+## Tests
+
+- **Unitaires (Vitest)**, dans `tests/unit` : fonctions pures du routing i18n (`localizePath`, `unlocalizePath`, `alternatePath`), complétude du dictionnaire FR/EN, tri et déduplication des publications, données structurées SEO. Lancer avec `pnpm test`.
+- **Bout en bout (Playwright)** : `tests/e2e` vérifie le comportement bilingue réel (sélecteur de langue, préfixe `/en`, balises `hreflang`). Les navigateurs ne sont pas installés par défaut :
+
+```
+npx playwright install chromium
+pnpm e2e
+```
+
 ## Contenu
 
 Le contenu éditorial (profil, projets, publications) est géré via Keystatic. Chaque édition écrit un fichier versionné par Git.

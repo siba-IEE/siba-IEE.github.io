@@ -8,6 +8,11 @@ dist/
 .vercel/
 .wrangler/
 
+# tests
+test-results/
+playwright-report/
+.playwright/
+
 # logs
 *.log
 npm-debug.log*

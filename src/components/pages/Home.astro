@@ -151,12 +151,17 @@ const pillars = [
         </div>
       </div>
 
-      <dl class="mt-6 grid grid-cols-3 gap-px overflow-hidden rounded-xl border border-border bg-border">
+      <dl class="mt-10 grid grid-cols-3 gap-6 border-t border-border pt-8">
         {
           stats.map((s) => (
-            <div class="bg-surface p-4 text-center">
-              <dt class="font-display text-2xl font-bold text-brand-700">{s.value}</dt>
-              <dd class="mt-1 text-xs text-text-muted text-pretty">{s.label}</dd>
+            <div>
+              <dt
+                class="font-display text-4xl font-bold tracking-tight text-brand-700 tabular-nums sm:text-5xl"
+                data-count={s.value}
+              >
+                0
+              </dt>
+              <dd class="mt-1.5 text-sm text-text-muted text-pretty">{s.label}</dd>
             </div>
           ))
         }
@@ -283,4 +288,56 @@ const pillars = [
       </a>
     </div>
   </section>
+
+  <script>
+    const animateCount = (el: HTMLElement) => {
+      const target = parseInt(el.dataset.count || '0', 10);
+      if (Number.isNaN(target)) {
+        el.textContent = el.dataset.count || '';
+        return;
+      }
+      if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+        el.textContent = String(target);
+        return;
+      }
+      const duration = 1100;
+      let startTime = 0;
+      const tick = (now: number) => {
+        if (!startTime) startTime = now;
+        const t = Math.min((now - startTime) / duration, 1);
+        const eased = 1 - Math.pow(1 - t, 3);
+        el.textContent = String(Math.round(eased * target));
+        if (t < 1) requestAnimationFrame(tick);
+      };
+      requestAnimationFrame(tick);
+    };
+
+    const initCounters = () => {
+      const els = document.querySelectorAll<HTMLElement>('[data-count]:not([data-counted])');
+      if (!('IntersectionObserver' in window)) {
+        els.forEach((el) => {
+          el.textContent = el.dataset.count || '';
+          el.setAttribute('data-counted', '');
+        });
+        return;
+      }
+      const io = new IntersectionObserver(
+        (entries, obs) => {
+          entries.forEach((entry) => {
+            if (entry.isIntersecting) {
+              const el = entry.target as HTMLElement;
+              el.setAttribute('data-counted', '');
+              animateCount(el);
+              obs.unobserve(el);
+            }
+          });
+        },
+        { threshold: 0.6 },
+      );
+      els.forEach((el) => io.observe(el));
+    };
+
+    initCounters();
+    document.addEventListener('astro:page-load', initCounters);
+  </script>
 </BaseLayout>

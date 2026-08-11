@@ -1,5 +1,8 @@
 ---
 import ThemeToggle from '../ui/ThemeToggle.astro';
+import OrcidIcon from '../ui/OrcidIcon.astro';
+import LinkedInIcon from '../ui/LinkedInIcon.astro';
+import { SITE, orcidUrl } from '../../lib/site';
 import {
   getLangFromUrl,
   useTranslations,
@@ -56,7 +59,26 @@ const isActive = (href: string) => path === href || path.startsWith(`${href}/`);
       }
     </div>
 
-    <div class="flex items-center gap-2">
+    <div class="flex items-center gap-1.5">
+      <a
+        href={orcidUrl}
+        target="_blank"
+        rel="me noopener"
+        aria-label="ORCID"
+        class="hidden size-9 items-center justify-center rounded-lg transition-colors hover:bg-surface-2 md:inline-flex"
+      >
+        <OrcidIcon class="size-5" />
+      </a>
+      <a
+        href={SITE.linkedin}
+        target="_blank"
+        rel="me noopener"
+        aria-label="LinkedIn"
+        class="hidden size-9 items-center justify-center rounded-lg transition-colors hover:bg-surface-2 md:inline-flex"
+      >
+        <LinkedInIcon class="size-5" />
+      </a>
+      <span class="mx-0.5 hidden h-5 w-px bg-border md:block" aria-hidden="true"></span>
       <a
         href={switchHref}
         hreflang={other}

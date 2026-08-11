@@ -29,8 +29,8 @@ const enCours = homeProjects.filter((p) => p.status !== 'live');
 
 // Accroche de mission (à affiner librement).
 const mission = isFr
-  ? 'Fiabiliser la donnée solaire de l’Afrique de l’Ouest.'
-  : 'Making West Africa’s solar data trustworthy.';
+  ? 'Fiabiliser le solaire ouest-africain'
+  : 'Making West African solar trustworthy';
 const missionLede = isFr
   ? 'Chercheur et ingénieur, je bâtis les données, méthodes et outils du solaire ouest-africain.'
   : 'A researcher and engineer building the data, methods and tools of West African solar.';
@@ -88,10 +88,10 @@ const pillars = [
         {t('hero.availability')}
       </p>
 
-      <h1 class="mt-5 max-w-3xl font-display text-4xl font-bold tracking-tight text-balance text-white sm:text-5xl">
+      <h1 class="mt-5 font-display text-4xl font-bold tracking-tight text-balance text-white sm:text-5xl lg:whitespace-nowrap">
         {mission}
       </h1>
-      <p class="mt-4 max-w-xl text-base text-white/75 text-pretty">{missionLede}</p>
+      <p class="mt-4 max-w-2xl text-base text-white/75 text-pretty">{missionLede}</p>
 
       <div class="mt-8 flex flex-wrap items-center gap-4">
         <a

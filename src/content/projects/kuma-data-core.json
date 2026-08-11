@@ -5,7 +5,7 @@
   "featured": true,
   "order": 1,
   "year": "2026",
-  "url": null,
+  "url": "https://zenodo.org/records/21117159",
   "repo": null,
   "summaryFr": "Infrastructure de données propriétaire de l’écosystème Kuma : schéma générique unique, API privée et données solaires qualifiées.",
   "summaryEn": "Proprietary data backbone of the Kuma ecosystem: a single generic schema, a private API and qualified solar data.",

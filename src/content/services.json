@@ -1,0 +1,67 @@
+{
+  "services": [
+    {
+      "category": "research",
+      "nameFr": "Revue de littérature",
+      "nameEn": "Literature review",
+      "descFr": "État de l’art rigoureux et sourcé sur une question technique ou scientifique : cadrage, synthèse critique et bibliographie exploitable.",
+      "descEn": "A rigorous, sourced state of the art on a technical or scientific question: framing, critical synthesis and a usable bibliography.",
+      "priceFrom": "1 000 $",
+      "order": 1
+    },
+    {
+      "category": "dev",
+      "nameFr": "Site web",
+      "nameEn": "Website",
+      "descFr": "Site vitrine ou éditorial, bilingue, rapide et accessible, pensé pour durer et se référencer.",
+      "descEn": "A showcase or editorial website, bilingual, fast and accessible, built to last and to rank.",
+      "priceFrom": "2 500 €",
+      "order": 2
+    },
+    {
+      "category": "dev",
+      "nameFr": "Tableau de bord",
+      "nameEn": "Dashboard",
+      "descFr": "Tableau de bord de données connecté à vos sources : indicateurs, suivi et visualisations claires pour décider.",
+      "descEn": "A data dashboard wired to your sources: indicators, monitoring and clear visualisations to decide.",
+      "priceFrom": "4 000 €",
+      "order": 3
+    },
+    {
+      "category": "dev",
+      "nameFr": "Application métier",
+      "nameEn": "Business application",
+      "descFr": "Application desktop ou web sur mesure pour un besoin métier précis : calcul, gestion, dimensionnement, automatisation.",
+      "descEn": "A custom desktop or web application for a precise business need: computation, management, sizing, automation.",
+      "priceFrom": "8 000 €",
+      "order": 4
+    },
+    {
+      "category": "platforms",
+      "nameFr": "Forum & communauté",
+      "nameEn": "Forum & community",
+      "descFr": "Déploiement d’un forum Discourse : hébergement, thème, catégories, modération et authentification unique (SSO).",
+      "descEn": "A Discourse forum deployment: hosting, theme, categories, moderation and single sign-on (SSO).",
+      "priceFrom": "5 000 €",
+      "order": 5
+    },
+    {
+      "category": "platforms",
+      "nameFr": "Plateforme de formation",
+      "nameEn": "Learning platform",
+      "descFr": "Plateforme de cours en ligne type FUN MOOC : Open edX déployé avec Tutor, thème, contenus, intégrations et certificats.",
+      "descEn": "An online course platform, FUN MOOC style: Open edX deployed with Tutor, theme, content, integrations and certificates.",
+      "priceFrom": "15 000 €",
+      "order": 6
+    },
+    {
+      "category": "platforms",
+      "nameFr": "Portail de données",
+      "nameEn": "Data portal",
+      "descFr": "Portail ou plateforme de données à l’échelle : ingestion, qualification, API, cartographie et accès contrôlé.",
+      "descEn": "A data portal or platform at scale: ingestion, qualification, API, mapping and controlled access.",
+      "priceFrom": "30 000 €",
+      "order": 7
+    }
+  ]
+}

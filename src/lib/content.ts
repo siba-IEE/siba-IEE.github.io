@@ -6,6 +6,7 @@
 import type { Lang } from './i18n';
 import orcidSnapshot from '../data/snapshots/orcid.json';
 import profileData from '../content/profile/index.json';
+import servicesData from '../content/services.json';
 
 /* ---------- Profil ---------- */
 
@@ -278,3 +279,28 @@ export function getResearch(): Research[] {
     .map((mod) => mod.default)
     .sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
 }
+
+/* ---------- Services (offre + tarifs) ---------- */
+
+export type ServiceCategory = 'research' | 'dev' | 'platforms';
+
+export interface Service {
+  category: ServiceCategory;
+  nameFr: string;
+  nameEn: string;
+  descFr: string;
+  descEn: string;
+  /** Tarif de départ, texte libre (ex. « 1 000 $ », « 30 000 € », « sur devis »). */
+  priceFrom: string;
+  order: number;
+}
+
+export function getServices(): Service[] {
+  return (servicesData.services as Service[]).slice().sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+}
+
+export const serviceCategoryLabels: Record<ServiceCategory, Record<Lang, string>> = {
+  research: { fr: 'Recherche & science', en: 'Research & science' },
+  dev: { fr: 'Développement', en: 'Software' },
+  platforms: { fr: 'Données & plateformes', en: 'Data & platforms' },
+};

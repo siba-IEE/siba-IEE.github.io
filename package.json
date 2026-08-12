@@ -42,6 +42,7 @@
     "@tailwindcss/vite": "^4.3.3",
     "astro": "^7.2.0",
     "katex": "^0.18.4",
+    "marked": "^18.0.9",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
     "tailwindcss": "^4.3.3",

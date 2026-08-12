@@ -55,7 +55,6 @@ export const ui = {
     'contact.pageLede': 'Une idée de projet, ou juste une question ? La boîte mail est ouverte.',
     'contact.email': 'Écrire un email',
     'footer.rights': 'Tous droits réservés',
-    'footer.builtWith': 'Conçu avec Astro et Tailwind',
   },
   en: {
     'nav.about': 'About',
@@ -93,7 +92,6 @@ export const ui = {
     'contact.pageLede': 'An idea for a project, or just a question? My inbox is open.',
     'contact.email': 'Send an email',
     'footer.rights': 'All rights reserved',
-    'footer.builtWith': 'Built with Astro and Tailwind',
   },
 } as const;
 

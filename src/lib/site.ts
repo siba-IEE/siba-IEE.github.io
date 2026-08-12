@@ -32,8 +32,8 @@ export const SITE = {
   githubUser: 'siba-IEE',
   github: 'https://github.com/siba-IEE',
   linkedin: 'https://www.linkedin.com/in/siba-kalivogui/',
-  // URL de production, surchargée par PUBLIC_SITE_URL au build.
-  url: 'https://siba-portfolio.pages.dev',
+  // URL de production (GitHub Pages).
+  url: 'https://siba-iee.github.io',
 } as const;
 
 export const orcidUrl = `https://orcid.org/${SITE.orcid}`;

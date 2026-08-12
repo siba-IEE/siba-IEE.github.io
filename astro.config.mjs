@@ -7,8 +7,8 @@ import mdx from '@astrojs/mdx';
 import sitemap from '@astrojs/sitemap';
 import tailwindcss from '@tailwindcss/vite';
 
-// URL du site, surchargée en production (Cloudflare) via PUBLIC_SITE_URL.
-const SITE = process.env.PUBLIC_SITE_URL ?? 'https://siba-portfolio.pages.dev';
+// URL du site (GitHub Pages, siba-iee.github.io), surchargeable via PUBLIC_SITE_URL.
+const SITE = process.env.PUBLIC_SITE_URL ?? 'https://siba-iee.github.io';
 
 // L'adapter Cloudflare ouvre un workerd local, inutile en dev (site statique) et
 // bloquant sous Vitest. On ne l'active qu'au build et en preview.

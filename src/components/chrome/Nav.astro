@@ -30,81 +30,91 @@ const items: { key: UiKey; href: string }[] = [
 const isActive = (href: string) => path === href || path.startsWith(`${href}/`);
 ---
 
+{/* En haut : encre (épouse l'en-tête de page). Au scroll : surface + flou. */}
 <header
-  class="sticky top-0 z-40 border-b border-border/70 bg-surface/80 backdrop-blur-md supports-[backdrop-filter]:bg-surface/60"
+  id="site-nav"
+  data-scrolled="false"
+  class="group/nav sticky top-0 z-40 border-b border-transparent bg-brand-900 transition-colors duration-300 data-[scrolled=true]:border-border/70 data-[scrolled=true]:bg-surface/85 supports-[backdrop-filter]:data-[scrolled=true]:bg-surface/70 data-[scrolled=true]:backdrop-blur-md"
 >
   <nav class="shell flex h-16 items-center gap-4" aria-label="Principale">
-    <a href={localizePath('/', lang)} class="group inline-flex items-center gap-2.5" aria-label="Accueil">
+    <a href={localizePath('/', lang)} class="inline-flex items-center" aria-label="Accueil">
       <span
-        class="grid size-9 place-items-center rounded-lg bg-brand-700 font-display text-sm font-bold text-white transition-transform group-hover:-rotate-6"
+        class="font-display text-lg font-bold tracking-tight text-white transition-colors group-data-[scrolled=true]/nav:text-text sm:text-xl"
       >
-        S
+        Siba Kalivogui
       </span>
-      <span class="font-display text-sm font-semibold tracking-tight">Siba Kalivogui</span>
     </a>
 
-    <div class="hidden items-center gap-1 md:ml-auto md:flex">
-      {
-        items.map((item) => (
-          <a
-            href={item.href}
-            aria-current={isActive(item.href) ? 'page' : undefined}
-            class:list={[
-              'rounded-lg px-3 py-2 text-sm transition-colors hover:bg-surface-2',
-              isActive(item.href) ? 'font-medium text-text' : 'text-text-muted hover:text-text',
-            ]}
-          >
-            {t(item.key)}
-          </a>
-        ))
-      }
-    </div>
+    <div class="ml-auto flex items-center gap-2 sm:gap-3">
+      <div class="hidden items-center gap-1 md:flex">
+        {
+          items.map((item) => (
+            <a
+              href={item.href}
+              aria-current={isActive(item.href) ? 'page' : undefined}
+              class:list={[
+                'rounded-lg px-3 py-2 text-sm transition-colors',
+                isActive(item.href)
+                  ? 'font-medium text-white group-data-[scrolled=true]/nav:text-text'
+                  : 'text-white/70 hover:text-white group-data-[scrolled=true]/nav:text-text-muted group-data-[scrolled=true]/nav:hover:text-text',
+              ]}
+            >
+              {t(item.key)}
+            </a>
+          ))
+        }
+      </div>
 
-    <div class="flex items-center gap-1.5 max-md:ml-auto">
-      <a
-        href={orcidUrl}
-        target="_blank"
-        rel="me noopener"
-        aria-label="ORCID"
-        class="hidden size-9 items-center justify-center rounded-lg transition-colors hover:bg-surface-2 md:inline-flex"
-      >
-        <OrcidIcon class="size-5" />
-      </a>
-      <a
-        href={SITE.linkedin}
-        target="_blank"
-        rel="me noopener"
-        aria-label="LinkedIn"
-        class="hidden size-9 items-center justify-center rounded-lg transition-colors hover:bg-surface-2 md:inline-flex"
-      >
-        <LinkedInIcon class="size-5" />
-      </a>
-      <span class="mx-0.5 hidden h-5 w-px bg-border md:block" aria-hidden="true"></span>
-      <a
-        href={switchHref}
-        hreflang={other}
-        aria-label={t('lang.switch')}
-        class="inline-flex h-9 items-center justify-center rounded-lg border border-border px-3 text-sm font-medium text-text-muted transition-colors hover:bg-surface-2 hover:text-text"
-      >
-        {other.toUpperCase()}
-      </a>
-      <ThemeToggle />
-      <button
-        type="button"
-        id="nav-toggle"
-        class="inline-flex size-9 items-center justify-center rounded-lg border border-border text-text-muted hover:bg-surface-2 md:hidden"
-        aria-label="Menu"
-        aria-expanded="false"
-        aria-controls="nav-mobile"
-      >
-        <svg class="size-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true">
-          <path d="M4 7h16M4 12h16M4 17h16" stroke-linecap="round"></path>
-        </svg>
-      </button>
+      <div class="flex items-center gap-1.5">
+        <a
+          href={orcidUrl}
+          target="_blank"
+          rel="me noopener"
+          aria-label="ORCID"
+          class="hidden size-9 items-center justify-center rounded-lg transition-colors hover:bg-white/10 group-data-[scrolled=true]/nav:hover:bg-surface-2 md:inline-flex"
+        >
+          <OrcidIcon class="size-5" />
+        </a>
+        <a
+          href={SITE.linkedin}
+          target="_blank"
+          rel="me noopener"
+          aria-label="LinkedIn"
+          class="hidden size-9 items-center justify-center rounded-lg transition-colors hover:bg-white/10 group-data-[scrolled=true]/nav:hover:bg-surface-2 md:inline-flex"
+        >
+          <LinkedInIcon class="size-5" />
+        </a>
+        <span
+          class="mx-0.5 hidden h-5 w-px bg-white/25 transition-colors group-data-[scrolled=true]/nav:bg-border md:block"
+          aria-hidden="true"
+        >
+        </span>
+        <a
+          href={switchHref}
+          hreflang={other}
+          aria-label={t('lang.switch')}
+          class="inline-flex h-9 items-center justify-center rounded-lg border border-white/25 px-3 text-sm font-medium text-white/90 transition-colors hover:bg-white/10 group-data-[scrolled=true]/nav:border-border group-data-[scrolled=true]/nav:text-text-muted group-data-[scrolled=true]/nav:hover:bg-surface-2 group-data-[scrolled=true]/nav:hover:text-text"
+        >
+          {other.toUpperCase()}
+        </a>
+        <ThemeToggle />
+        <button
+          type="button"
+          id="nav-toggle"
+          class="inline-flex size-9 items-center justify-center rounded-lg border border-white/25 text-white transition-colors hover:bg-white/10 group-data-[scrolled=true]/nav:border-border group-data-[scrolled=true]/nav:text-text-muted group-data-[scrolled=true]/nav:hover:bg-surface-2 md:hidden"
+          aria-label="Menu"
+          aria-expanded="false"
+          aria-controls="nav-mobile"
+        >
+          <svg class="size-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true">
+            <path d="M4 7h16M4 12h16M4 17h16" stroke-linecap="round"></path>
+          </svg>
+        </button>
+      </div>
     </div>
   </nav>
 
-  <div id="nav-mobile" class="hidden border-t border-border px-5 py-2 md:hidden">
+  <div id="nav-mobile" class="hidden border-t border-border bg-surface px-5 py-2 md:hidden">
     {
       items.map((item) => (
         <a
@@ -123,7 +133,20 @@ const isActive = (href: string) => path === href || path.startsWith(`${href}/`);
 </header>
 
 <script>
-  // Délégation sur document : le menu survit aux transitions de page (View Transitions).
+  // État de la nav : encre en haut, surface dès qu'on scrolle (ou menu ouvert).
+  // Délégation sur document : survit aux transitions de page (View Transitions).
+  const evalNav = () => {
+    const nav = document.getElementById('site-nav');
+    if (!nav) return;
+    const menuOpen = document.getElementById('nav-mobile')?.classList.contains('hidden') === false;
+    nav.dataset.scrolled = String(menuOpen || window.scrollY > 16);
+  };
+
+  evalNav();
+  window.addEventListener('scroll', evalNav, { passive: true });
+  document.addEventListener('astro:page-load', evalNav);
+  document.addEventListener('astro:after-swap', evalNav);
+
   document.addEventListener('click', (event) => {
     const target = event.target as HTMLElement | null;
     const toggle = target?.closest('#nav-toggle');
@@ -131,11 +154,13 @@ const isActive = (href: string) => path === href || path.startsWith(`${href}/`);
       const panel = document.getElementById('nav-mobile');
       const open = panel?.classList.toggle('hidden') === false;
       toggle.setAttribute('aria-expanded', String(open));
+      evalNav();
       return;
     }
     if (target?.closest('#nav-mobile a')) {
       document.getElementById('nav-mobile')?.classList.add('hidden');
       document.getElementById('nav-toggle')?.setAttribute('aria-expanded', 'false');
+      evalNav();
     }
   });
 </script>

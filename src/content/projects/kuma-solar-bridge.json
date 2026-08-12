@@ -7,11 +7,11 @@
   "year": "2026",
   "url": null,
   "repo": null,
-  "summaryFr": "Application de bureau pour bureaux d’études PV : convertit les exports de dataloggers solaires multi-fabricants.",
-  "summaryEn": "Desktop app for PV design offices: converts multi-vendor solar datalogger exports.",
+  "summaryFr": "Un logiciel de bureau pour les bureaux d’études PV : il convertit les exports de dataloggers solaires, tous fabricants confondus.",
+  "summaryEn": "A desktop app for PV design offices: it converts solar datalogger exports, whatever the vendor.",
   "stack": ["Tauri", "React", "TypeScript"],
   "tags": ["Outil", "Solaire", "Desktop"],
   "image": "/images/kuma-solar-bridge.jpeg",
-  "bodyFr": "Premier outil dérivé de l’écosystème et premier client de l’API Kuma Data Core. Application de bureau destinée aux bureaux d’études photovoltaïques d’Afrique de l’Ouest, Solar Bridge convertit les fichiers CSV de dataloggers de différents fabricants vers un format exploitable, en matérialisant les principes éditoriaux de Kuma : transparence, sobriété d’usage, cohérence des libellés.",
-  "bodyEn": "The ecosystem’s first derived tool and the first client of the Kuma Data Core API. A desktop application for West African photovoltaic design offices, Solar Bridge converts datalogger CSV files from various vendors into a usable format, embodying Kuma’s editorial principles: transparency, restraint, consistent labelling."
+  "bodyFr": "Le premier outil issu de l’écosystème, et le premier à consommer l’API Kuma Data Core. Solar Bridge s’adresse aux bureaux d’études photovoltaïques d’Afrique de l’Ouest : il prend les CSV produits par des dataloggers de marques différentes et les remet dans un format exploitable. Au passage, il applique les partis pris de Kuma : de la transparence, une interface qui ne s’impose pas, des libellés cohérents d’un bout à l’autre.",
+  "bodyEn": "The first tool to come out of the ecosystem, and the first to consume the Kuma Data Core API. Solar Bridge is aimed at West African photovoltaic design offices: it takes the CSV files produced by dataloggers of different makes and puts them back into a workable format. Along the way it carries Kuma’s choices: transparency, an interface that stays out of the way, labels that stay consistent throughout."
 }

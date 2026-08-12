@@ -7,11 +7,11 @@
   "year": "2026",
   "url": null,
   "repo": null,
-  "summaryFr": "Application mobile de dimensionnement solaire, bâtie sur un moteur de calcul pur et vérifiable.",
-  "summaryEn": "Mobile solar-sizing app, built on a pure, verifiable calculation engine.",
+  "summaryFr": "Une appli mobile de dimensionnement solaire, posée sur un moteur de calcul pur et vérifiable.",
+  "summaryEn": "A mobile solar-sizing app, sitting on a pure, verifiable calculation engine.",
   "stack": ["Expo", "React Native", "TypeScript"],
   "tags": ["Outil", "Mobile", "Solaire"],
   "image": "/images/kuma-solaire-app.png",
-  "bodyFr": "Application mobile de dimensionnement solaire pour le terrain, construite en monorepo TypeScript autour d’un moteur de calcul pur (isolé de l’interface par une règle d’imports stricte) et d’une page de vérification. Pensée pour les réseaux mobiles et les usages de terrain en Afrique de l’Ouest.",
-  "bodyEn": "A mobile solar-sizing app for the field, built as a TypeScript monorepo around a pure calculation engine (isolated from the UI by a strict import rule) and a verification page. Designed for mobile networks and field use in West Africa."
+  "bodyFr": "Une appli mobile pour dimensionner du solaire directement sur le terrain. Elle est bâtie en monorepo TypeScript autour d’un moteur de calcul pur, tenu à l’écart de l’interface par une règle d’imports stricte et doublé d’une page de vérification. Pensée pour les réseaux capricieux et le travail de terrain en Afrique de l’Ouest.",
+  "bodyEn": "A mobile app for sizing solar right there in the field. It’s built as a TypeScript monorepo around a pure calculation engine, kept away from the interface by a strict import rule and backed by a verification page. Designed for patchy networks and fieldwork in West Africa."
 }

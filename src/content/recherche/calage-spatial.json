@@ -5,15 +5,15 @@
   "summaryEn": "The transferability of a ground calibration is governed by climatic similarity between sites, not by geographic distance.",
   "status": "wip",
   "order": 1,
-  "progressFr": "Cadrage clos, exécution E0–E6 complète, trois améliorations livrées (loi enrichie à l'aérosol, réplication SARAH-3, carte Afrique de l'Ouest) ; stabilité des poids et rédaction de l'article en cours.",
-  "progressEn": "Framing closed, E0–E6 execution complete, three improvements delivered (aerosol-enriched law, SARAH-3 replication, West Africa map); weight stability and article write-up in progress.",
+  "progressFr": "Analyse complète sur les 31 stations et les 930 paires, confirmée sur deux produits satellitaires indépendants (CAMS puis SARAH-3), puis cartographiée sur l'Afrique de l'Ouest. Rédaction de l'article en cours.",
+  "progressEn": "Analysis complete over the 31 stations and 930 pairs, confirmed on two independent satellite products (CAMS then SARAH-3), then mapped across West Africa. Article write-up in progress.",
   "pullFr": "L'intuition dit *la distance*. Les mesures disent *le climat*.",
   "pullEn": "Intuition says *distance*. The measurements say *climate*.",
   "metrics": [
     { "value": "31", "labelFr": "stations ESMAP/WAPP", "labelEn": "ESMAP/WAPP stations" },
     { "value": "930", "labelFr": "paires source-cible", "labelEn": "source-target pairs" },
     { "value": "2", "labelFr": "produits indépendants", "labelEn": "independent products" },
-    { "value": "+0.53", "labelFr": "résidu vs Δclim (GHI)", "labelEn": "residual vs Δclim (GHI)" }
+    { "value": "+0.32", "labelFr": "résidu vs Δclim (GHI)", "labelEn": "residual vs Δclim (GHI)" }
   ],
   "figures": [
     {
@@ -60,18 +60,20 @@
     "The transfer residual grows with $\\Delta_{\\mathrm{clim}}$, and this law is stable from one independent satellite product to another.",
     "Accounting for aerosol (AOD) enriches the law and reduces the transfer residual."
   ],
-  "methodFr": "Réseau de 31 stations, soit 930 paires source–cible ordonnées. Pour chaque paire, on cale le produit sur la source (correction de biais par appariement de quantiles), on applique ce calage à la cible, et on mesure le résidu. On confronte alors le résidu à deux distances concurrentes : la distance géographique et la distance climatique $\\Delta_{\\mathrm{clim}}$.\n\nOutils : loi résidu–$\\Delta_{\\mathrm{clim}}$, variogramme (climat contre distance), validation croisée station-par-station (LOSO), loi enrichie à l'aérosol par pondération LOO, puis réplication sur un second produit indépendant (SARAH-3 après CAMS) et cartographie sur une grille Afrique de l'Ouest au 1°. Pipeline déterministe, tracé jusqu'aux formules, et ré-audité en seconde main.",
-  "methodEn": "A network of 31 stations, i.e. 930 ordered source–target pairs. For each pair, the product is calibrated on the source (bias correction by quantile matching), the calibration is applied to the target, and the residual is measured. The residual is then compared against two competing distances: geographic distance and climatic distance $\\Delta_{\\mathrm{clim}}$.\n\nTools: residual–$\\Delta_{\\mathrm{clim}}$ law, variogram (climate vs distance), leave-one-station-out cross-validation (LOSO), aerosol-enriched law by LOO weighting, then replication on a second independent product (SARAH-3 after CAMS) and mapping on a 1° West Africa grid. Deterministic pipeline, traced to the formulas, and independently re-audited.",
-  "resultsFr": "La transférabilité est bien gouvernée par $\\Delta_{\\mathrm{clim}}$ et non par la distance : le variogramme climatique structure le résidu là où la distance géographique ne le fait pas. Le résultat est validé sur 31 stations et 930 paires, avec deux produits satellitaires indépendants (CAMS, SARAH-3), puis cartographié à l'échelle de l'Afrique de l'Ouest, avec application au réseau ESMAP/WAPP, cas de la Guinée, avec une ancre terrain à Kankan (campagne ESMAP/WAPP).\n\nTrois améliorations ont été livrées après l'exécution de base : la loi enrichie à l'aérosol, la réplication indépendante sur SARAH-3, et la carte Afrique de l'Ouest (océan masqué, zoom Guinée).",
-  "resultsEn": "Transferability is indeed governed by $\\Delta_{\\mathrm{clim}}$ and not by distance: the climatic variogram structures the residual where geographic distance does not. The result is validated on 31 stations and 930 pairs, with two independent satellite products (CAMS, SARAH-3), then mapped across West Africa, applied to the ESMAP/WAPP network, the Guinea case, with a field anchor at Kankan (ESMAP/WAPP campaign).\n\nThree improvements were delivered after the baseline run: the aerosol-enriched law, the independent SARAH-3 replication, and the West Africa map (ocean masked, Guinea zoom).",
+  "methodFr": "Réseau de 31 stations, soit 930 paires source–cible ordonnées. Pour chaque paire, on cale le produit sur la source (correction de biais par appariement de quantiles), on applique ce calage à la cible, et on mesure le résidu. On confronte alors le résidu à deux distances concurrentes : la distance géographique et la distance climatique $\\Delta_{\\mathrm{clim}}$.\n\nLes outils : une relation entre résidu et $\\Delta_{\\mathrm{clim}}$, un variogramme qui oppose climat et distance, une validation croisée station par station, une version enrichie qui tient compte de l'aérosol, puis la réplication sur un second produit indépendant (SARAH-3 après CAMS) et une cartographie de l'Afrique de l'Ouest au pas de 1°. Le tout suit un pipeline déterministe, tracé jusqu'aux formules et revérifié de façon indépendante.",
+  "methodEn": "A network of 31 stations, i.e. 930 ordered source–target pairs. For each pair, the product is calibrated on the source (bias correction by quantile matching), the calibration is applied to the target, and the residual is measured. The residual is then compared against two competing distances: geographic distance and climatic distance $\\Delta_{\\mathrm{clim}}$.\n\nTools: a relationship between residual and $\\Delta_{\\mathrm{clim}}$, a variogram pitting climate against distance, station-by-station cross-validation, an aerosol-aware enriched version, then replication on a second independent product (SARAH-3 after CAMS) and a map of West Africa at 1° resolution. The whole thing follows a deterministic pipeline, traced to the formulas and independently checked.",
+  "resultsFr": "La transférabilité est bien gouvernée par $\\Delta_{\\mathrm{clim}}$ et non par la distance : le variogramme climatique structure le résidu là où la distance géographique ne le fait pas. Le résultat est validé sur 31 stations et 930 paires, avec deux produits satellitaires indépendants (CAMS, SARAH-3), puis cartographié à l'échelle de l'Afrique de l'Ouest, avec application au réseau ESMAP/WAPP, cas de la Guinée, avec une ancre terrain à Kankan (campagne ESMAP/WAPP).\n\nLa méthode qui en découle, CLIM3, cale chaque site sur ses trois meilleurs analogues climatiques, pondérés par l'inverse de $\\Delta_{\\mathrm{clim}}$. Sur la Guinée, elle ramène le résidu attendu à 2,4 % en GHI et 6,9 % en DNI. Quelques stations bien réparties entre zones climatiques suffisent alors à couvrir un territoire, à condition de valider localement les zones peu instrumentées.",
+  "resultsEn": "Transferability is indeed governed by $\\Delta_{\\mathrm{clim}}$ and not by distance: the climatic variogram structures the residual where geographic distance does not. The result is validated on 31 stations and 930 pairs, with two independent satellite products (CAMS, SARAH-3), then mapped across West Africa, applied to the ESMAP/WAPP network, the Guinea case, with a field anchor at Kankan (ESMAP/WAPP campaign).\n\nThe resulting method, CLIM3, calibrates each site on its three best climatic analogues, weighted by the inverse of $\\Delta_{\\mathrm{clim}}$. On Guinea, it brings the expected residual down to 2.4% for GHI and 6.9% for DNI. A few stations well spread across climate zones are then enough to cover a territory, provided the least-instrumented areas are validated locally.",
   "questionsFr": [
-    "Établir la stabilité des poids $\\Delta_{\\mathrm{clim}}$ et une analyse de sensibilité, pour un résultat défendable en tout point.",
-    "Recoupement indépendant (MiniTab) des estimations avant rédaction de l'article.",
-    "Option d'une campagne de mesure ou d'un second réseau pour renforcer la validation."
+    "Le DNI reste la composante la moins bien contrainte : sa tendance climatique existe, mais dépend encore du produit satellitaire. Elle demande une preuve aussi solide que pour le GHI.",
+    "Le résultat porte sur une fenêtre de deux ans, un seul réseau et une seule région : au-delà, la généralité reste à montrer.",
+    "La carte est validée station par station, sans mesure de terrain à l'intérieur d'une maille : une campagne courte en zone cible la confirmerait.",
+    "L'épaisseur optique de l'aérosol vient d'une réanalyse grossière ; un produit plus fin affinerait $\\Delta_{\\mathrm{clim}}$."
   ],
   "questionsEn": [
-    "Establish the stability of the $\\Delta_{\\mathrm{clim}}$ weights and a sensitivity analysis, for a result defensible at every point.",
-    "Independent cross-check (MiniTab) of the estimates before writing the article.",
-    "Option of a measurement campaign or a second network to strengthen the validation."
+    "DNI stays the least well-constrained component: its climatic trend is there, but still depends on the satellite product. It needs evidence as strong as GHI's.",
+    "The result rests on a two-year window, a single network and a single region: beyond that, generality remains to be shown.",
+    "The map is validated station by station, with no ground measurement inside a cell: a short campaign in a target zone would confirm it.",
+    "The aerosol optical depth comes from a coarse reanalysis; a finer product would sharpen $\\Delta_{\\mathrm{clim}}$."
   ]
 }

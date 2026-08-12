@@ -7,11 +7,11 @@
   "year": "2026",
   "url": "https://zenodo.org/records/21051755",
   "repo": null,
-  "summaryFr": "Référentiel de données solaires de la Guinée : données ouvertes, qualifiées et citables (DOI).",
-  "summaryEn": "Solar-data reference for Guinea: open, qualified and citable data (DOI).",
+  "summaryFr": "Le référentiel de données solaires de la Guinée : de la donnée ouverte et qualifiée, citable par un DOI.",
+  "summaryEn": "Guinea’s solar-data reference: open, qualified data you can cite by DOI.",
   "stack": ["Zenodo", "CC BY 4.0", "DOI"],
   "tags": ["Données", "Recherche", "Solaire"],
   "image": "/images/rds-guinee.png",
-  "bodyFr": "Un référentiel, pas un entrepôt : l’autorité vient de la qualification de chaque donnée, pas du volume. Chaque mesure porte un passeport (source, méthode, niveau de confiance, période de validité, incertitude), et le référentiel dit ce qu’il sait et ce qu’il ne sait pas.\n\nLa Guinée est le pays pilote ; la donnée y est ouverte (CC BY 4.0) et publiée en instantanés versionnés, chacun archivé sur Zenodo avec un DOI persistant. Les niveaux de confiance vont du satellitaire et de la réanalyse (B) au mesuré-sol validé (A), avec un premier point terrain à Kankan.",
-  "bodyEn": "A reference, not a warehouse: authority comes from qualifying each datum, not from sheer volume. Every measurement carries a passport (source, method, confidence level, validity window, uncertainty), and the reference states what it knows and what it does not.\n\nGuinea is the pilot country; its data is open (CC BY 4.0) and released as versioned snapshots, each archived on Zenodo with a persistent DOI. Confidence levels range from satellite and reanalysis (B) to validated ground measurement (A), with a first field point in Kankan."
+  "bodyFr": "Ici, c’est un référentiel, pas un entrepôt : ce qui compte, c’est la qualité de chaque donnée bien plus que leur nombre. Chaque mesure voyage avec son passeport (source, méthode, niveau de confiance, période de validité, incertitude), et le référentiel assume de dire ce qu’il sait comme ce qu’il ignore.\n\nLa Guinée sert de pays pilote. La donnée y est ouverte (CC BY 4.0), publiée par instantanés versionnés, chacun archivé sur Zenodo avec un DOI qui ne bouge plus. Les niveaux de confiance s’échelonnent du satellite et de la réanalyse (B) jusqu’au mesuré-sol validé (A), avec un premier point terrain à Kankan.",
+  "bodyEn": "This is a reference, not a warehouse: what counts is the quality of each datum far more than their number. Every measurement travels with its passport (source, method, confidence level, validity window, uncertainty), and the reference is willing to say what it knows as much as what it doesn’t.\n\nGuinea serves as the pilot country. The data there is open (CC BY 4.0), released as versioned snapshots, each archived on Zenodo with a DOI that never moves. Confidence levels run from satellite and reanalysis (B) up to validated ground measurement (A), with a first field point in Kankan."
 }

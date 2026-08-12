@@ -32,40 +32,40 @@ const mission = isFr
   ? 'Fiabiliser le solaire ouest-africain'
   : 'Making West African solar trustworthy';
 const missionLede = isFr
-  ? 'Chercheur et ingénieur, je bâtis les données, méthodes et outils du solaire ouest-africain.'
-  : 'A researcher and engineer building the data, methods and tools of West African solar.';
+  ? 'Chercheur et ingénieur, je m’attaque au maillon faible du solaire ouest-africain : la fiabilité de la donnée.'
+  : 'A researcher and engineer going after the weak link of West African solar: whether you can trust the data.';
 
 const pillars = [
   {
     n: '01',
     title: isFr ? 'Recherche & méthode' : 'Research & method',
     desc: isFr
-      ? 'Des méthodes de qualification et de transfert de la donnée solaire (calage spatial, incertitude, dégénérescence de pixel), validées et publiées.'
-      : 'Methods to qualify and transfer solar data (spatial calibration, uncertainty, pixel degeneracy), validated and published.',
+      ? 'Qualifier et transférer une donnée solaire, méthode à l’appui : calage spatial, incertitude, dégénérescence de pixel. Validé, puis publié.'
+      : 'Qualifying and transferring solar data, with a method behind it: spatial calibration, uncertainty, pixel degeneracy. Validated, then published.',
     href: localizePath('/travaux', lang),
   },
   {
     n: '02',
     title: isFr ? 'Infrastructure de données' : 'Data infrastructure',
     desc: isFr
-      ? 'Kuma Data Core : l’ossature qui ingère, qualifie (A/B/C) et sert des millions de points de données solaires.'
-      : 'Kuma Data Core: the backbone that ingests, qualifies (A/B/C) and serves millions of solar data points.',
+      ? 'Kuma Data Core : la brique qui ingère la donnée solaire, lui attribue un niveau de confiance (A/B/C) et la sert par millions de points.'
+      : 'Kuma Data Core: the piece that ingests solar data, gives it a confidence level (A/B/C) and serves it by the million.',
     href: `${localizePath('/projets', lang)}#kuma-data-core`,
   },
   {
     n: '03',
     title: isFr ? 'Outils & logiciels' : 'Tools & software',
     desc: isFr
-      ? 'Des applications de dimensionnement, desktop et mobile, qui mettent la donnée qualifiée entre les mains des bureaux d’études.'
-      : 'Desktop and mobile sizing apps that put qualified data in the hands of design offices.',
+      ? 'Des applis de dimensionnement, sur bureau et sur mobile, pour que la donnée qualifiée arrive vraiment jusqu’aux bureaux d’études.'
+      : 'Sizing apps, desktop and mobile, so the qualified data actually reaches the design offices that need it.',
     href: localizePath('/projets', lang),
   },
   {
     n: '04',
     title: isFr ? 'Ingénierie énergétique' : 'Energy engineering',
     desc: isFr
-      ? 'Audit et optimisation de la performance énergétique des bâtiments : audits, DPE, bilans carbone, simulation.'
-      : 'Auditing and optimising building energy performance: audits, EPC, carbon assessments, simulation.',
+      ? 'Mon métier d’origine : la performance énergétique des bâtiments. Audits, DPE, bilans carbone, simulation thermique.'
+      : 'My original trade: building energy performance. Audits, EPC ratings, carbon assessments, thermal simulation.',
     href: localizePath('/a-propos', lang),
   },
 ];
@@ -169,8 +169,8 @@ const pillars = [
           <p class="mt-4 max-w-sm text-white/70 text-pretty">
             {
               isFr
-                ? 'Quatre facettes d’un même fil : rendre l’énergie solaire mesurable, fiable et outillée.'
-                : 'Four facets of one thread: making solar energy measurable, reliable and equipped.'
+                ? 'Ça part toujours du même endroit : rendre la ressource solaire mesurable, puis en faire quelque chose d’utile.'
+                : 'It always starts in the same place: making the solar resource measurable, then turning it into something useful.'
             }
           </p>
         </div>

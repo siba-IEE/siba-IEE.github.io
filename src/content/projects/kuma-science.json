@@ -7,11 +7,11 @@
   "year": "2026",
   "url": "https://kumascience.com",
   "repo": null,
-  "summaryFr": "Plateforme éditoriale et scientifique d’ingénierie énergétique pour l’Afrique francophone.",
-  "summaryEn": "Editorial and scientific platform for energy engineering across French-speaking Africa.",
+  "summaryFr": "Le portail public de Kuma Science : de l’ingénierie énergétique en accès libre pour l’Afrique francophone, données et outils compris.",
+  "summaryEn": "The public portal of Kuma Science: open-access energy engineering for French-speaking Africa, data and tools included.",
   "stack": ["Astro", "Supabase", "Cloudflare", "TypeScript"],
   "tags": ["Plateforme", "Énergie", "Afrique francophone"],
   "image": "/images/kuma-science.png",
-  "bodyFr": "Le portail public de l’écosystème Kuma : données techniques, méthodologie et outils en libre accès pour l’ingénierie énergétique appliquée en Afrique francophone, calibrés sur les villes pilotes de Guinée. Il réunit le média éditorial, le catalogue de séries (instantanés du dépôt privé Kuma Data Core), les pages méthodologiques et une boutique d’outils.\n\nStack sobre et robuste : Astro en rendu statique et à la demande, Supabase pour les comptes, hébergement Cloudflare, observabilité Sentry, et une chaîne qualité complète (tests, lint, CI).",
-  "bodyEn": "The public gateway of the Kuma ecosystem: open technical data, methodology and tools for applied energy engineering across French-speaking Africa, calibrated on Guinea’s pilot cities. It brings together the editorial media, the series catalogue (snapshots of the private Kuma Data Core repository), the methodology pages and a tools shop.\n\nA lean, robust stack: Astro with static and on-demand rendering, Supabase for accounts, Cloudflare hosting, Sentry observability, and a full quality chain (tests, lint, CI)."
+  "bodyFr": "C’est la porte d’entrée publique de Kuma : données techniques, méthodo et outils, en libre accès, pour l’ingénierie énergétique appliquée en Afrique francophone et calés sur les villes pilotes de Guinée. On y trouve le média éditorial, le catalogue de séries (des instantanés du dépôt privé Kuma Data Core), les pages de méthode et une boutique d’outils.\n\nCôté technique, rien de tape-à-l’œil mais du solide : Astro en rendu statique et à la demande, Supabase pour les comptes, hébergement Cloudflare, Sentry pour garder un œil sur les erreurs, et une chaîne qualité complète (tests, lint, CI).",
+  "bodyEn": "It’s the public front door to Kuma: technical data, method and tools, openly available, for applied energy engineering across French-speaking Africa and tuned to Guinea’s pilot cities. You’ll find the editorial media, the series catalogue (snapshots of the private Kuma Data Core repo), the method pages and a tools shop.\n\nOn the technical side, nothing flashy but plenty solid: Astro with static and on-demand rendering, Supabase for accounts, Cloudflare hosting, Sentry to keep an eye on errors, and a full quality chain (tests, lint, CI)."
 }

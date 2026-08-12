@@ -142,18 +142,12 @@ const pillars = [
           </div>
         </div>
         <div class="relative min-h-[22rem] bg-surface-3">
-          {
-            profile.photo ? (
-              <img src={profile.photo} alt={SITE.name} class="absolute inset-0 size-full object-cover object-top" />
-            ) : (
-              <div class="flex size-full flex-col items-center justify-center gap-2 bg-gradient-to-br from-surface-3 to-brand-100">
-                <span class="font-display text-6xl font-bold text-brand-800/40">S</span>
-                <span class="font-mono text-xs tracking-[0.2em] text-text-subtle uppercase">
-                  {isFr ? 'portrait à venir' : 'portrait coming'}
-                </span>
-              </div>
-            )
-          }
+          <img
+            src="/images/ph.jpeg"
+            alt={isFr ? `${SITE.name}, à son poste de travail` : `${SITE.name}, at work`}
+            loading="lazy"
+            class="absolute inset-0 size-full object-cover object-[50%_55%]"
+          />
         </div>
       </div>
     </div>

@@ -12,11 +12,9 @@ const t = useTranslations(lang);
   <PageHeader title={t('contact.pageTitle')} lede={t('contact.pageLede')} />
 
   <section class="shell py-12 sm:py-14">
-    <p class="text-sm text-text-muted">{SITE.location[lang]}</p>
-
     <a
       href={`mailto:${SITE.email}`}
-      class="mt-6 inline-flex items-center gap-2 rounded-full bg-brand-700 px-6 py-3 text-sm font-semibold text-white transition-transform hover:-translate-y-0.5"
+      class="inline-flex items-center gap-2 rounded-full bg-brand-700 px-6 py-3 text-sm font-semibold text-white transition-transform hover:-translate-y-0.5"
     >
       {t('contact.email')}
     </a>

@@ -45,9 +45,8 @@ const timelines = [
 
 const reperes = [
   { k: isFr ? 'Rôle' : 'Role', v: isFr ? 'Ingénieur & chercheur' : 'Engineer & researcher' },
-  { k: isFr ? 'Basé à' : 'Based in', v: SITE.location[lang] },
   { k: isFr ? 'Terrain' : 'Field', v: isFr ? 'Guinée, Afrique de l’Ouest' : 'Guinea, West Africa' },
-  { k: isFr ? 'Actuellement' : 'Currently', v: 'Kuma Science, ÉTS' },
+  { k: isFr ? 'Actuellement' : 'Currently', v: 'Kuma Science' },
 ];
 ---
 
@@ -78,10 +77,7 @@ const reperes = [
             )
           }
           <div>
-            <p class="font-mono text-xs tracking-[0.2em] text-text-subtle uppercase">
-              Montréal &harr; Conakry
-            </p>
-            <p class="mt-3 text-lg leading-relaxed text-text text-pretty">{bio}</p>
+            <p class="text-lg leading-relaxed text-text text-pretty">{bio}</p>
           </div>
         </div>
       </div>

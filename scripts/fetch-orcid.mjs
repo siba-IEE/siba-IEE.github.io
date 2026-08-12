@@ -37,18 +37,25 @@ async function fetchWorks() {
 }
 
 async function main() {
-  let snapshot;
+  let works;
   try {
-    const works = await fetchWorks();
-    works.sort((a, b) => Number(b.year ?? 0) - Number(a.year ?? 0));
-    snapshot = { source: 'orcid', orcid: ORCID, count: works.length, works };
-    console.log(`[orcid] ${works.length} travaux recuperes.`);
+    works = await fetchWorks();
   } catch (error) {
-    snapshot = { source: 'fallback-empty', orcid: ORCID, count: 0, works: [] };
-    console.warn(`[orcid] repli (API indisponible) : ${error.message}`);
+    // Doctrine snapshot : sur echec reseau, ne JAMAIS ecraser le snapshot existant.
+    console.warn(`[orcid] API indisponible, snapshot conserve : ${error.message}`);
+    return;
   }
+  // Un fetch qui renvoie 0 travail alors qu'on en avait est presque toujours un
+  // faux negatif (glitch API) : on preserve aussi dans ce cas.
+  if (!works.length) {
+    console.warn('[orcid] 0 travail renvoye, snapshot existant conserve.');
+    return;
+  }
+  works.sort((a, b) => Number(b.year ?? 0) - Number(a.year ?? 0));
+  const snapshot = { source: 'orcid', orcid: ORCID, count: works.length, works };
   await mkdir(dirname(OUT), { recursive: true });
   await writeFile(OUT, `${JSON.stringify(snapshot, null, 2)}\n`, 'utf8');
+  console.log(`[orcid] ${works.length} travaux recuperes.`);
 }
 
 main();

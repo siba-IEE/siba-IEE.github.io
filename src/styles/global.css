@@ -4,8 +4,8 @@
 @custom-variant dark (&:where([data-theme='dark'], [data-theme='dark'] *));
 
 @theme {
-  --font-sans: 'Geist Variable', 'Helvetica Neue', helvetica, arial, sans-serif;
-  --font-display: 'Geist Variable', 'Helvetica Neue', helvetica, arial, sans-serif;
+  --font-sans: 'Instrument Sans Variable', 'Helvetica Neue', helvetica, arial, sans-serif;
+  --font-display: 'Instrument Serif', 'Iowan Old Style', georgia, serif;
   --font-mono: 'Geist Mono Variable', ui-monospace, sfmono-regular, monospace;
 
   /* Orange (50 à 600) : la couleur de l'erreur sur la carte. Noirs (700 à 900) : les aplats. */
@@ -77,9 +77,10 @@
     color: var(--heading);
   }
 
-  /* La grotesque se compose serrée dès qu'elle grossit. */
+  /* Le sérif des titres n'existe qu'en une graisse, et se compose à peine serré. */
   .font-display {
-    letter-spacing: -0.035em;
+    font-weight: 400;
+    letter-spacing: -0.015em;
   }
 
   /* Les liens de texte se reconnaissent à leur souligné orange. */

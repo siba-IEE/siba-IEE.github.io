@@ -101,7 +101,7 @@ function part(geometry: THREE.BufferGeometry, material: THREE.Material, x = 0, y
 
 function textSprite(text: string, size: number) {
   const canvas = document.createElement('canvas');
-  const font = '500 72px "Geist Variable", Helvetica, Arial, sans-serif';
+  const font = '500 72px "Instrument Sans Variable", Helvetica, Arial, sans-serif';
   const measure = canvas.getContext('2d')!;
   measure.font = font;
   // Le canvas prend la largeur du texte : une étiquette longue n'est jamais coupée.

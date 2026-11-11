@@ -210,17 +210,7 @@
   white-space: nowrap;
 }
 
-/* Travaux : une figure pleine largeur, puis le texte en regard de son intitulé. */
-.work-title {
-  max-width: 62rem;
-  margin: 0 0 1.5rem;
-  font-size: clamp(2rem, 5vw, 4.5rem);
-  font-weight: 500;
-  line-height: 1;
-  letter-spacing: -0.05em;
-  color: var(--heading);
-}
-
+/* Figures des articles */
 .figure {
   margin: 3rem 0 0;
 }
@@ -241,39 +231,10 @@
   color: var(--text-muted);
 }
 
-.figures {
-  display: grid;
-  gap: 2rem;
+@media (width >= 900px) {
 }
 
 @media (width >= 900px) {
-  .figures {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-}
-
-.part {
-  display: grid;
-  gap: 0.75rem 2rem;
-  padding-block: 2rem;
-  border-top: 1px solid var(--border);
-}
-
-.part:first-of-type {
-  margin-top: 4rem;
-}
-
-@media (width >= 900px) {
-  .part {
-    grid-template-columns: 11rem minmax(0, 46rem);
-  }
-}
-
-.part h3 {
-  margin: 0;
-  font-size: 0.95rem;
-  font-weight: 400;
-  color: var(--text-subtle);
 }
 
 .prose {
@@ -302,11 +263,6 @@
 .prose strong {
   font-weight: 600;
   color: var(--heading);
-}
-
-.prose .katex-display {
-  margin-block: 1.2rem;
-  overflow: auto hidden;
 }
 
 /* Tarifs : une troisième colonne étroite pour le prix. */

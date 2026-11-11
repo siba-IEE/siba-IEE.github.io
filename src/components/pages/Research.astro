@@ -1,142 +1,111 @@
 ---
+/**
+ * Page Travaux. Composition d'après les articles de la revue Distill : le titre, une figure
+ * interactive en pleine largeur, puis une colonne de texte étroite.
+ */
 import { marked } from 'marked';
-import katex from 'katex';
 import BaseLayout from '../../layouts/BaseLayout.astro';
+import BiasFigure from '../research/BiasFigure.astro';
+import { SITE } from '../../lib/site';
 import { getLangFromUrl } from '../../lib/i18n';
 import { getResearch, getPublications } from '../../lib/content';
-import 'katex/dist/katex.min.css';
 
 const lang = getLangFromUrl(Astro.url);
 const isFr = lang === 'fr';
-const works = getResearch();
+
+const [paper, ...others] = getResearch();
 const publications = getPublications();
+const figures = (paper.figures ?? []).filter(
+  (figure) => !figure.featured && figure.section === 'result',
+);
+const doi = paper.url?.replace('https://doi.org/', '');
 
-// KaTeX est rendu au build, avant le markdown : sinon CommonMark déséchappe les commandes
-// LaTeX (\, \; \{ \}) et casse les formules. Les maths sont remplacées par des jetons
-// neutres, puis réinjectées une fois le markdown converti.
-function render(source: string, inline = false): string {
-  const blocks: string[] = [];
-  const stash = (tex: string, displayMode: boolean) => {
-    blocks.push(
-      katex.renderToString(tex.trim(), { displayMode, throwOnError: false, strict: false }),
-    );
-    return `@@KMATH${blocks.length - 1}@@`;
-  };
-  const text = source
-    .replace(/\$\$([\s\S]+?)\$\$/g, (_match, tex) => stash(tex, true))
-    .replace(/\$([^\n$]+?)\$/g, (_match, tex) => stash(tex, false));
-  const html = (inline ? marked.parseInline(text) : marked.parse(text)) as string;
-  return html
-    .replace(/@@KMATH(\d+)@@/g, (_match, index) => blocks[Number(index)])
-    .replace(/<p>(\s*<span class="katex-display">[\s\S]*?<\/span>\s*)<\/p>/g, '$1');
-}
-const list = (items: string[]) =>
-  ['<ol>', ...items.map((item) => ['<li>', render(item, true), '</li>'].join('')), '</ol>'].join(
-    '',
-  );
-
-const title = isFr ? 'Travaux' : 'Research';
-const lede = isFr
-  ? 'Travaux sur les données de rayonnement solaire en Afrique de l’Ouest.'
-  : 'Work on solar radiation data in West Africa.';
-const labels = isFr
+const t = isFr
   ? {
-      problem: 'Problématique',
-      hypotheses: 'Hypothèses',
-      method: 'Méthode',
-      results: 'Résultats',
-      questions: 'Limites et suites',
-      paper: 'Lire la prépublication',
+      title: 'Travaux',
+      meta: 'Prépublication, octobre 2026',
+      limits: 'Limites',
+      read: 'Lire la prépublication',
+      ongoing: 'En cours',
+      publications: 'Publications',
     }
   : {
-      problem: 'Problem',
-      hypotheses: 'Hypotheses',
-      method: 'Method',
-      results: 'Results',
-      questions: 'Limits and next steps',
-      paper: 'Read the preprint',
+      title: 'Research',
+      meta: 'Preprint, October 2026',
+      limits: 'Limits',
+      read: 'Read the preprint',
+      ongoing: 'In progress',
+      publications: 'Publications',
     };
 ---
 
-<BaseLayout title={title} description={lede}>
-  <section class="block first">
+<BaseLayout title={t.title} description={isFr ? paper.summaryFr : paper.summaryEn}>
+  <article class="block first">
     <div class="shell">
-      <h1 class="page-title">{title}</h1>
+      <h1 class="paper-title">{isFr ? paper.titleFr : paper.titleEn}</h1>
+      <BiasFigure />
+
+      <p class="byline">
+        <span>{SITE.name}</span>
+        <span>{t.meta}</span>
+        {
+          paper.url && (
+            <a href={paper.url} target="_blank" rel="noopener" class="group">
+              <span class="draw">doi:{doi}</span>
+            </a>
+          )
+        }
+      </p>
+
+      <div class="column">
+        <p class="lead">{isFr ? paper.summaryFr : paper.summaryEn}</p>
+        <div class="prose" set:html={marked.parse(isFr ? paper.resultsFr : paper.resultsEn)} />
+      </div>
+
+      {
+        figures.map((figure) => (
+          <figure class="figure wide" data-reveal>
+            <img src={!isFr && figure.srcEn ? figure.srcEn : figure.src} alt="" loading="lazy" />
+            <figcaption>{isFr ? figure.captionFr : figure.captionEn}</figcaption>
+          </figure>
+        ))
+      }
+
+      <div class="column">
+        <h2 class="label">{t.limits}</h2>
+        <ul class="prose">
+          {(isFr ? paper.questionsFr : paper.questionsEn).map((item) => <li>{item}</li>)}
+        </ul>
+        {
+          paper.url && (
+            <a href={paper.url} target="_blank" rel="noopener" class="more">
+              {t.read}
+            </a>
+          )
+        }
+      </div>
     </div>
-  </section>
-
-  {
-    works.map((work, index) => {
-      const figures = (work.figures ?? []).map((figure) => ({
-        src: !isFr && figure.srcEn ? figure.srcEn : figure.src,
-        caption: isFr ? figure.captionFr : figure.captionEn,
-        featured: figure.featured,
-      }));
-      const main = figures.find((figure) => figure.featured) ?? figures[0];
-      const others = figures.filter((figure) => figure !== main);
-      const parts = [
-        { label: labels.problem, html: render(isFr ? work.problemFr : work.problemEn) },
-        { label: labels.hypotheses, html: list(isFr ? work.hypothesesFr : work.hypothesesEn) },
-        { label: labels.method, html: render(isFr ? work.methodFr : work.methodEn) },
-        { label: labels.results, html: render(isFr ? work.resultsFr : work.resultsEn) },
-        { label: labels.questions, html: list(isFr ? work.questionsFr : work.questionsEn) },
-      ];
-      return (
-        <section
-          id={`travail-${index + 1}`}
-          class:list={['block scroll-mt-16', index === 0 && 'first', false]}
-        >
-          <div class="shell">
-            <h2 class="work-title" data-reveal>
-              {isFr ? work.titleFr : work.titleEn}
-            </h2>
-            <p class="lead" data-reveal>
-              {isFr ? work.summaryFr : work.summaryEn}
-            </p>
-            {work.url && (
-              <a href={work.url} target="_blank" rel="noopener" class="more">
-                {labels.paper}
-              </a>
-            )}
-            {work.url && work.preview && (
-              <a href={work.url} target="_blank" rel="noopener" class="figure" data-reveal>
-                <img src={work.preview} alt="" loading="lazy" />
-              </a>
-            )}
-
-            {main && (
-              <figure class="figure" data-reveal>
-                <img src={main.src} alt="" loading="lazy" />
-                <figcaption>{main.caption}</figcaption>
-              </figure>
-            )}
-
-            {parts.map((part) => (
-              <div class="part" data-reveal>
-                <h3>{part.label}</h3>
-                <div class="prose" set:html={part.html} />
-              </div>
-            ))}
-
-            {others.length > 0 && (
-              <div class="figures">
-                {others.map((figure) => (
-                  <figure class="figure" data-reveal>
-                    <img src={figure.src} alt="" loading="lazy" />
-                    <figcaption>{figure.caption}</figcaption>
-                  </figure>
-                ))}
-              </div>
-            )}
-          </div>
-        </section>
-      );
-    })
-  }
+  </article>
 
   <section class="block last">
     <div class="shell">
-      <h2 class="label">Publications</h2>
+      {
+        others.length > 0 && (
+          <>
+            <h2 class="label">{t.ongoing}</h2>
+            <ul class="rows wip">
+              {others.map((work) => (
+                <li data-reveal>
+                  <span class="what">{isFr ? work.titleFr : work.titleEn}</span>
+                  <span class="where">{isFr ? work.summaryFr : work.summaryEn}</span>
+                </li>
+              ))}
+            </ul>
+          </>
+        )
+      }
+
+      <h2 class="label">{t.publications}</h2>
       <ul class="rows">
         {
           publications.map((pub) => (
@@ -161,3 +130,62 @@ const labels = isFr
     </div>
   </section>
 </BaseLayout>
+
+<style>
+  .paper-title {
+    max-width: 60rem;
+    margin: 0 0 2.5rem;
+    font-size: clamp(2.2rem, 5.6vw, 5rem);
+    font-weight: 500;
+    line-height: 0.98;
+    letter-spacing: -0.05em;
+    color: var(--heading);
+    text-wrap: balance;
+  }
+
+  .byline {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem 2.5rem;
+    margin: 2.5rem 0 0;
+    padding-block: 1rem;
+    border-block: 1px solid var(--border);
+    font-size: 0.85rem;
+    color: var(--text-muted);
+  }
+
+  .byline a {
+    font-family: var(--font-mono);
+    font-size: 0.78rem;
+    color: var(--heading);
+  }
+
+  /* Colonne de lecture étroite, décalée vers la droite comme dans la revue. */
+  .column {
+    max-width: 40rem;
+    margin-top: 4rem;
+  }
+
+  .column .prose {
+    margin-top: 2rem;
+  }
+
+  .column ul {
+    padding-left: 1.1rem;
+    list-style: disc;
+  }
+
+  .figure.wide {
+    margin-top: 4rem;
+  }
+
+  @media (min-width: 1024px) {
+    .column {
+      margin-left: 25%;
+    }
+
+    .figure.wide {
+      margin-left: 12.5%;
+    }
+  }
+</style>

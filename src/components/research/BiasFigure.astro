@@ -1,0 +1,417 @@
+---
+/**
+ * Figure interactive de la page Travaux : la droite biais-latitude de CAMS et son intervalle
+ * de prédiction (src/data/bias.ts). Le lecteur choisit une latitude et une estimation
+ * satellitaire annuelle ; la figure donne le biais attendu et l'estimation corrigée
+ * (équation 2 de la prépublication : x' = x / (1 + b / 100)).
+ * Le tracé est rendu au build ; le script ne déplace que le repère et les valeurs lues.
+ */
+import { getLangFromUrl } from '../../lib/i18n';
+import { BIAS_LINE, biasAt, halfWidthAt } from '../../data/bias';
+
+const lang = getLangFromUrl(Astro.url);
+const isFr = lang === 'fr';
+
+const t = isFr
+  ? {
+      alt: 'Biais du produit CAMS en rayonnement global selon la latitude, avec son intervalle de prédiction à 95 %.',
+      xAxis: 'Latitude (° N)',
+      yAxis: 'Biais de CAMS (%)',
+      lat: 'Latitude du site',
+      raw: 'Rayonnement global annuel estimé par CAMS',
+      bias: 'Biais attendu',
+      corrected: 'Estimation corrigée',
+      unit: 'kWh/m²',
+      range: 'de {low} à {high}',
+      note: 'Droite ajustée sur 22 stations au sol situées sous 600 m d’altitude, entre 5,9 et 14,0° N. La bande est l’intervalle de prédiction à 95 % pour un nouveau site. Les points sont les valeurs publiées au tableau 5.',
+    }
+  : {
+      alt: 'Bias of the CAMS product in global irradiance against latitude, with its 95% prediction interval.',
+      xAxis: 'Latitude (° N)',
+      yAxis: 'CAMS bias (%)',
+      lat: 'Site latitude',
+      raw: 'Annual global irradiance estimated by CAMS',
+      bias: 'Expected bias',
+      corrected: 'Corrected estimate',
+      unit: 'kWh/m²',
+      range: 'from {low} to {high}',
+      note: 'Line fitted on 22 ground stations below 600 m of altitude, between 5.9 and 14.0° N. The band is the 95% prediction interval for a new site. Dots are the values published in Table 5.',
+    };
+
+/* ---------- Géométrie du tracé ---------- */
+
+const W = 1000;
+const H = 400;
+const margin = { left: 56, right: 16, top: 16, bottom: 46 };
+const domain = { lat: [5, 15], bias: [-4, 20] };
+
+const x = (lat: number) =>
+  margin.left +
+  ((lat - domain.lat[0]) / (domain.lat[1] - domain.lat[0])) * (W - margin.left - margin.right);
+const y = (bias: number) =>
+  margin.top +
+  ((domain.bias[1] - bias) / (domain.bias[1] - domain.bias[0])) * (H - margin.top - margin.bottom);
+const point = (lat: number, bias: number) => `${x(lat).toFixed(1)},${y(bias).toFixed(1)}`;
+
+const lats = Array.from({ length: 82 }, (_, i) =>
+  Math.min(BIAS_LINE.latMax, BIAS_LINE.latMin + i * 0.1),
+);
+const band = [
+  ...lats.map((lat) => point(lat, biasAt(lat) + halfWidthAt(lat))),
+  ...lats.toReversed().map((lat) => point(lat, biasAt(lat) - halfWidthAt(lat))),
+].join(' ');
+
+const xTicks = [6, 8, 10, 12, 14];
+const yTicks = [0, 4, 8, 12, 16, 20];
+const start = { lat: 10, raw: 2000 };
+
+const config = JSON.stringify({
+  line: BIAS_LINE,
+  scale: { W, H, margin, domain },
+  locale: isFr ? 'fr-FR' : 'en-US',
+  range: t.range,
+});
+---
+
+<figure class="bias" data-bias data-config={config}>
+  <svg viewBox={`0 0 ${W} ${H}`} role="img" aria-label={t.alt}>
+    <g class="grid">
+      {
+        yTicks.map((tick) => (
+          <line x1={margin.left} x2={W - margin.right} y1={y(tick)} y2={y(tick)} />
+        ))
+      }
+      {
+        yTicks.map((tick) => (
+          <text x={margin.left - 10} y={y(tick) + 4} text-anchor="end">
+            {tick}
+          </text>
+        ))
+      }
+      {
+        xTicks.map((tick) => (
+          <text x={x(tick)} y={H - margin.bottom + 20} text-anchor="middle">
+            {tick}
+          </text>
+        ))
+      }
+      <text class="axis" x={W - margin.right} y={H - 6} text-anchor="end">{t.xAxis}</text>
+      <text class="axis" x={margin.left} y={margin.top + 4} dx="8">{t.yAxis}</text>
+    </g>
+
+    <polygon class="band" points={band}></polygon>
+    <line
+      class="fit"
+      x1={x(BIAS_LINE.latMin)}
+      y1={y(biasAt(BIAS_LINE.latMin))}
+      x2={x(BIAS_LINE.latMax)}
+      y2={y(biasAt(BIAS_LINE.latMax))}></line>
+    {BIAS_LINE.tabulated.map((lat) => <circle class="tab" cx={x(lat)} cy={y(biasAt(lat))} r="4" />)}
+
+    <g class="probe" data-probe>
+      <line data-rule x1={x(start.lat)} x2={x(start.lat)} y1={margin.top} y2={H - margin.bottom}
+      ></line>
+      <line
+        class="whisker"
+        data-whisker
+        x1={x(start.lat)}
+        x2={x(start.lat)}
+        y1={y(biasAt(start.lat) + halfWidthAt(start.lat))}
+        y2={y(biasAt(start.lat) - halfWidthAt(start.lat))}></line>
+      <circle data-dot cx={x(start.lat)} cy={y(biasAt(start.lat))} r="7"></circle>
+    </g>
+  </svg>
+
+  <figcaption>
+    <label>
+      <span>{t.lat}</span>
+      <output data-out="lat"></output>
+      <input
+        type="range"
+        min={BIAS_LINE.latMin}
+        max={BIAS_LINE.latMax}
+        step="0.1"
+        value={start.lat}
+        data-in="lat"
+      />
+    </label>
+    <label>
+      <span>{t.raw}</span>
+      <output data-out="raw"></output>
+      <input type="range" min="1500" max="2400" step="10" value={start.raw} data-in="raw" />
+    </label>
+    <dl>
+      <div>
+        <dt>{t.bias}</dt>
+        <dd data-out="bias"></dd>
+      </div>
+      <div>
+        <dt>{t.corrected}</dt>
+        <dd>
+          <b data-out="corrected"></b>{' '}
+          {t.unit}
+          <small data-out="interval"></small>
+        </dd>
+      </div>
+    </dl>
+    <p>{t.note}</p>
+  </figcaption>
+</figure>
+
+<style>
+  .bias {
+    --accent: var(--color-brand-500);
+
+    margin: 0;
+  }
+
+  svg {
+    display: block;
+    width: 100%;
+    height: auto;
+    touch-action: pan-y;
+    cursor: ew-resize;
+  }
+
+  .grid line {
+    stroke: var(--border);
+  }
+
+  .grid text {
+    fill: var(--text-subtle);
+    font-family: var(--font-mono);
+    font-size: 12px;
+  }
+
+  .grid .axis {
+    font-family: var(--font-sans);
+    font-size: 13px;
+  }
+
+  .band {
+    fill: color-mix(in srgb, var(--accent) 16%, transparent);
+  }
+
+  .fit {
+    stroke: var(--heading);
+    stroke-width: 2.5;
+  }
+
+  .tab {
+    fill: var(--surface);
+    stroke: var(--heading);
+    stroke-width: 2;
+  }
+
+  .probe line {
+    stroke: var(--accent);
+    stroke-width: 1.5;
+    stroke-dasharray: 4 4;
+  }
+
+  .probe .whisker {
+    stroke-width: 5;
+    stroke-dasharray: none;
+    stroke-linecap: round;
+  }
+
+  .probe circle {
+    fill: var(--accent);
+    stroke: var(--surface);
+    stroke-width: 3;
+  }
+
+  /* Le tracé se dessine à l'arrivée. */
+  @media (prefers-reduced-motion: no-preference) {
+    :global(.js) .fit {
+      stroke-dasharray: 1000;
+      stroke-dashoffset: 1000;
+      animation: draw 1.4s cubic-bezier(0.22, 1, 0.36, 1) 0.2s forwards;
+    }
+
+    :global(.js) .band,
+    :global(.js) .tab,
+    :global(.js) .probe {
+      animation: appear 0.8s ease 1s both;
+    }
+  }
+
+  @keyframes draw {
+    to {
+      stroke-dashoffset: 0;
+    }
+  }
+
+  @keyframes appear {
+    from {
+      opacity: 0;
+    }
+  }
+
+  /* Sous la figure : deux curseurs, les valeurs lues, puis la note. */
+  figcaption {
+    display: grid;
+    gap: 1.5rem 2.5rem;
+    margin-top: 1.5rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--border);
+    font-size: 0.85rem;
+    color: var(--text-muted);
+  }
+
+  @media (min-width: 900px) {
+    figcaption {
+      grid-template-columns: repeat(2, minmax(0, 3fr)) minmax(0, 4fr);
+    }
+
+    dl {
+      grid-column: 1 / span 2;
+    }
+
+    figcaption p {
+      grid-area: 1 / 3 / span 2;
+    }
+  }
+
+  label {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 0.3rem 1rem;
+  }
+
+  output,
+  dd {
+    font-family: var(--font-mono);
+    font-variant-numeric: tabular-nums;
+    color: var(--heading);
+  }
+
+  input {
+    grid-column: 1 / -1;
+    width: 100%;
+    accent-color: var(--accent);
+  }
+
+  dl {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1rem 2.5rem;
+    margin: 0;
+  }
+
+  dd {
+    margin: 0.2rem 0 0;
+    font-size: 1rem;
+  }
+
+  dd b {
+    font-weight: 500;
+  }
+
+  dd small {
+    display: block;
+    font-size: 0.78rem;
+    color: var(--text-muted);
+  }
+
+  figcaption p {
+    margin: 0;
+    line-height: 1.55;
+    text-wrap: pretty;
+  }
+</style>
+
+<script>
+  interface Config {
+    line: {
+      intercept: number;
+      slope: number;
+      latMin: number;
+      latMax: number;
+      interval: { a: number; b: number; c: number };
+    };
+    scale: {
+      W: number;
+      H: number;
+      margin: { left: number; right: number; top: number; bottom: number };
+      domain: { lat: number[]; bias: number[] };
+    };
+    locale: string;
+    range: string;
+  }
+
+  const init = () => {
+    const root = document.querySelector<HTMLElement>('[data-bias]');
+    const svg = root?.querySelector('svg');
+    if (!root || !svg || root.dataset.bound) return;
+    root.dataset.bound = 'true';
+
+    const { line, scale, locale, range } = JSON.parse(root.dataset.config ?? '{}') as Config;
+    const { W, H, margin, domain } = scale;
+    const x = (lat: number) =>
+      margin.left +
+      ((lat - domain.lat[0]) / (domain.lat[1] - domain.lat[0])) * (W - margin.left - margin.right);
+    const y = (bias: number) =>
+      margin.top +
+      ((domain.bias[1] - bias) / (domain.bias[1] - domain.bias[0])) *
+        (H - margin.top - margin.bottom);
+    const number = (value: number, digits: number) =>
+      new Intl.NumberFormat(locale, {
+        minimumFractionDigits: digits,
+        maximumFractionDigits: digits,
+      }).format(value);
+
+    const input = (name: string) => root.querySelector<HTMLInputElement>(`[data-in="${name}"]`)!;
+    const out = (name: string) => root.querySelector<HTMLElement>(`[data-out="${name}"]`)!;
+    const rule = root.querySelector<SVGLineElement>('[data-rule]')!;
+    const whisker = root.querySelector<SVGLineElement>('[data-whisker]')!;
+    const dot = root.querySelector<SVGCircleElement>('[data-dot]')!;
+
+    const update = () => {
+      const lat = Number(input('lat').value);
+      const raw = Number(input('raw').value);
+      const bias = line.intercept + line.slope * lat;
+      const half = Math.sqrt(line.interval.a + line.interval.b * (lat - line.interval.c) ** 2);
+      // Équation 2 de la prépublication : la série est divisée par (1 + biais / 100).
+      const correct = (b: number) => raw / (1 + b / 100);
+
+      const px = x(lat).toFixed(1);
+      rule.setAttribute('x1', px);
+      rule.setAttribute('x2', px);
+      whisker.setAttribute('x1', px);
+      whisker.setAttribute('x2', px);
+      whisker.setAttribute('y1', y(bias + half).toFixed(1));
+      whisker.setAttribute('y2', y(bias - half).toFixed(1));
+      dot.setAttribute('cx', px);
+      dot.setAttribute('cy', y(bias).toFixed(1));
+
+      out('lat').textContent = `${number(lat, 1)}° N`;
+      out('raw').textContent = `${number(raw, 0)} kWh/m²`;
+      out('bias').textContent = `+${number(bias, 1)} % ± ${number(half, 1)}`;
+      out('corrected').textContent = number(correct(bias), 0);
+      out('interval').textContent = range
+        .replace('{low}', number(correct(bias + half), 0))
+        .replace('{high}', number(correct(bias - half), 0));
+    };
+
+    // Glisser sur le tracé déplace la latitude.
+    const drag = (event: PointerEvent) => {
+      if (event.type === 'pointermove' && event.buttons === 0 && event.pointerType !== 'mouse')
+        return;
+      const rect = svg.getBoundingClientRect();
+      const px = ((event.clientX - rect.left) / rect.width) * W;
+      const lat =
+        domain.lat[0] +
+        ((px - margin.left) / (W - margin.left - margin.right)) * (domain.lat[1] - domain.lat[0]);
+      input('lat').value = Math.min(line.latMax, Math.max(line.latMin, lat)).toFixed(1);
+      update();
+    };
+    svg.addEventListener('pointerdown', drag);
+    svg.addEventListener('pointermove', drag);
+    input('lat').addEventListener('input', update);
+    input('raw').addEventListener('input', update);
+    update();
+  };
+
+  document.addEventListener('astro:page-load', init);
+</script>

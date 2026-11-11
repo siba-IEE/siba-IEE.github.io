@@ -9,100 +9,83 @@ import { getLangFromUrl } from '../../lib/i18n';
 const lang = getLangFromUrl(Astro.url);
 const isFr = lang === 'fr';
 
-interface Chapter {
-  title: string;
-  /** Deux sous-titres par plan : le premier de 1 à 6 s, le second de 6,5 à 11,5 s. */
-  lines: [string, string];
-}
+/** Un plan du film : son titre et ses deux sous-titres (de 1 à 6 s, puis de 6,5 à 11,5 s). */
+type Chapter = [title: string, first: string, second: string];
 
 const chapters: Chapter[] = isFr
   ? [
-      {
-        title: 'Mesurer au sol',
-        lines: [
-          'En Afrique de l’Ouest, 31 stations ont mesuré le rayonnement solaire au sol.',
-          'Deux années chacune, dans 13 pays.',
-        ],
-      },
-      {
-        title: 'Le satellite',
-        lines: [
-          'Partout ailleurs, on dépend des estimations par satellite.',
-          'Le produit CAMS surestime le rayonnement annuel de 6,6 % en moyenne, davantage vers le sud.',
-        ],
-      },
-      {
-        title: 'Corriger sur place',
-        lines: [
-          'Avec un an de mesure sur le site, on corrige l’estimation du satellite.',
-          'L’erreur passe de 6,6 % à 1,1 % l’année suivante.',
-        ],
-      },
-      {
-        title: 'Corriger sans station',
-        lines: [
-          'Conakry n’a pas de station : la correction vient des stations les plus proches.',
-          'Suivre la tendance nord-sud laisse 1,8 % d’erreur. Copier la station la plus proche, 2,9 %.',
-        ],
-      },
-      {
-        title: 'Dimensionner',
-        lines: [
-          'La méthode a corrigé les séries de 340 localités de Guinée.',
-          'Elles servent à dimensionner des installations solaires.',
-        ],
-      },
-      {
-        title: 'En cours : la maille',
-        lines: [
-          'Kindia et Mamou sont à 92 km l’une de l’autre. NASA POWER leur donne exactement la même série.',
-          'Elles partagent une maille. Reste à vérifier que les produits à maille fine les séparent.',
-        ],
-      },
+      [
+        'Mesurer au sol',
+        'En Afrique de l’Ouest, 31 stations ont mesuré le rayonnement solaire au sol.',
+        'Chaque minute, pendant deux ans.',
+      ],
+      [
+        'Le réseau',
+        'Le réseau couvre 13 pays, de la Gambie au Nigeria.',
+        'Ses mesures sont publiques.',
+      ],
+      [
+        'Le satellite',
+        'Partout ailleurs, on dépend des estimations par satellite.',
+        'Le produit CAMS surestime le rayonnement annuel de 6,6 % en moyenne, davantage vers le sud.',
+      ],
+      [
+        'Corriger sur place',
+        'Avec un an de mesure sur le site, on corrige l’estimation du satellite.',
+        'L’erreur passe de 6,6 % à 1,1 % l’année suivante.',
+      ],
+      [
+        'Corriger sans station',
+        'Conakry n’a pas de station : la correction vient des stations les plus proches.',
+        'Suivre la tendance nord-sud laisse 1,8 % d’erreur. Copier la station la plus proche, 2,9 %.',
+      ],
+      [
+        'Dimensionner',
+        'La méthode a corrigé les séries de 340 localités de Guinée.',
+        'Elles servent à dimensionner des installations solaires.',
+      ],
+      [
+        'En cours : la maille',
+        'Kindia et Mamou sont à 92 km l’une de l’autre. NASA POWER leur donne exactement la même série.',
+        'Elles partagent une maille. Reste à vérifier que les produits à maille fine les séparent.',
+      ],
     ]
   : [
-      {
-        title: 'Measuring on the ground',
-        lines: [
-          'In West Africa, 31 stations measured solar radiation on the ground.',
-          'Two years each, in 13 countries.',
-        ],
-      },
-      {
-        title: 'The satellite',
-        lines: [
-          'Everywhere else, we depend on satellite estimates.',
-          'The CAMS product overestimates annual irradiation by 6.6% on average, more so towards the south.',
-        ],
-      },
-      {
-        title: 'Correcting on site',
-        lines: [
-          'With one year of measurement on site, the satellite estimate can be corrected.',
-          'The error goes from 6.6% to 1.1% the following year.',
-        ],
-      },
-      {
-        title: 'Correcting without a station',
-        lines: [
-          'Conakry has no station: the correction comes from the nearest stations.',
-          'Following the north–south trend leaves 1.8% of error. Copying the nearest station, 2.9%.',
-        ],
-      },
-      {
-        title: 'Sizing',
-        lines: [
-          'The method corrected the series of 340 localities in Guinea.',
-          'They are used to size solar installations.',
-        ],
-      },
-      {
-        title: 'In progress: the grid cell',
-        lines: [
-          'Kindia and Mamou are 92 km apart. NASA POWER gives them exactly the same series.',
-          'They share a grid cell. What remains is to check that fine-grid products separate them.',
-        ],
-      },
+      [
+        'Measuring on the ground',
+        'In West Africa, 31 stations measured solar radiation on the ground.',
+        'Every minute, for two years.',
+      ],
+      [
+        'The network',
+        'The network spans 13 countries, from The Gambia to Nigeria.',
+        'Its measurements are public.',
+      ],
+      [
+        'The satellite',
+        'Everywhere else, we depend on satellite estimates.',
+        'The CAMS product overestimates annual irradiation by 6.6% on average, more so towards the south.',
+      ],
+      [
+        'Correcting on site',
+        'With one year of measurement on site, the satellite estimate can be corrected.',
+        'The error goes from 6.6% to 1.1% the following year.',
+      ],
+      [
+        'Correcting without a station',
+        'Conakry has no station: the correction comes from the nearest stations.',
+        'Following the north–south trend leaves 1.8% of error. Copying the nearest station, 2.9%.',
+      ],
+      [
+        'Sizing',
+        'The method corrected the series of 340 localities in Guinea.',
+        'They are used to size solar installations.',
+      ],
+      [
+        'In progress: the grid cell',
+        'Kindia and Mamou are 92 km apart. NASA POWER gives them exactly the same series.',
+        'They share a grid cell. What remains is to check that fine-grid products separate them.',
+      ],
     ];
 
 const ui = isFr
@@ -110,24 +93,61 @@ const ui = isFr
       title: 'Travaux',
       play: 'Lire',
       pause: 'Pause',
-      credit: 'Satellite : modèle NASA. Images : NASA Blue Marble et MODIS. Sol : Poly Haven.',
+      credit:
+        'Satellite : modèle NASA. Images : NASA Blue Marble et MODIS. Paysage : Poly Haven. Frontières : Natural Earth.',
     }
   : {
       title: 'Research',
       play: 'Play',
       pause: 'Pause',
-      credit: 'Satellite: NASA model. Imagery: NASA Blue Marble and MODIS. Ground: Poly Haven.',
+      credit:
+        'Satellite: NASA model. Imagery: NASA Blue Marble and MODIS. Landscape: Poly Haven. Borders: Natural Earth.',
     };
 
 const assets = {
-  groundColor: '/images/film/sol-couleur.webp',
-  groundNormal: '/images/film/sol-relief.webp',
-  groundRoughness: '/images/film/sol-rugosite.webp',
+  panorama: '/images/film/paysage.webp',
   earth: '/images/terre/jour.webp',
   satellite: '/models/satellite.glb',
   draco: '/draco/',
   region: '/images/terre/afrique-ouest.webp',
   cell: '/images/film/guinee-modis.webp',
+};
+
+const labels = {
+  kindia: 'Kindia',
+  mamou: 'Mamou',
+  conakry: 'Conakry',
+  countries: isFr
+    ? [
+        'Gambie',
+        'Guinée-Bissau',
+        'Guinée',
+        'Sierra Leone',
+        'Libéria',
+        'Mali',
+        'Côte d’Ivoire',
+        'Burkina Faso',
+        'Ghana',
+        'Togo',
+        'Bénin',
+        'Niger',
+        'Nigeria',
+      ]
+    : [
+        'The Gambia',
+        'Guinea-Bissau',
+        'Guinea',
+        'Sierra Leone',
+        'Liberia',
+        'Mali',
+        'Côte d’Ivoire',
+        'Burkina Faso',
+        'Ghana',
+        'Togo',
+        'Benin',
+        'Niger',
+        'Nigeria',
+      ],
 };
 ---
 
@@ -135,7 +155,7 @@ const assets = {
   class="film"
   data-film
   data-assets={JSON.stringify(assets)}
-  data-labels={JSON.stringify(['Kindia', 'Mamou', 'Conakry'])}
+  data-labels={JSON.stringify(labels)}
   data-state="loading"
 >
   <canvas aria-hidden="true"></canvas>
@@ -143,15 +163,15 @@ const assets = {
 
   <header>
     <h1>{ui.title}</h1>
-    <p data-chapter-title>{chapters[0].title}</p>
+    <p data-chapter-title>{chapters[0][0]}</p>
   </header>
 
   <ol class="captions">
     {
-      chapters.map((chapter, index) => (
+      chapters.map(([title, ...lines], index) => (
         <li data-chapter={index}>
-          <h2>{chapter.title}</h2>
-          {chapter.lines.map((line, n) => (
+          <h2>{title}</h2>
+          {lines.map((line, n) => (
             <p data-cue={`${index}-${n}`}>{line}</p>
           ))}
         </li>
@@ -180,8 +200,8 @@ const assets = {
     </button>
     <div class="track" data-track>
       {
-        chapters.map((chapter, index) => (
-          <span class="segment" title={chapter.title}>
+        chapters.map(([title], index) => (
+          <span class="segment" title={title}>
             <i data-fill={index} />
           </span>
         ))
@@ -508,7 +528,7 @@ const assets = {
 </style>
 
 <script>
-  import type { Film, FilmAssets } from '../../scripts/film';
+  import type { Film, FilmAssets, FilmLabels } from '../../scripts/film';
 
   let film: Film | null = null;
   let observer: IntersectionObserver | null = null;
@@ -566,7 +586,7 @@ const assets = {
 
     const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     const assets = JSON.parse(root.dataset.assets ?? '{}') as FilmAssets;
-    const labels = JSON.parse(root.dataset.labels ?? '[]') as string[];
+    const labels = JSON.parse(root.dataset.labels ?? '{}') as FilmLabels;
     film = mountFilm(canvas, assets, labels, onFrame, () => {
       // Prêt : la lecture démarre seule, sauf si le visiteur a demandé moins d'animation.
       if (root.dataset.state !== 'loading') return;

@@ -14,6 +14,7 @@
     "dev": "astro dev",
     "fetch:orcid": "node scripts/fetch-orcid.mjs",
     "og": "node scripts/build-og.mjs",
+    "borders": "node scripts/build-borders.mjs",
     "guard:emdash": "node scripts/clean-emdash.mjs",
     "build": "node scripts/fetch-orcid.mjs && node scripts/clean-emdash.mjs && astro build",
     "preview": "astro preview",
@@ -60,8 +61,10 @@
     "prettier-plugin-astro": "^0.14.1",
     "stylelint": "^17.14.1",
     "stylelint-config-standard": "^40.0.0",
+    "topojson-client": "^3.1.0",
     "typescript": "^6.0.3",
     "vitest": "^4.1.10",
+    "world-atlas": "^2.0.2",
     "wrangler": "^4.120.1"
   },
   "pnpm": {

@@ -1,30 +1,31 @@
 /**
- * Film 3D de la page Travaux (three.js). Six plans de douze secondes, joués comme une vidéo :
- * une station de mesure dans la savane, le satellite au-dessus de l'Afrique de l'Ouest, le
- * capteur en gros plan, le transfert sur une image satellite de la région, une centrale
- * solaire, puis la maille d'un produit satellitaire sur une image satellite de la Guinée.
+ * Film 3D de la page Travaux (three.js). Sept plans de douze secondes, joués comme une vidéo :
+ * une station de mesure, le réseau sur 13 pays, le satellite au-dessus de l'Afrique de l'Ouest,
+ * le capteur en gros plan, le transfert vers un site sans station, une centrale solaire, puis
+ * la maille d'un produit satellitaire.
  *
- * Éléments réels : satellite géostationnaire modélisé par la NASA, images satellite NASA
- * (Blue Marble, MODIS), positions des stations et des villes, sol de latérite photographié (Poly Haven, CC0). Le ciel est un modèle physique de
- * diffusion atmosphérique, qui éclaire aussi la scène. Le reste (station, centrale) est
- * construit ici avec des matériaux physiques.
+ * Tout ce qui peut être réel l'est : le paysage des plans au sol est une photographie à 360°
+ * (Poly Haven, CC0) projetée au sol, qui éclaire aussi les objets ; le satellite est un modèle
+ * de la NASA ; les plans vus du ciel sont des images satellite NASA (Blue Marble, MODIS) avec
+ * les positions réelles des stations et des villes. Seules la station et la centrale sont
+ * construites ici, avec des matériaux physiques.
  *
  * Ce module ne connaît ni les textes ni le lecteur : il rend l'image de l'instant demandé.
  */
 import * as THREE from 'three';
-import { Sky } from 'three/addons/objects/Sky.js';
+import { GroundedSkybox } from 'three/addons/objects/GroundedSkybox.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
 import { STATIONS } from '../data/stations';
+import borders from '../data/borders.json';
 
 export const CHAPTER_SECONDS = 12;
-export const CHAPTER_COUNT = 6;
+export const CHAPTER_COUNT = 7;
 const FADE_SECONDS = 0.6;
 
 export interface FilmAssets {
-  groundColor: string;
-  groundNormal: string;
-  groundRoughness: string;
+  /** Panorama à 360° du paysage des plans au sol. */
+  panorama: string;
   earth: string;
   satellite: string;
   draco: string;
@@ -32,6 +33,15 @@ export interface FilmAssets {
   region: string;
   /** Image satellite de la Guinée (MODIS Terra, 21 décembre 2023). */
   cell: string;
+}
+
+/** Noms à afficher dans l'image, dans la langue de la page. */
+export interface FilmLabels {
+  kindia: string;
+  mamou: string;
+  conakry: string;
+  /** Les 13 pays du réseau, dans l'ordre de COUNTRIES. */
+  countries: string[];
 }
 
 export interface Film {
@@ -57,10 +67,6 @@ const smooth = (from: number, to: number, value: number) => {
   return t * t * (3 - 2 * t);
 };
 const vec = (x: number, y: number, z: number) => new THREE.Vector3(x, y, z);
-
-/** Bruit lisse et déterministe, pour le relief et les variations de teinte du sol. */
-const noise = (x: number, z: number) =>
-  Math.sin(x * 0.013 + 1.7) * Math.cos(z * 0.011) + Math.sin(x * 0.031 + z * 0.027) * 0.4;
 
 /** Suite pseudo-aléatoire reproductible : le décor est le même à chaque visite. */
 function random(seed: number) {
@@ -245,14 +251,14 @@ function buildStation() {
   return group;
 }
 
-/** Centre de la centrale solaire. */
-const PLANT = vec(70, 0, -30);
+/** Centre de la centrale solaire, devant la caméra du plan « dimensionner ». */
+const PLANT = vec(0, 0, -9);
 
 /** Centrale : des tables de modules inclinées, instanciées, et un local onduleur. */
 function buildPlant() {
   const group = new THREE.Group();
-  const rows = 7;
-  const columns = 9;
+  const rows = 5;
+  const columns = 7;
   const count = rows * columns;
   const tables = new THREE.InstancedMesh(new THREE.BoxGeometry(4, 0.045, 2.1), moduleGlass, count);
   const frames = new THREE.InstancedMesh(new THREE.BoxGeometry(4.06, 0.06, 2.16), steel, count);
@@ -291,8 +297,8 @@ function buildPlant() {
     mesh.receiveShadow = true;
     group.add(mesh);
   });
-  group.add(part(new THREE.BoxGeometry(6, 2.6, 2.4), paint, 26, 1.3, 4));
-  group.add(part(new THREE.BoxGeometry(1, 2, 0.04), steel, 24.5, 1.05, 5.22));
+  group.add(part(new THREE.BoxGeometry(6, 2.6, 2.4), paint, 19, 1.3, 2));
+  group.add(part(new THREE.BoxGeometry(1, 2, 0.04), steel, 17.5, 1.05, 3.22));
   group.position.copy(PLANT);
   return group;
 }
@@ -370,6 +376,23 @@ const haversine = (a: { lat: number; lon: number }, b: { lat: number; lon: numbe
 const CONAKRY = { lat: 9.51, lon: -13.71 };
 const KINDIA = { lat: 10.06, lon: -12.87 };
 const MAMOU = { lat: 10.38, lon: -12.09 };
+/** Où poser le nom de chacun des 13 pays du réseau (latitude, longitude). */
+const COUNTRIES: [number, number][] = [
+  [13.45, -15.4], // Gambie
+  [12.0, -14.9], // Guinée-Bissau
+  [10.9, -10.9], // Guinée
+  [8.5, -11.8], // Sierra Leone
+  [6.4, -9.4], // Libéria
+  [14.2, -6.5], // Mali
+  [7.6, -5.5], // Côte d'Ivoire
+  [12.4, -1.6], // Burkina Faso
+  [7.9, -1.2], // Ghana
+  [8.6, 1.0], // Togo
+  [9.9, 2.3], // Bénin
+  [14.4, 5.5], // Niger
+  [9.6, 8.0], // Nigeria
+];
+
 /** La maille d'un degré qui contient Kindia et Mamou : 10 à 11° N, 13 à 12° O. */
 const CELL = { south: 10, north: 11, west: -13, east: -12 };
 
@@ -379,16 +402,15 @@ interface Shot {
   scene: THREE.Scene;
   /** Éléments animés du plan, selon son avancement de 0 à 1. */
   animate?: (u: number) => void;
-  fog: number;
-  /** Centre de l'ombre portée, pour les plans au sol. */
-  shadowAt: THREE.Vector3;
+  /** Exposition du rendu : le plein jour et l'orbite ne se règlent pas pareil. */
+  exposure: number;
   camera: (u: number) => { position: THREE.Vector3; target: THREE.Vector3 };
 }
 
 export function mountFilm(
   canvas: HTMLCanvasElement,
   assets: FilmAssets,
-  labels: string[],
+  labels: FilmLabels,
   onFrame: FrameListener,
   onReady: () => void,
 ): Film | null {
@@ -404,7 +426,6 @@ export function mountFilm(
   }
   renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.75));
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
-  renderer.toneMappingExposure = 0.4;
   renderer.shadowMap.enabled = true;
   renderer.shadowMap.type = THREE.PCFShadowMap;
 
@@ -412,107 +433,60 @@ export function mountFilm(
   const textures = new THREE.TextureLoader();
   const disposables: { dispose: () => void }[] = [];
 
-  /* ----- Scène au sol ----- */
+  /* ----- Scène au sol : un paysage photographié, projeté sur un sol plat ----- */
 
   const land = new THREE.Scene();
-  const sunDirection = new THREE.Vector3().setFromSphericalCoords(1, (90 - 32) * RAD, 62 * RAD);
+  const panorama = textures.load(assets.panorama);
+  panorama.colorSpace = THREE.SRGBColorSpace;
+  panorama.mapping = THREE.EquirectangularReflectionMapping;
+  panorama.anisotropy = 8;
+  disposables.push(panorama);
 
-  const sky = new Sky();
-  sky.scale.setScalar(9000);
-  const skyUniforms = sky.material.uniforms;
-  skyUniforms.turbidity.value = 3.2;
-  skyUniforms.rayleigh.value = 1.1;
-  skyUniforms.mieCoefficient.value = 0.006;
-  skyUniforms.mieDirectionalG.value = 0.82;
-  skyUniforms.sunPosition.value.copy(sunDirection);
+  // La photographie a été prise à hauteur d'homme : c'est la hauteur de projection.
+  const EYE = 1.7;
+  const backdrop = new GroundedSkybox(panorama, EYE, 160);
+  backdrop.position.y = EYE;
+  backdrop.material.toneMapped = false;
+  land.add(backdrop);
 
-  // Le ciel éclaire la scène : on en tire la carte d'environnement.
+  // Le même panorama éclaire les objets, pour qu'ils prennent la lumière du lieu.
   const pmrem = new THREE.PMREMGenerator(renderer);
-  const skyOnly = new THREE.Scene();
-  skyOnly.add(sky);
-  const environment = pmrem.fromScene(skyOnly, 0, 0.1, 12000);
-  land.add(sky);
-  land.environment = environment.texture;
-  land.environmentIntensity = 0.75;
-  land.fog = new THREE.FogExp2(0xd9bfa3, 0.0014);
-  disposables.push(pmrem, environment);
+  let environment: THREE.WebGLRenderTarget | null = null;
+  const lightFromPanorama = () => {
+    environment = pmrem.fromEquirectangular(panorama);
+    land.environment = environment.texture;
+  };
+  land.environmentIntensity = 1.5;
+  disposables.push(pmrem);
 
-  const sun = new THREE.DirectionalLight(0xffe6c8, 3.4);
+  // Le soleil de la photographie, à 73° de hauteur : il porte les ombres des objets.
+  const sunDirection = vec(0.212, 0.956, 0.201).normalize();
+  const sun = new THREE.DirectionalLight(0xfff4e4, 3);
+  sun.position.copy(sunDirection).multiplyScalar(120);
   sun.castShadow = true;
   sun.shadow.mapSize.set(2048, 2048);
-  sun.shadow.camera.left = -48;
-  sun.shadow.camera.right = 48;
-  sun.shadow.camera.top = 48;
-  sun.shadow.camera.bottom = -48;
-  sun.shadow.camera.far = 400;
+  sun.shadow.camera.left = -30;
+  sun.shadow.camera.right = 30;
+  sun.shadow.camera.top = 30;
+  sun.shadow.camera.bottom = -30;
+  sun.shadow.camera.far = 300;
   sun.shadow.bias = -0.0004;
   sun.shadow.normalBias = 0.03;
-  land.add(sun, sun.target);
+  land.add(sun);
 
-  // Sol : latérite photographiée, relief doux au loin, teinte qui varie pour casser la répétition.
-  const tile = (url: string, color: boolean) => {
-    const texture = textures.load(url);
-    texture.wrapS = THREE.RepeatWrapping;
-    texture.wrapT = THREE.RepeatWrapping;
-    texture.repeat.set(420, 420);
-    texture.anisotropy = 8;
-    if (color) texture.colorSpace = THREE.SRGBColorSpace;
-    disposables.push(texture);
-    return texture;
-  };
-  const groundGeometry = new THREE.PlaneGeometry(2400, 2400, 200, 200);
-  groundGeometry.rotateX(-Math.PI / 2);
-  const positions = groundGeometry.attributes.position;
-  const tints = new Float32Array(positions.count * 3);
-  for (let i = 0; i < positions.count; i += 1) {
-    const x = positions.getX(i);
-    const z = positions.getZ(i);
-    const far = smooth(140, 700, Math.hypot(x, z));
-    positions.setY(i, far * 16 * noise(x, z));
-    const tint = 0.9 + 0.14 * noise(x * 2.3 + 40, z * 2.1 - 15);
-    // Teinte chaude : la latérite de Guinée est plus rouge que l'échantillon photographié.
-    tints.set([tint * 1.12, tint * 0.86, tint * 0.72], i * 3);
-  }
-  groundGeometry.setAttribute('color', new THREE.BufferAttribute(tints, 3));
-  groundGeometry.computeVertexNormals();
-  const ground = new THREE.Mesh(
-    groundGeometry,
-    new THREE.MeshStandardMaterial({
-      map: tile(assets.groundColor, true),
-      normalMap: tile(assets.groundNormal, false),
-      roughnessMap: tile(assets.groundRoughness, false),
-      vertexColors: true,
-    }),
+  // Le sol photographié ne reçoit pas d'ombre : un plan invisible la reçoit à sa place.
+  const shadowCatcher = new THREE.Mesh(
+    new THREE.PlaneGeometry(120, 120),
+    new THREE.ShadowMaterial({ opacity: 0.42 }),
   );
-  ground.receiveShadow = true;
-  land.add(ground);
+  shadowCatcher.rotation.x = -Math.PI / 2;
+  shadowCatcher.position.y = 0.01;
+  shadowCatcher.receiveShadow = true;
+  land.add(shadowCatcher);
 
-  // Blocs de latérite épars.
-  const next = random(7);
-  const rocks = new THREE.InstancedMesh(
-    new THREE.IcosahedronGeometry(1, 1),
-    new THREE.MeshStandardMaterial({ color: 0x9a6248, roughness: 1, flatShading: true }),
-    160,
-  );
-  const pose = new THREE.Object3D();
-  for (let i = 0; i < rocks.count; i += 1) {
-    const angle = next() * Math.PI * 2;
-    const distance = 9 + next() * 150;
-    const size = 0.08 + next() * next() * 0.5;
-    pose.position.set(Math.cos(angle) * distance, size * 0.25, Math.sin(angle) * distance);
-    // Rien dans l'emprise de la centrale.
-    if (Math.abs(pose.position.x - PLANT.x) < 32 && Math.abs(pose.position.z - PLANT.z) < 24)
-      pose.position.y = -5;
-    pose.rotation.set(next() * 3, next() * 3, next() * 3);
-    pose.scale.set(size, size * (0.5 + next() * 0.4), size * (0.7 + next() * 0.5));
-    pose.updateMatrix();
-    rocks.setMatrixAt(i, pose.matrix);
-  }
-  rocks.castShadow = true;
-  rocks.receiveShadow = true;
-  land.add(rocks);
-
-  land.add(buildStation(), buildPlant());
+  const station = buildStation();
+  const plant = buildPlant();
+  land.add(station, plant);
 
   /* ----- Plan « transfert » : les 31 stations sur l'image de la région ----- */
 
@@ -524,13 +498,40 @@ export function mountFilm(
     return texture;
   };
   const region = buildMap(photo(assets.region), [-32, -6, 24, 32], 10);
+  // Frontières et côtes (Natural Earth), puis le nom des 13 pays du réseau.
+  const borderPoints: number[] = [];
+  (borders as [number, number][][]).forEach((line) => {
+    for (let i = 0; i < line.length - 1; i += 1) {
+      const from = region.at(line[i][1], line[i][0], 0.06);
+      const to = region.at(line[i + 1][1], line[i + 1][0], 0.06);
+      borderPoints.push(from.x, from.y, from.z, to.x, to.y, to.z);
+    }
+  });
+  const borderGeometry = new THREE.BufferGeometry();
+  borderGeometry.setAttribute('position', new THREE.Float32BufferAttribute(borderPoints, 3));
+  region.scene.add(
+    new THREE.LineSegments(
+      borderGeometry,
+      new THREE.LineBasicMaterial({
+        color: 0xffffff,
+        transparent: true,
+        opacity: 0.5,
+        toneMapped: false,
+      }),
+    ),
+  );
+  COUNTRIES.forEach(([lat, lon], i) => {
+    const name = textSprite(labels.countries[i] ?? '', 13);
+    name.position.copy(region.at(lat, lon, 0.6));
+    region.scene.add(name);
+  });
   const donors = [...STATIONS]
     .sort((a, b) => haversine(a, CONAKRY) - haversine(b, CONAKRY))
     .slice(0, 3);
   STATIONS.forEach((station) =>
     region.pin(station.lat, station.lon, donors.includes(station) ? 2.4 : 1.6, 0.09, 0xffffff),
   );
-  region.pin(CONAKRY.lat, CONAKRY.lon, 3.4, 0.12, ORANGE, labels[2]);
+  region.pin(CONAKRY.lat, CONAKRY.lon, 3.4, 0.12, ORANGE, labels.conakry);
   const linkMaterial = flat({ color: ORANGE });
   const links = donors.map((donor) => {
     const from = region.at(donor.lat, donor.lon, 2.4);
@@ -580,14 +581,13 @@ export function mountFilm(
   wash.rotation.x = -Math.PI / 2;
   wash.position.copy(guinea.at(10.5, -12.5, 0.03));
   guinea.scene.add(wash);
-  guinea.pin(KINDIA.lat, KINDIA.lon, 12, 0.4, 0xffffff, labels[0]);
-  guinea.pin(MAMOU.lat, MAMOU.lon, 12, 0.4, 0xffffff, labels[1]);
+  guinea.pin(KINDIA.lat, KINDIA.lon, 12, 0.4, 0xffffff, labels.kindia);
+  guinea.pin(MAMOU.lat, MAMOU.lon, 12, 0.4, 0xffffff, labels.mamou);
 
   /* ----- Scène en orbite ----- */
 
   const space = new THREE.Scene();
   space.background = new THREE.Color(0x020203);
-  space.environment = environment.texture;
   space.environmentIntensity = 0.35;
   const EARTH = 10;
 
@@ -693,7 +693,7 @@ export function mountFilm(
     dirty = true;
   });
 
-  /* ----- Les six plans ----- */
+  /* ----- Les sept plans ----- */
 
   const lookFrom =
     (from: THREE.Vector3, to: THREE.Vector3, targetFrom: THREE.Vector3, targetTo = targetFrom) =>
@@ -704,18 +704,32 @@ export function mountFilm(
         target: targetFrom.clone().lerp(targetTo, eased),
       };
     };
-  const origin = vec(0, 0, 0);
+  const hideLinks = () => links.forEach((link) => link.geometry.setDrawRange(0, 0));
   const shots: Shot[] = [
     {
       scene: land,
-      fog: 0.0014,
-      shadowAt: origin,
-      camera: lookFrom(vec(15, 1.9, 17), vec(8.5, 2.6, 9.5), vec(0, 2.2, 0)),
+      exposure: 1,
+      camera: lookFrom(vec(9.5, 1.5, 10.5), vec(5.5, 2.1, 7), vec(0, 2.1, 0)),
+      animate: () => {
+        station.visible = true;
+        plant.visible = false;
+      },
+    },
+    {
+      scene: region.scene,
+      exposure: 1,
+      // Survol d'ouest en est, de la Gambie au Nigeria.
+      camera: lookFrom(
+        region.at(11.5, -15, 0).add(vec(-6, 34, 46)),
+        region.at(10.5, 6, 0).add(vec(6, 40, 52)),
+        region.at(11.5, -14, 0),
+        region.at(10.5, 5, 0),
+      ),
+      animate: hideLinks,
     },
     {
       scene: space,
-      fog: 0,
-      shadowAt: origin,
+      exposure: 0.4,
       camera: lookFrom(
         orbit.clone().add(vec(2.2, 1.6, 5.5)),
         onGlobe(22, -30, 36),
@@ -726,14 +740,16 @@ export function mountFilm(
     },
     {
       scene: land,
-      fog: 0.0014,
-      shadowAt: origin,
+      exposure: 1,
       camera: lookFrom(vec(0.1, 3.3, 1.5), vec(-1.3, 3.16, 0.7), SENSOR),
+      animate: () => {
+        station.visible = true;
+        plant.visible = false;
+      },
     },
     {
       scene: region.scene,
-      fog: 0,
-      shadowAt: origin,
+      exposure: 1,
       camera: lookFrom(
         vec(20, 120, 150),
         conakry.clone().add(vec(18, 26, 42)),
@@ -752,14 +768,16 @@ export function mountFilm(
     },
     {
       scene: land,
-      fog: 0.0014,
-      shadowAt: PLANT,
-      camera: lookFrom(vec(42, 2.2, -4), vec(84, 6, 6), vec(66, 1.4, -26), vec(76, 1.4, -34)),
+      exposure: 1,
+      camera: lookFrom(vec(-13, 1.7, 9), vec(9, 3.6, 12), vec(-2, 1.2, -6), vec(3, 1.2, -8)),
+      animate: () => {
+        station.visible = false;
+        plant.visible = true;
+      },
     },
     {
       scene: guinea.scene,
-      fog: 0,
-      shadowAt: origin,
+      exposure: 1,
       camera: lookFrom(vec(0, 230, 170), vec(0, 175, 120), vec(0, 0, 10), vec(0, 0, 14)),
       // À mi-plan, la maille se subdivise.
       animate: (u) => {
@@ -798,11 +816,7 @@ export function mountFilm(
     camera.position.copy(position);
     camera.lookAt(target);
 
-    if (shot.scene === land) {
-      (land.fog as THREE.FogExp2).density = shot.fog;
-      sun.target.position.copy(shot.shadowAt);
-      sun.position.copy(shot.shadowAt).addScaledVector(sunDirection, 200);
-    }
+    renderer.toneMappingExposure = shot.exposure;
     shot.animate?.(u);
     renderer.render(shot.scene, camera);
 
@@ -839,6 +853,7 @@ export function mountFilm(
   resize();
 
   THREE.DefaultLoadingManager.onLoad = () => {
+    lightFromPanorama();
     dirty = true;
     onReady();
   };
@@ -872,6 +887,7 @@ export function mountFilm(
         }),
       );
       disposables.forEach((item) => item.dispose());
+      environment?.dispose();
       draco.dispose();
       renderer.dispose();
     },

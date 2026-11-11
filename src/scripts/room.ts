@@ -359,7 +359,7 @@ export function buildRoom(frames: Frame[]): Room {
   add(screen, tvCenter.x, tvCenter.y, tvCenter.z);
 
   // Mobilier.
-  const seat = new THREE.Vector3(0, 0, doorZ - 4.72);
+  const seat = new THREE.Vector3(0, 0, doorZ - 4.6);
   const table = new THREE.Vector3(0, 0.395, doorZ - 5.75);
   const furniture: [file: string, x: number, y: number, z: number, turn: number, scale?: number][] =
     [

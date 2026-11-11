@@ -7,9 +7,19 @@ import outlines from '../../data/outlines.json';
 
 interface Props {
   country: 'gn' | 'ci';
+  /** Mention affichée à côté de la carte. */
+  tag: string;
+  /** Nom d'une station à distinguer des autres repères. */
+  station?: string;
 }
 
-const land = outlines[Astro.props.country];
+const { country, tag, station } = Astro.props;
+const land = outlines[country];
+// Le repère le plus proche de Kankan, dans l'est de la Guinée, porte la station.
+const gap = (dot: number[]) => Math.hypot(dot[0] - 77, dot[1] - 32);
+const marked = station
+  ? land.dots.reduce((best, dot, index) => (gap(dot) < gap(land.dots[best]) ? index : best), 0)
+  : -1;
 // Hauteur de chaque repère : une valeur stable, sans hasard, tirée de sa position.
 const pins = land.dots.map(([x, y], index) => ({
   left: (x / land.width) * 100,
@@ -30,8 +40,9 @@ const pins = land.dots.map(([x, y], index) => ({
       {land.dots.map(([x, y]) => <circle cx={x} cy={y} r="0.7" />)}
     </svg>
     {
-      pins.map((pin) => (
+      pins.map((pin, index) => (
         <i
+          class:list={{ station: index === marked }}
           style={`left:${pin.left.toFixed(1)}%;top:${pin.top.toFixed(1)}%;--h:${pin.height.toFixed(0)};--d:${pin.delay.toFixed(2)}s`}
         />
       ))
@@ -44,6 +55,10 @@ const pins = land.dots.map(([x, y], index) => ({
     <path d="M60 42v8M54 54a6 6 0 0 1 12 0"></path>
   </svg>
   <span class="beam"></span>
+  <p class="tag">
+    {station && <b>{station}</b>}
+    {tag}
+  </p>
 </div>
 
 <style>
@@ -128,6 +143,49 @@ const pins = land.dots.map(([x, y], index) => ({
       height: 0;
       margin-top: 0;
       opacity: 0;
+    }
+  }
+
+  i.station {
+    width: 3px;
+    height: calc(var(--h) * 2.4px);
+    margin-top: calc(var(--h) * -2.4px);
+    background: linear-gradient(#ffc266, rgb(255 194 102 / 0%));
+  }
+
+  i.station::before {
+    top: -5px;
+    left: -4px;
+    width: 11px;
+    height: 11px;
+    background: #ffc266;
+    box-shadow: 0 0 18px #ffc266;
+  }
+
+  .tag {
+    position: absolute;
+    right: 8%;
+    bottom: 12%;
+    display: grid;
+    gap: 0.3rem;
+    margin: 0;
+    padding: 0.6rem 1rem;
+    border: 1px solid rgb(255 255 255 / 40%);
+    border-radius: 0.5rem;
+    background: rgb(11 13 18 / 70%);
+    font-size: 0.9rem;
+    animation: tag 0.8s cubic-bezier(0.22, 1, 0.36, 1) 1.6s both;
+  }
+
+  .tag b {
+    font-weight: 500;
+    color: #ffc266;
+  }
+
+  @keyframes tag {
+    from {
+      opacity: 0;
+      translate: 0 0.8rem;
     }
   }
 

@@ -1,129 +1,47 @@
 ---
 /**
- * Barre du haut : le nom, les ancres de la page unique et le changement de langue.
+ * Seul élément fixe de la page : le changement de langue, posé dans le coin de la scène.
  */
-import OrcidIcon from '../ui/OrcidIcon.astro';
-import LinkedInIcon from '../ui/LinkedInIcon.astro';
-import { SITE, orcidUrl } from '../../lib/site';
-import { getLangFromUrl, localizePath, alternatePath, type Lang } from '../../lib/i18n';
+import { getLangFromUrl, alternatePath, type Lang } from '../../lib/i18n';
 
 const lang = getLangFromUrl(Astro.url);
 const other: Lang = lang === 'fr' ? 'en' : 'fr';
-const home = localizePath('/', lang);
-
-const items =
-  lang === 'fr'
-    ? [
-        ['Parcours', 'parcours'],
-        ['Réalisations', 'realisations'],
-        ['Recherche', 'recherche'],
-        ['Contact', 'contact'],
-      ]
-    : [
-        ['Background', 'parcours'],
-        ['Work', 'realisations'],
-        ['Research', 'recherche'],
-        ['Contact', 'contact'],
-      ];
 ---
 
-<header>
-  <nav aria-label={lang === 'fr' ? 'Principale' : 'Main'}>
-    <a href={home} class="name">{SITE.name}</a>
-    <ul>
-      {
-        items.map(([label, id]) => (
-          <li>
-            <a href={`${home}#${id}`}>{label}</a>
-          </li>
-        ))
-      }
-    </ul>
-    <a href={orcidUrl} target="_blank" rel="me noopener" aria-label="ORCID" class="icon"
-      ><OrcidIcon class="size-5" /></a
-    >
-    <a href={SITE.linkedin} target="_blank" rel="me noopener" aria-label="LinkedIn" class="icon">
-      <LinkedInIcon class="size-5" />
-    </a>
-    <a
-      href={alternatePath(Astro.url.pathname, other)}
-      hreflang={other}
-      class="lang"
-      aria-label={other === 'en' ? 'English' : 'Français'}
-    >
-      {other.toUpperCase()}
-    </a>
-  </nav>
-</header>
+<a
+  href={alternatePath(Astro.url.pathname, other)}
+  hreflang={other}
+  aria-label={other === 'en' ? 'English' : 'Français'}
+>
+  {other.toUpperCase()}
+</a>
 
 <style>
-  header {
-    position: sticky;
-    top: 0;
+  a {
+    position: fixed;
+    top: 1.25rem;
+    right: 1.25rem;
     z-index: 40;
-    height: 4rem;
-    background: #0b0c0e;
-    color: #fff;
-  }
-
-  nav {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-    height: 100%;
-    padding-inline: 1.25rem;
-  }
-
-  .name {
-    margin-right: auto;
-    font-family: var(--font-display);
-    font-size: 1.45rem;
-  }
-
-  ul {
-    display: none;
-    gap: 1.75rem;
-    margin: 0 1rem 0 0;
-    padding: 0;
-    list-style: none;
-    font-size: 0.88rem;
-  }
-
-  ul a {
-    color: rgb(255 255 255 / 65%);
-    transition: color 0.2s ease;
-  }
-
-  ul a:hover {
-    color: #fff;
-  }
-
-  .icon {
-    display: none;
-  }
-
-  .lang {
     display: grid;
     place-items: center;
     height: 2.1rem;
     padding-inline: 0.75rem;
-    border: 1px solid rgb(255 255 255 / 25%);
-    font-size: 0.82rem;
+    border-radius: 2rem;
+    background: rgb(11 12 14 / 60%);
+    backdrop-filter: blur(8px);
+    color: #fff;
+    font-size: 0.8rem;
     transition: background 0.2s ease;
   }
 
-  .lang:hover {
-    background: rgb(255 255 255 / 12%);
+  a:hover {
+    background: rgb(11 12 14 / 90%);
   }
 
-  @media (min-width: 900px) {
-    nav {
-      padding-inline: 4rem;
-    }
-
-    ul,
-    .icon {
-      display: flex;
+  @media (min-width: 1024px) {
+    a {
+      top: 2rem;
+      right: 4rem;
     }
   }
 </style>

@@ -4,9 +4,7 @@
  * défilement : un couloir, puis un salon. Ce composant porte le texte et le film de chaque
  * réalisation. Sans WebGL ou sans JavaScript, tout se lit à la suite.
  */
-import Territory from '../film/Territory.astro';
-import Engine from '../film/Engine.astro';
-import Solar from '../film/Solar.astro';
+import Shot from '../film/Shot.astro';
 import { SITE } from '../../lib/site';
 import { getLangFromUrl } from '../../lib/i18n';
 import {
@@ -17,7 +15,8 @@ import {
   getPublications,
   statusLabels,
 } from '../../lib/content';
-import { films } from '../../data/films';
+import { films, glyphs } from '../../data/films';
+import outlines from '../../data/outlines.json';
 import { timeline } from '../../scripts/stage';
 
 const lang = getLangFromUrl(Astro.url);
@@ -51,21 +50,29 @@ const milestones = [
 
 const sentences = (text: string) => text.split(/(?<=[.!?])\s+/).filter(Boolean);
 const channels = getProjects()
-  .filter((project) => project.image && films[project.slug])
+  .filter((project) => films[project.slug])
   .map((project) => {
     const film = films[project.slug];
+    const glyph =
+      film.glyph === 'gn' || film.glyph === 'ci'
+        ? outlines[film.glyph]
+        : { path: glyphs[film.glyph], width: 100, height: 100 };
+    // Le commentaire du film : le résumé, puis la description, phrase par phrase.
+    const lines = [
+      isFr ? project.summaryFr : project.summaryEn,
+      ...sentences(isFr ? project.bodyFr : project.bodyEn),
+    ];
     return {
       title: project.title,
       status: project.status === 'live' ? '' : statusLabels[project.status][lang],
-      image: project.image!,
       url: project.url,
-      scene: film.scene,
-      details: film.details.map((detail) => detail[lang]),
-      // Le commentaire du film : le résumé, puis la description, phrase par phrase.
-      lines: [
-        isFr ? project.summaryFr : project.summaryEn,
-        ...sentences(isFr ? project.bodyFr : project.bodyEn),
-      ],
+      tint: film.tint,
+      glyph: { path: glyph.path, width: glyph.width, height: glyph.height },
+      // Un plan par phrase ; le dernier plan sert aux phrases restantes.
+      beats: lines.map((line, index) => ({
+        line,
+        shot: film.shots[Math.min(index, film.shots.length - 1)],
+      })),
     };
   });
 
@@ -121,15 +128,9 @@ const config = {
   walk: '/models/walk.json',
   frames: milestones.map(({ when, title, place }) => ({ when, title, place })),
   volumes: papers.map(({ title, mention, color }) => ({ title, mention, color })),
-  channels: channels.map(({ title, image }) => ({ title, image })),
+  channels: channels.map(({ title, tint, glyph }) => ({ title, tint, glyph })),
   hint: t.pick,
 };
-/** Position des ancres du menu, en hauteurs d'écran. */
-const anchors = [
-  { id: 'parcours', at: T.walk },
-  { id: 'realisations', at: T.screen + 0.1 },
-  { id: 'recherche', at: T.books },
-];
 ---
 
 <section
@@ -208,36 +209,20 @@ const anchors = [
             </header>
 
             <div class="visual">
-              <div class="vector">
-                {channel.scene.kind === 'territory' && (
-                  <Territory country={channel.scene.country} />
-                )}
-                {channel.scene.kind === 'engine' && (
-                  <Engine
-                    inputs={channel.scene.inputs.map((label) => label[lang])}
-                    core={channel.scene.core[lang]}
-                    output={channel.scene.output[lang]}
-                  />
-                )}
-                {channel.scene.kind === 'solar' && <Solar />}
-              </div>
-              <figure class="capture">
-                <img src={channel.image} alt="" loading="lazy" />
-              </figure>
+              {channel.beats.map((beat) => (
+                <div class="shot">
+                  <Shot shot={beat.shot} lang={lang} />
+                </div>
+              ))}
             </div>
 
-            <ul class="details">
-              {channel.details.map((detail) => (
-                <li>{detail}</li>
-              ))}
-            </ul>
             <ol class="lines">
-              {channel.lines.map((line) => (
-                <li>{line}</li>
+              {channel.beats.map((beat) => (
+                <li>{beat.line}</li>
               ))}
             </ol>
             <ol class="beats" aria-hidden="true">
-              {channel.lines.map(() => (
+              {channel.beats.map(() => (
                 <li />
               ))}
             </ol>
@@ -257,16 +242,11 @@ const anchors = [
       </div>
     </div>
   </div>
-
-  {/* Piste de défilement, et ancres du menu posées à leur place dans la piste. */}
-  <div class="track" aria-hidden="true">
-    {anchors.map((anchor) => <span id={anchor.id} style={`--at:${anchor.at.toFixed(2)}`} />)}
-  </div>
 </section>
 
 <style>
   .scene {
-    --nav: 4rem;
+    --nav: 0rem;
     --stage: calc(100svh - var(--nav));
     --ink: #0b0c0e;
     --glow: #7fdcff;
@@ -282,12 +262,6 @@ const anchors = [
     top: var(--nav);
     height: var(--stage);
     overflow: hidden;
-  }
-
-  .track span {
-    position: absolute;
-    top: calc(var(--stage) * var(--at));
-    scroll-margin-top: var(--nav);
   }
 
   canvas {
@@ -637,84 +611,60 @@ const anchors = [
     color: rgb(255 255 255 / 70%);
   }
 
-  /* Deux plans alternent en plein cadre : le décor vectoriel, puis la capture inclinée dans l'espace. */
+  /* Un plan à la fois, en plein cadre : il arrive du fond en pivotant, l'ancien repart de l'autre côté. */
   .visual {
     position: absolute;
     inset: 5.5rem 0 11.5rem;
     perspective: 1400px;
   }
 
-  .vector,
-  .capture {
+  .shot {
     position: absolute;
     inset: 0;
-    display: grid;
+    display: none;
     place-items: center;
-    margin: 0;
     padding-inline: 1.25rem;
-    transition:
-      opacity 0.7s ease,
-      transform 1.1s cubic-bezier(0.22, 1, 0.36, 1);
   }
 
-  article[data-shot='capture'] .vector {
-    opacity: 0;
-    transform: translate3d(-18%, 0, -420px) rotateY(38deg);
+  .shot[data-state] {
+    display: grid;
   }
 
-  article[data-shot='vector'] .capture {
-    opacity: 0;
-    transform: translate3d(18%, 0, -420px) rotateY(-38deg);
+  .shot[data-state='in'] {
+    animation: shot-in 1.1s cubic-bezier(0.22, 1, 0.36, 1) both;
   }
 
-  .capture img {
-    width: min(100%, 60rem);
-    max-height: 100%;
-    aspect-ratio: 16 / 10;
-    border-radius: 0.5rem;
-    object-fit: cover;
-    object-position: left top;
-    box-shadow:
-      0 0 0 1px rgb(255 255 255 / 14%),
-      0 3rem 6rem rgb(0 0 0 / 65%);
-    transform: rotateY(-18deg) rotateX(7deg);
-    animation: float 9s ease-in-out infinite alternate;
+  .shot[data-state='out'] {
+    animation: shot-out 0.7s cubic-bezier(0.55, 0, 0.78, 0.3) both;
   }
 
-  @keyframes float {
-    to {
-      transform: rotateY(14deg) rotateX(2deg) translateY(-1.5%);
+  @keyframes shot-in {
+    from {
+      opacity: 0;
+      transform: translate3d(22%, 0, -520px) rotateY(-42deg);
     }
   }
 
-  .details {
-    position: absolute;
-    inset: auto 1.25rem 9.4rem;
-    z-index: 2;
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.4rem;
-    margin: 0;
-    padding: 0;
-    list-style: none;
-    font-size: 0.74rem;
+  @keyframes shot-out {
+    to {
+      opacity: 0;
+      transform: translate3d(-22%, 0, -520px) rotateY(42deg);
+    }
   }
 
-  .details li {
-    padding: 0.35rem 0.75rem;
-    border: 1px solid rgb(255 255 255 / 30%);
-    border-radius: 2rem;
-    background: rgb(11 13 18 / 70%);
-    opacity: 0;
-    translate: 0 0.5rem;
-    transition:
-      opacity 0.5s ease,
-      translate 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+  /* Le plan en cours dérive lentement, comme tenu par une caméra à l'épaule. */
+  .shot[data-state='in'] > :global(*) {
+    animation: drift 11s ease-in-out 1.1s infinite alternate;
   }
 
-  .details li[data-on] {
-    opacity: 1;
-    translate: 0;
+  @keyframes drift {
+    from {
+      transform: rotateY(-7deg) rotateX(3deg);
+    }
+
+    to {
+      transform: rotateY(7deg) rotateX(-2deg) translateY(-1.5%);
+    }
   }
 
   .lines {
@@ -828,13 +778,7 @@ const anchors = [
     }
 
     .visual {
-      inset: 8rem 0 12rem;
-    }
-
-    .details {
-      inset: 2.6rem 4rem auto auto;
-      flex-direction: column;
-      align-items: end;
+      inset: 8rem 0 10.5rem;
     }
 
     .lines {
@@ -900,7 +844,7 @@ const anchors = [
   import type { Stage, StageOptions } from '../../scripts/stage';
 
   /** Durée d'une explication à l'écran, en millisecondes. */
-  const LINE_MS = 5600;
+  const LINE_MS = 6400;
   /** Temps que met la caméra à rejoindre l'écran avant que le film commence. */
   const ZOOM_MS = 900;
 
@@ -934,23 +878,34 @@ const anchors = [
 
     const only = (items: Element[], index: number) =>
       items.forEach((item, i) => item.toggleAttribute('data-on', i === index));
-    const upTo = (items: Element[], index: number) =>
-      items.forEach((item, i) => item.toggleAttribute('data-on', i <= index));
 
     /* ----- Film : les explications passent une à une, le plan change avec elles ----- */
 
     const run = (program: HTMLElement) => {
       const lines = [...program.querySelectorAll('.lines li')];
       const beats = [...program.querySelectorAll<HTMLElement>('.beats li')];
-      const details = [...program.querySelectorAll('.details li')];
+      const shots = [...program.querySelectorAll<HTMLElement>('.shot')];
       const started = performance.now();
+      let shown = -1;
+      shots.forEach((shot) => delete shot.dataset.state);
       window.clearInterval(timer);
       const step = () => {
         const elapsed = performance.now() - started;
         const line = Math.min(lines.length - 1, Math.floor(elapsed / LINE_MS));
-        only(lines, line);
-        upTo(details, line);
-        program.dataset.shot = line % 2 ? 'capture' : 'vector';
+        if (line !== shown) {
+          // L'ancien plan sort, le nouveau entre : ses animations repartent de zéro.
+          const leaving = shots[shown];
+          if (leaving) {
+            leaving.dataset.state = 'out';
+            window.setTimeout(
+              () => leaving.dataset.state === 'out' && delete leaving.dataset.state,
+              700,
+            );
+          }
+          shots[line].dataset.state = 'in';
+          only(lines, line);
+          shown = line;
+        }
         beats.forEach((beat, i) =>
           beat.style.setProperty(
             '--played',

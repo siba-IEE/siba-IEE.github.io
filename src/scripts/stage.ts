@@ -33,7 +33,7 @@ export function timeline(milestones: number, volumes: number) {
   /** Il passe le seuil du salon. */
   const seat = walk + milestones * STEP;
   /** Il est assis, la télévision est allumée. */
-  const screen = seat + 1.9;
+  const screen = seat + 2.3;
   /** La caméra quitte l'écran pour la table basse. */
   const rise = screen + 1.3;
   const books = rise + 0.8;
@@ -72,8 +72,8 @@ const vec = (x: number, y: number, z: number) => new THREE.Vector3(x, y, z);
 
 /** Longueur parcourue pendant un cycle de marche (deux pas), en mètres. */
 const STRIDE = 1.5;
-/** Recul et abaissement du bassin pour s'asseoir dans le fauteuil, en mètres. */
-const SIT = { back: 0.34, down: 0.5 };
+/** Recul et abaissement du bassin pour s'asseoir au fond du fauteuil, en mètres. */
+const SIT = { back: 0.52, down: 0.37, recline: 0.2 };
 
 interface WalkData {
   duration: number;
@@ -82,50 +82,96 @@ interface WalkData {
   hips: number[];
 }
 
-interface Bones {
-  hips: THREE.Object3D;
-  leftUpLeg: THREE.Object3D;
-  rightUpLeg: THREE.Object3D;
-  leftLeg: THREE.Object3D;
-  rightLeg: THREE.Object3D;
-  leftArm: THREE.Object3D;
-  rightArm: THREE.Object3D;
-  leftForeArm: THREE.Object3D;
-  rightForeArm: THREE.Object3D;
-  head: THREE.Object3D;
-}
+/** Os que la pose assise déplace, de la racine vers les extrémités. */
+const POSED = [
+  'Hips',
+  'Spine',
+  'Neck',
+  'Head',
+  ...['Left', 'Right'].flatMap((side) => [
+    `${side}UpLeg`,
+    `${side}Leg`,
+    `${side}Foot`,
+    `${side}Arm`,
+    `${side}ForeArm`,
+    `${side}Hand`,
+  ]),
+] as const;
+type Bones = Record<(typeof POSED)[number], THREE.Object3D>;
 
-const BONE_NAMES: Record<keyof Bones, string> = {
-  hips: 'Hips',
-  leftUpLeg: 'LeftUpLeg',
-  rightUpLeg: 'RightUpLeg',
-  leftLeg: 'LeftLeg',
-  rightLeg: 'RightLeg',
-  leftArm: 'LeftArm',
-  rightArm: 'RightArm',
-  leftForeArm: 'LeftForeArm',
-  rightForeArm: 'RightForeArm',
-  head: 'Head',
-};
+const from = new THREE.Vector3();
+const to = new THREE.Vector3();
+const swing = new THREE.Quaternion();
+const world = new THREE.Quaternion();
+const local = new THREE.Quaternion();
 
 /**
- * Pose assise, ajoutée à l'animation d'attente. Sur ce squelette : tourner une cuisse autour
- * de X vers le négatif la porte en avant, tourner un tibia autour de X vers le positif plie
- * le genou, et un bras part en avant autour de Z (positif à gauche, négatif à droite).
- * `remote` lève l'avant-bras droit, télécommande en main ; `down` incline la tête.
+ * Oriente un os pour que le segment qui va de lui à son enfant pointe dans `direction`
+ * (repère du monde). Cette visée ne dépend ni des axes propres de l'os ni de l'animation
+ * en cours, ce qui la rend fiable là où une rotation « autour de X » ne l'est pas.
  */
-function pose(bones: Bones, sit: number, remote: number, down: number) {
-  bones.leftUpLeg.rotateX(-sit * 1.5);
-  bones.rightUpLeg.rotateX(-sit * 1.5);
-  bones.leftLeg.rotateX(sit * 1.5);
-  bones.rightLeg.rotateX(sit * 1.5);
-  bones.leftArm.rotateZ(sit * 0.3);
-  bones.rightArm.rotateZ(-sit * 0.3 - remote * 0.35);
-  bones.leftForeArm.rotateZ(sit * 0.85);
-  bones.rightForeArm.rotateZ(-sit * 0.85 - remote * 0.55);
-  bones.head.rotateX(down * 0.32);
-  bones.hips.position.y -= sit * SIT.down;
-  bones.hips.position.z -= sit * SIT.back;
+function aim(
+  bone: THREE.Object3D,
+  child: THREE.Object3D,
+  direction: THREE.Vector3,
+  weight: number,
+) {
+  bone.updateWorldMatrix(true, false);
+  child.updateWorldMatrix(false, false);
+  from
+    .setFromMatrixPosition(child.matrixWorld)
+    .sub(to.setFromMatrixPosition(bone.matrixWorld))
+    .normalize();
+  swing.setFromUnitVectors(from, to.copy(direction).normalize());
+  swing.multiply(bone.getWorldQuaternion(world));
+  bone.parent!.getWorldQuaternion(local).invert().multiply(swing);
+  bone.quaternion.slerp(local, weight);
+}
+
+const forward = new THREE.Vector3();
+const right = new THREE.Vector3();
+const direction = new THREE.Vector3();
+/** Direction dans le repère du personnage : vers l'avant, vers le haut, vers sa droite. */
+const toward = (ahead: number, up: number, aside: number) =>
+  direction.set(0, up, 0).addScaledVector(forward, ahead).addScaledVector(right, aside);
+
+/**
+ * Pose assise, mêlée à l'animation d'attente selon `sit` (0 debout, 1 assis). Le buste part
+ * vers l'avant pendant la descente puis s'adosse ; les cuisses reposent sur l'assise, les
+ * tibias tombent à la verticale, les mains se posent sur les cuisses. `remote` lève
+ * l'avant-bras droit, télécommande pointée vers l'écran.
+ */
+function pose(bones: Bones, heading: number, sit: number, remote: number) {
+  if (sit <= 0) return;
+  forward.set(Math.sin(heading), 0, Math.cos(heading));
+  right.set(-Math.cos(heading), 0, Math.sin(heading));
+  // Le bassin recule d'abord, descend ensuite : on cherche le siège avant de s'y poser.
+  bones.Hips.position.z -= SIT.back * smooth(0, 0.7, sit);
+  bones.Hips.position.y -= SIT.down * smooth(0.15, 1, sit);
+  const lean = SIT.recline * smooth(0.6, 1, sit) - 0.45 * Math.sin(Math.PI * sit) ** 2;
+  aim(bones.Hips, bones.Spine, toward(-Math.sin(lean), Math.cos(lean), 0), 1);
+  aim(bones.Neck, bones.Head, toward(0.1, 1, 0), sit);
+
+  for (const [side, out] of [
+    ['Left', -1],
+    ['Right', 1],
+  ] as const) {
+    const lifted = side === 'Right' ? remote : 0;
+    aim(bones[`${side}UpLeg`], bones[`${side}Leg`], toward(1, -0.02, out * 0.14), sit);
+    aim(bones[`${side}Leg`], bones[`${side}Foot`], toward(0.05, -1, 0), sit);
+    aim(
+      bones[`${side}Arm`],
+      bones[`${side}ForeArm`],
+      toward(0.22 + lifted * 0.3, -1, out * 0.16),
+      sit,
+    );
+    aim(
+      bones[`${side}ForeArm`],
+      bones[`${side}Hand`],
+      toward(1, -0.75 + lifted * 0.95, -out * 0.3 * (1 - lifted)),
+      sit,
+    );
+  }
 }
 
 /* ---------- La scène ---------- */
@@ -211,6 +257,11 @@ export function mountStage(
   let walkAction: THREE.AnimationAction | null = null;
   let idleAction: THREE.AnimationAction | null = null;
   let bones: Bones | null = null;
+  /**
+   * Valeurs des os posés telles que l'animation les a laissées. Le mélangeur ne réécrit
+   * que ce qui a changé : sans ce rappel, la pose s'ajouterait à elle-même d'image en image.
+   */
+  let base: { bone: THREE.Object3D; rotation: THREE.Quaternion; position: THREE.Vector3 }[] = [];
   let avatar: THREE.Object3D | null = null;
   let disposed = false;
 
@@ -230,10 +281,15 @@ export function mountStage(
           object.castShadow = true;
         }
       });
-      const found = Object.fromEntries(
-        Object.entries(BONE_NAMES).map(([key, name]) => [key, avatar!.getObjectByName(name)]),
-      );
-      if (Object.values(found).every(Boolean)) bones = found as unknown as Bones;
+      const found = Object.fromEntries(POSED.map((name) => [name, avatar!.getObjectByName(name)]));
+      if (Object.values(found).every(Boolean)) {
+        bones = found as Bones;
+        base = POSED.map((name) => ({
+          bone: bones![name],
+          rotation: bones![name].quaternion.clone(),
+          position: bones![name].position.clone(),
+        }));
+      }
 
       mixer = new THREE.AnimationMixer(avatar);
       if (gltf.animations[0]) idleAction = mixer.clipAction(gltf.animations[0]).play();
@@ -292,7 +348,7 @@ export function mountStage(
   let fov = 36;
   let portrait = false;
   /** Mélange la vue courante vers une autre. */
-  const toward = (
+  const view = (
     x: number,
     y: number,
     z: number,
@@ -356,10 +412,10 @@ export function mountStage(
     const turn = smooth(0.4, 0.95, p);
     heading = THREE.MathUtils.lerp(0, heading, turn);
     // Devant le fauteuil, il pivote dos au siège, face à l'écran.
-    const pivot = smooth(T.seat + 0.95, T.seat + 1.2, p);
+    const pivot = smooth(T.seat + 0.9, T.seat + 1.1, p);
     heading = THREE.MathUtils.lerp(heading, Math.PI, pivot);
 
-    const walking = p > 0.4 && p < T.seat + 1.2;
+    const walking = p > 0.4 && p < T.seat + 1.1;
     const moving = walking && Math.abs(speed) > 0.012;
     walkWeight += ((moving ? 1 : 0) - walkWeight) * Math.min(1, delta * (moving ? 7 : 4));
     back +=
@@ -370,12 +426,11 @@ export function mountStage(
     // Pendant qu'il pivote sur place, il piétine au rythme du temps.
     cycle += travelled / STRIDE + (moving && travelled < 0.0005 ? delta * 0.9 : 0);
 
-    const sit = smooth(T.seat + 1.2, T.seat + 1.55, p);
+    const sit = clamp01((p - T.seat - 1.1) / 0.45);
     const remote =
-      smooth(T.seat + 1.5, T.seat + 1.65, p) * (1 - smooth(T.seat + 1.8, T.seat + 2.0, p));
+      smooth(T.seat + 1.55, T.seat + 1.7, p) * (1 - smooth(T.seat + 1.9, T.seat + 2.1, p));
     const power =
-      smooth(T.seat + 1.65, T.seat + 1.85, p) * (1 - smooth(T.rise + 0.05, T.rise + 0.35, p));
-    const reading = smooth(T.rise + 0.1, T.books - 0.1, p);
+      smooth(T.seat + 1.7, T.seat + 1.9, p) * (1 - smooth(T.rise + 0.05, T.rise + 0.35, p));
 
     if (avatar) {
       avatar.position.copy(point);
@@ -386,9 +441,20 @@ export function mountStage(
       walkAction.setEffectiveWeight(weight);
       idleAction.setEffectiveWeight(1 - weight);
       walkAction.time = (cycle % 1) * walkAction.getClip().duration;
+      for (const item of base) {
+        item.bone.quaternion.copy(item.rotation);
+        item.bone.position.copy(item.position);
+      }
       mixer.update(delta);
+      for (const item of base) {
+        item.rotation.copy(item.bone.quaternion);
+        item.position.copy(item.bone.position);
+      }
     }
-    if (bones) pose(bones, sit, remote, reading);
+    if (bones && avatar) {
+      avatar.updateMatrixWorld(true);
+      pose(bones, heading, sit, remote);
+    }
 
     /* Décor : lumière d'accompagnement, télévision, pile de livres. */
     room.follow(point);
@@ -410,7 +476,7 @@ export function mountStage(
     target.set(portrait ? 0 : -1.05, portrait ? 0.85 : 1.15, 0);
     fov = portrait ? 46 : 34;
     // Dans son dos, légèrement décalée du côté opposé au cadre en cours.
-    toward(
+    view(
       -lean * 0.72 * wide,
       1.62,
       point.z + (portrait ? 3.9 : 2.9),
@@ -421,7 +487,7 @@ export function mountStage(
       smooth(0.35, T.walk, p),
     );
     // Vue d'ensemble du salon quand il entre.
-    toward(
+    view(
       portrait ? 0.5 : 1.55,
       1.6,
       D - (portrait ? 0.4 : 1.3),
@@ -434,20 +500,20 @@ export function mountStage(
     // Par-dessus son épaule, vers l'écran : la focale se règle pour que l'écran occupe
     // une part fixe de la largeur.
     const { center } = room.tv;
-    const eye = portrait ? vec(0, 1.6, room.seat.z + 1.5) : vec(0.45, 1.5, room.seat.z + 1.45);
+    const eye = portrait ? vec(0, 1.85, room.seat.z + 2.9) : vec(0.95, 1.64, room.seat.z + 2.3);
     const tvFov = fovFor(portrait ? 0.92 : 0.62, center.z - eye.z);
-    toward(
+    view(
       eye.x,
       eye.y,
       eye.z,
-      center.x - (portrait ? 0 : 0.1),
-      center.y - (portrait ? 0.5 : 0),
+      center.x - (portrait ? 0 : 0.3),
+      center.y - (portrait ? 0.75 : 0),
       center.z,
       tvFov,
-      smooth(T.seat + 1.35, T.screen, p),
+      smooth(T.seat + 1.75, T.screen, p),
     );
     // Vers la table basse et la pile de publications.
-    toward(
+    view(
       room.table.x + (portrait ? 0.25 : 0.62),
       room.table.y + (portrait ? 0.75 : 0.42),
       room.table.z + (portrait ? 1.15 : 0.82),
@@ -465,7 +531,7 @@ export function mountStage(
       const full =
         Math.min(room.tv.height / 2 / half, room.tv.width / 2 / (half * camera.aspect)) * 0.98;
       const eased = zoom * zoom * (3 - 2 * zoom);
-      toward(center.x, center.y, center.z + full, center.x, center.y, center.z, tvFov, eased);
+      view(center.x, center.y, center.z + full, center.x, center.y, center.z, tvFov, eased);
     }
 
     camera.fov = fov;

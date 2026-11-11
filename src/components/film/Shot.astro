@@ -1,0 +1,809 @@
+---
+/**
+ * Un plan du film d'une réalisation : un décor vectoriel animé, choisi et paramétré dans
+ * src/data/films.ts. Tous les décors se dessinent dans le même cadre (640 × 400) et
+ * partagent le même trait, pour que le film garde une seule écriture d'un plan à l'autre.
+ */
+import Territory from './Territory.astro';
+import type { Shot } from '../../data/films';
+import type { Lang } from '../../lib/i18n';
+
+interface Props {
+  shot: Shot;
+  lang: Lang;
+}
+
+const { shot, lang } = Astro.props;
+const delay = (index: number, start = 0.2, step = 0.16) =>
+  `--d:${(start + index * step).toFixed(2)}s`;
+/** Points répartis sur un cercle, en partant du haut. */
+const ring = (count: number, radius: number, cx = 320, cy = 200) =>
+  Array.from({ length: count }, (_, index) => {
+    const angle = -Math.PI / 2 + (index * Math.PI * 2) / count + (count === 1 ? Math.PI / 2 : 0);
+    return { x: cx + Math.cos(angle) * radius * 1.45, y: cy + Math.sin(angle) * radius };
+  });
+---
+
+{
+  shot.scene === 'territory' && (
+    <Territory country={shot.country} tag={shot.tag[lang]} station={shot.station?.[lang]} />
+  )
+}
+
+{
+  shot.scene === 'timeline' && (
+    <svg class="plan" viewBox="0 0 640 400" aria-hidden="true">
+      <path class="axis in" d="M70 300H590" style={delay(0)} />
+      {Array.from({ length: Math.floor((shot.to - shot.from) / 4) + 1 }, (_, index) => {
+        const x = 70 + (index * 4 * 520) / (shot.to - shot.from);
+        return (
+          <path class="tick in" d={`M${x.toFixed(1)} 300v8`} style={delay(index, 0.3, 0.05)} />
+        );
+      })}
+      <text class="big in" x="70" y="346" style={delay(1)}>
+        {shot.from}
+      </text>
+      <text class="big in" x="590" y="346" text-anchor="end" style={delay(2)}>
+        {shot.to}
+      </text>
+      {/* Un rang par pas de temps : plus le pas est fin, plus les traits sont serrés. */}
+      {shot.steps.map((step, index) => {
+        const y = 250 - index * 62;
+        return (
+          <g class="in" style={delay(index, 0.8, 0.35)}>
+            <text x="70" y={y - 14}>
+              {step[lang]}
+            </text>
+            <path
+              class="series"
+              d={`M70 ${y}H590`}
+              style={`stroke-dasharray:${[14, 5, 1.5][index] ?? 1.5} ${[8, 4, 2.5][index] ?? 2.5}`}
+            />
+          </g>
+        );
+      })}
+      <path class="playhead" d="M0 60V300" />
+    </svg>
+  )
+}
+
+{
+  shot.scene === 'sources' &&
+    (() => {
+      const span = 320 / shot.inputs.length;
+      const rows = shot.inputs.map((label, index) => {
+        const y = 40 + span * index + span / 2;
+        return { label: label[lang], y, path: `M186 ${y}C250 ${y} 240 200 302 200` };
+      });
+      return (
+        <svg class="plan" viewBox="0 0 640 400" aria-hidden="true">
+          {rows.map((row, index) => (
+            <g class="in" style={delay(index)}>
+              <rect class="chip" x="18" y={row.y - 17} width="168" height="34" rx="17" />
+              <text x="102" y={row.y + 5} text-anchor="middle">
+                {row.label}
+              </text>
+              <path class="link draw" d={row.path} pathLength="1" />
+              <circle class="dot" r="3.5">
+                <animateMotion
+                  dur="2.4s"
+                  begin={`${(index * 0.45).toFixed(2)}s`}
+                  repeatCount="indefinite"
+                  path={row.path}
+                />
+              </circle>
+            </g>
+          ))}
+          <g class="in" style="--d:1s">
+            {[0, 1, 2].map((level) => (
+              <g transform={`translate(0 ${-level * 26})`}>
+                <path class="solid" d="M302 210v20c0 14 96 14 96 0v-20" />
+                <ellipse class="solid" cx="350" cy="210" rx="48" ry="15" />
+              </g>
+            ))}
+            <text class="big" x="350" y="284" text-anchor="middle">
+              {shot.core[lang]}
+            </text>
+          </g>
+          <g class="in" style="--d:1.5s">
+            <path class="link draw" d="M398 200H468" pathLength="1" />
+            <circle class="dot" r="3.5">
+              <animateMotion dur="1.6s" repeatCount="indefinite" path="M398 200H468" />
+            </circle>
+            <rect class="chip" x="468" y="178" width="160" height="44" rx="6" />
+            <text x="548" y="205" text-anchor="middle">
+              {shot.output[lang]}
+            </text>
+          </g>
+        </svg>
+      );
+    })()
+}
+
+{
+  shot.scene === 'fields' && (
+    <svg class="plan" viewBox="0 0 640 400" aria-hidden="true">
+      {/* Une valeur, et tout ce qui est enregistré avec elle. */}
+      <g class="in" style="--d:0.1s">
+        <path class="solid" d="M70 150 190 110 250 150 130 190Z" />
+        <path class="solid" d="M70 150v60l60 40v-60ZM130 190v60l120-40v-60Z" />
+        <path class="link" d="M250 180H300" />
+      </g>
+      {shot.fields.map((field, index) => {
+        const y = 62 + index * 62;
+        return (
+          <g class="in" style={delay(index, 0.6, 0.3)}>
+            <path class="link draw" d={`M300 180C330 180 330 ${y} 360 ${y}`} pathLength="1" />
+            <rect class="chip" x="360" y={y - 19} width="250" height="38" rx="6" />
+            <circle class="dot" cx="380" cy={y} r="4" />
+            <text x="398" y={y + 5}>
+              {field[lang]}
+            </text>
+          </g>
+        );
+      })}
+    </svg>
+  )
+}
+
+{
+  shot.scene === 'levels' && (
+    <svg class="plan" viewBox="0 0 640 400" aria-hidden="true">
+      {shot.levels.map((level, index) => {
+        const x = 320 + (index - (shot.levels.length - 1) / 2) * 260;
+        return (
+          <g class:list={['in', { muted: level.muted }]} style={delay(index, 0.2, 0.5)}>
+            <path class="solid" d={`M${x - 70} 150 ${x} 115 ${x + 70} 150 ${x} 185Z`} />
+            <path class="solid" d={`M${x - 70} 150v70l70 35v-70ZM${x} 185v70l70-35v-70Z`} />
+            <text class="letter" x={x} y="118" text-anchor="middle">
+              {level.letter}
+            </text>
+            <text x={x} y="300" text-anchor="middle">
+              {level.label[lang]}
+            </text>
+            <circle class="pulse" cx={x} cy="150" r="20" />
+          </g>
+        );
+      })}
+    </svg>
+  )
+}
+
+{
+  shot.scene === 'versions' && (
+    <svg class="plan" viewBox="0 0 640 400" aria-hidden="true">
+      {/* Chaque correction pose une nouvelle fiche sur la pile ; les précédentes restent. */}
+      {[0, 1, 2].map((index) => {
+        const x = 110 + index * 34;
+        const y = 250 - index * 52;
+        return (
+          <g class="in sheet" style={delay(index, 0.2, 0.55)}>
+            <path
+              class="solid"
+              d={`M${x} ${y} ${x + 150} ${y - 44} ${x + 230} ${y} ${x + 80} ${y + 44}Z`}
+            />
+            <path
+              class="hair"
+              d={`M${x + 52} ${y - 4} ${x + 150} ${y - 32}M${x + 72} ${y + 8} ${x + 170} ${y - 20}M${x + 92} ${y + 20} ${x + 150} ${y + 4}`}
+            />
+            <text class="mono" x={x - 10} y={y + 5} text-anchor="end">{`v${index + 1}`}</text>
+          </g>
+        );
+      })}
+      {shot.log
+        ? [0, 1, 2, 3].map((index) => (
+            <g class="in" style={delay(index, 1.6, 0.35)}>
+              <rect class="chip" x="430" y={112 + index * 46} width="180" height="32" rx="4" />
+              <path class="tickmark" d={`M442 ${128 + index * 46}l5 5 9-10`} />
+              <path class="hair" d={`M468 ${128 + index * 46}h${[110, 84, 124, 70][index]}`} />
+            </g>
+          ))
+        : null}
+      <text
+        class="in"
+        x={shot.log ? 520 : 470}
+        y={shot.log ? 320 : 250}
+        text-anchor="middle"
+        style="--d:1.9s"
+      >
+        {shot.note[lang]}
+      </text>
+    </svg>
+  )
+}
+
+{
+  shot.scene === 'layers' && (
+    <svg class="plan" viewBox="0 0 640 400" aria-hidden="true">
+      {shot.layers.map((layer, index) => {
+        const y =
+          330 - (shot.layers.length - 1 - index) * (260 / Math.max(shot.layers.length, 3)) - 60;
+        return (
+          <g class="in slab" style={delay(shot.layers.length - 1 - index, 0.2, 0.35)}>
+            <path class="solid" d={`M110 ${y} 250 ${y - 46} 390 ${y} 250 ${y + 46}Z`} />
+            <path class="solid" d={`M110 ${y}v14l140 46v-14ZM250 ${y + 46}v14l140-46v-14Z`} />
+            <path class="link draw" d={`M390 ${y}H440`} pathLength="1" />
+            <text x="450" y={y + 5}>
+              {layer[lang]}
+            </text>
+          </g>
+        );
+      })}
+    </svg>
+  )
+}
+
+{
+  shot.scene === 'network' &&
+    (() => {
+      const nodes = ring(shot.nodes.length, 140);
+      return (
+        <svg class:list={['plan', { flaky: shot.flaky }]} viewBox="0 0 640 400" aria-hidden="true">
+          {nodes.map((node, index) => {
+            const path = `M320 200L${node.x.toFixed(1)} ${node.y.toFixed(1)}`;
+            const label = shot.nodes[index][lang];
+            return (
+              <g class="in" style={delay(index, 0.6, 0.22)}>
+                <path class="link draw" d={path} pathLength="1" />
+                <circle class="dot" r="3.5">
+                  <animateMotion
+                    dur="1.8s"
+                    begin={`${(index * 0.3).toFixed(2)}s`}
+                    repeatCount="indefinite"
+                    path={path}
+                  />
+                </circle>
+                {label ? (
+                  <>
+                    <rect
+                      class="chip"
+                      x={node.x - 68}
+                      y={node.y - 17}
+                      width="136"
+                      height="34"
+                      rx="17"
+                    />
+                    <text x={node.x} y={node.y + 5} text-anchor="middle">
+                      {label}
+                    </text>
+                  </>
+                ) : (
+                  <circle class="solid" cx={node.x} cy={node.y} r="13" />
+                )}
+              </g>
+            );
+          })}
+          <g class="in" style="--d:0.1s">
+            <circle class="pulse" cx="320" cy="200" r="66" />
+            <circle class="solid" cx="320" cy="200" r="66" />
+            <text class="hub" x="320" y="206" text-anchor="middle">
+              {shot.hub[lang]}
+            </text>
+          </g>
+        </svg>
+      );
+    })()
+}
+
+{
+  shot.scene === 'solar' &&
+    (() => {
+      const arc = 'M40 230C160 -10 480 -10 600 230';
+      return (
+        <svg class="plan" viewBox="0 0 640 400" aria-hidden="true">
+          <path class="course" d={arc} />
+          <g>
+            <circle class="halo" r="30" />
+            <circle class="sun" r="17" />
+            <animateMotion
+              dur="9s"
+              repeatCount="indefinite"
+              path={arc}
+              keyPoints="0;1;0"
+              keyTimes="0;0.5;1"
+              calcMode="linear"
+            />
+          </g>
+          <path class="hair" d="M60 330 320 374 600 292M110 306 380 348M200 280 470 320" />
+          {[0, 1, 2].map((index) => (
+            <g
+              class="in"
+              transform={`translate(${150 + index * 112} ${266 - index * 14})`}
+              style={delay(index, 0.3, 0.2)}
+            >
+              <path class="solid" d="M0 0 84 -22 108 22 24 46Z" />
+              <path class="hair" d="M28 -7 52 37M56 -15 80 30M8 15 92 -7M16 31 100 8" />
+              <path d="M30 44v22M96 26v22" />
+            </g>
+          ))}
+          <g class="in" transform="translate(498 316)" style="--d:1.1s">
+            <rect width="92" height="40" rx="5" />
+            <path d="M92 13h7v14h-7" />
+            <rect class="charge" x="5" y="5" width="82" height="30" rx="2" />
+          </g>
+          <g class="in" style="--d:1.4s">
+            <path class="axis" d="M56 150V78M56 150H228" />
+            <path
+              class="curve draw"
+              d="M56 148C100 148 108 84 142 84S184 148 228 148"
+              pathLength="1"
+            />
+          </g>
+        </svg>
+      );
+    })()
+}
+
+{
+  shot.scene === 'check' && (
+    <svg class="plan" viewBox="0 0 640 400" aria-hidden="true">
+      {/* Deux courbes superposées : le calcul et sa référence. */}
+      <path class="axis in" d="M70 210V50M70 210H570" style="--d:0.1s" />
+      <path
+        class="reference draw in"
+        d="M70 205C190 205 230 70 320 70S450 205 570 205"
+        pathLength="1"
+        style="--d:0.3s"
+      />
+      <path
+        class="curve draw in"
+        d="M70 205C190 205 230 70 320 70S450 205 570 205"
+        pathLength="1"
+        style="--d:1.3s"
+      />
+      <g class="in" style="--d:0.5s">
+        <path class="reference" d="M400 40h28" />
+        <text x="436" y="45">
+          {shot.right[lang]}
+        </text>
+      </g>
+      <g class="in" style="--d:1.5s">
+        <path class="curve" d="M400 66h28" />
+        <text x="436" y="71">
+          {shot.left[lang]}
+        </text>
+      </g>
+      {shot.count ? (
+        <>
+          {/* Un point par test : quarante colonnes, qui s'allument de gauche à droite. */}
+          <defs>
+            <pattern id="tests" width="12.5" height="6" patternUnits="userSpaceOnUse">
+              <rect class="test" x="1" y="1" width="10.5" height="4" />
+            </pattern>
+          </defs>
+          <rect
+            class="tests"
+            x="70"
+            y="250"
+            width="500"
+            height={(shot.count / 40) * 6}
+            fill="url(#tests)"
+          />
+        </>
+      ) : (
+        [0, 1, 2, 3, 4, 5].map((index) => (
+          <g class="in" style={delay(index, 2, 0.2)}>
+            <circle class="solid" cx={110 + index * 84} cy="300" r="20" />
+            <path class="tickmark" d={`M${101 + index * 84} 300l6 7 12-14`} />
+          </g>
+        ))
+      )}
+    </svg>
+  )
+}
+
+{
+  shot.scene === 'device' && (
+    <svg class="plan" viewBox="0 0 640 400" aria-hidden="true">
+      {shot.kind === 'phone' ? (
+        <>
+          <rect class="solid in" x="220" y="20" width="200" height="360" rx="28" style="--d:0.1s" />
+          <path class="hair in" d="M296 40h48" style="--d:0.2s" />
+          {shot.blocks.map((block, index) => (
+            <g class="in" style={delay(index, 0.5, 0.4)}>
+              <rect class="chip" x="240" y={78 + index * 92} width="160" height="74" rx="10" />
+              <text x="256" y={106 + index * 92}>
+                {block[lang]}
+              </text>
+              <path
+                class="hair"
+                d={`M256 ${124 + index * 92}h${[110, 84, 124][index % 3]}M256 ${136 + index * 92}h${[70, 100, 60][index % 3]}`}
+              />
+            </g>
+          ))}
+        </>
+      ) : (
+        <>
+          <rect class="solid in" x="60" y="40" width="520" height="320" rx="10" style="--d:0.1s" />
+          <path class="in" d="M60 78H580" style="--d:0.2s" />
+          <g class="in" style="--d:0.3s">
+            <circle cx="82" cy="59" r="4" />
+            <circle cx="98" cy="59" r="4" />
+            <circle cx="114" cy="59" r="4" />
+            {shot.address ? (
+              <>
+                <rect class="chip" x="140" y="47" width="300" height="24" rx="12" />
+                <text class="mono" x="156" y="64">
+                  {shot.address}
+                </text>
+              </>
+            ) : null}
+          </g>
+          {shot.kind === 'desktop' ? (
+            <>
+              {/* Fenêtre de logiciel : la liste des fichiers à gauche, leur contenu à droite. */}
+              <path class="in" d="M220 78V360" style="--d:0.4s" />
+              {shot.blocks.map((block, index) => (
+                <g class="in" style={delay(index, 0.6, 0.3)}>
+                  <rect class="chip" x="78" y={100 + index * 52} width="124" height="38" rx="6" />
+                  <path d={`M90 ${109 + index * 52}h10l5 5v15H90z`} />
+                  <text x="114" y={124 + index * 52}>
+                    {block[lang]}
+                  </text>
+                </g>
+              ))}
+              {[0, 1, 2, 3, 4, 5].map((index) => (
+                <path
+                  class="hair in"
+                  d={`M244 ${112 + index * 38}H556`}
+                  style={delay(index, 1.4, 0.12)}
+                />
+              ))}
+              <path class="hair in" d="M324 96V320M404 96V320M484 96V320" style="--d:2.1s" />
+            </>
+          ) : (
+            <>
+              <path class="hair in" d="M90 112h220M90 130h150" style="--d:0.5s" />
+              {shot.blocks.map((block, index) => (
+                <g class="in" style={delay(index, 0.8, 0.35)}>
+                  <rect class="chip" x={90 + index * 158} y="170" width="144" height="150" rx="8" />
+                  <path class="solid" d={`M${106 + index * 158} 186h112v60h-112z`} />
+                  <text x={106 + index * 158} y="274">
+                    {block[lang]}
+                  </text>
+                  <path class="hair" d={`M${106 + index * 158} 292h${[96, 70, 84][index % 3]}`} />
+                </g>
+              ))}
+            </>
+          )}
+        </>
+      )}
+    </svg>
+  )
+}
+
+{
+  shot.scene === 'convert' && (
+    <svg class="plan" viewBox="0 0 640 400" aria-hidden="true">
+      {/* Trois fichiers aux colonnes différentes entrent ; un seul tableau en sort. */}
+      {['M12 34V84M30 34V84M58 34V84', 'M22 34V84M40 34V84M48 34V84', 'M16 34V84M44 34V84'].map(
+        (columns, index) => {
+          const y = 30 + index * 118;
+          const path = `M132 ${y + 50}C210 ${y + 50} 200 200 262 200`;
+          return (
+            <g class="in" style={delay(index, 0.2, 0.3)}>
+              <g transform={`translate(52 ${y})`}>
+                <path class="solid" d="M0 0h54l18 18v80H0z" />
+                <path d="M54 0v18h18" />
+                <path class="hair" d={`M0 34H72${columns}`} />
+              </g>
+              <path class="link draw" d={path} pathLength="1" />
+              <circle class="dot" r="3.5">
+                <animateMotion
+                  dur="2.2s"
+                  begin={`${(index * 0.5).toFixed(1)}s`}
+                  repeatCount="indefinite"
+                  path={path}
+                />
+              </circle>
+            </g>
+          );
+        },
+      )}
+      <g class="in" style="--d:1.2s">
+        <path class="solid" d="M262 160 330 180 330 220 262 240Z" />
+        <path class="link draw" d="M330 200H400" pathLength="1" />
+        <circle class="dot" r="3.5">
+          <animateMotion dur="1.4s" repeatCount="indefinite" path="M330 200H400" />
+        </circle>
+      </g>
+      <g class="in" style="--d:1.7s">
+        <rect class="solid" x="400" y="110" width="200" height="180" rx="6" />
+        <path d="M400 146H600" />
+        <path
+          class="hair"
+          d="M400 182H600M400 218H600M400 254H600M450 110V290M500 110V290M550 110V290"
+        />
+        <text x="500" y="318" text-anchor="middle">
+          {shot.output[lang]}
+        </text>
+      </g>
+    </svg>
+  )
+}
+
+{
+  shot.scene === 'archive' && (
+    <svg class="plan" viewBox="0 0 640 400" aria-hidden="true">
+      <g class="in" style="--d:0.1s">
+        <path class="solid" d="M130 40h150l50 50v270H130z" />
+        <path d="M280 40v50h50" />
+        <path class="hair" d="M160 130h140M160 158h140M160 186h100M160 214h140M160 242h80" />
+      </g>
+      {/* Le tampon du dépôt. */}
+      <g class="in stamp" style="--d:0.9s">
+        <circle class="solid" cx="290" cy="300" r="44" />
+        <circle class="hair" cx="290" cy="300" r="34" />
+        <path class="tickmark" d="M272 300l12 13 24-28" />
+      </g>
+      {shot.tags.map((tag, index) => (
+        <g class="in" style={delay(index, 1.3, 0.35)}>
+          <path class="link draw" d={`M330 ${120 + index * 64}H384`} pathLength="1" />
+          <rect class="chip" x="384" y={100 + index * 64} width="230" height="40" rx="20" />
+          <text x="499" y={125 + index * 64} text-anchor="middle">
+            {tag[lang]}
+          </text>
+        </g>
+      ))}
+    </svg>
+  )
+}
+
+<style is:global>
+  /* Écriture commune des plans : un trait blanc, un aplat sombre, un accent bleu, un accent chaud. */
+  .plan {
+    width: min(100%, 60rem);
+    max-height: 100%;
+    overflow: visible;
+    fill: none;
+    stroke: #fff;
+    stroke-width: 1.4;
+    stroke-linejoin: round;
+    stroke-linecap: round;
+    font-family: var(--font-sans);
+    font-size: 14px;
+  }
+
+  .plan text {
+    fill: #fff;
+    stroke: none;
+  }
+
+  .plan .big {
+    font-family: var(--font-display);
+    font-size: 22px;
+  }
+
+  .plan .hub {
+    font-family: var(--font-display);
+    font-size: 18px;
+  }
+
+  .plan .mono {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    fill: rgb(255 255 255 / 75%);
+  }
+
+  .plan .letter {
+    font-family: var(--font-display);
+    font-size: 44px;
+    transform: translateY(46px);
+  }
+
+  .plan .solid {
+    fill: #12303a;
+    stroke: #7fdcff;
+  }
+
+  .plan .chip {
+    fill: rgb(255 255 255 / 6%);
+    stroke: rgb(255 255 255 / 50%);
+  }
+
+  .plan .hair {
+    stroke: rgb(127 220 255 / 45%);
+    stroke-width: 1;
+  }
+
+  .plan .link {
+    stroke: rgb(127 220 255 / 60%);
+  }
+
+  .plan .dot {
+    fill: #7fdcff;
+    stroke: none;
+  }
+
+  .plan .axis,
+  .plan .tick {
+    stroke: rgb(255 255 255 / 45%);
+  }
+
+  .plan .series {
+    stroke: #7fdcff;
+    stroke-width: 10;
+    stroke-linecap: butt;
+  }
+
+  .plan .curve {
+    stroke: #ffc266;
+    stroke-width: 2.4;
+  }
+
+  .plan .reference {
+    stroke-width: 7;
+    stroke: rgb(255 255 255 / 28%);
+  }
+
+  .plan .tickmark {
+    stroke: #ffc266;
+    stroke-width: 2.4;
+  }
+
+  .plan .course {
+    stroke: rgb(255 255 255 / 22%);
+    stroke-dasharray: 3 7;
+  }
+
+  .plan .sun {
+    fill: #ffc266;
+    stroke: none;
+  }
+
+  .plan .halo {
+    fill: rgb(255 194 102 / 22%);
+    stroke: none;
+    animation: plan-breathe 2.6s ease-in-out infinite;
+  }
+
+  .plan .muted {
+    opacity: 0.35;
+  }
+
+  .plan .test {
+    fill: #7fdcff;
+    stroke: none;
+  }
+
+  /* Entrées : chaque élément arrive à son tour, les liaisons se tracent. */
+  .plan .in {
+    animation: plan-in 0.8s cubic-bezier(0.22, 1, 0.36, 1) var(--d, 0s) both;
+  }
+
+  .plan .draw {
+    stroke-dasharray: 1;
+    animation: plan-draw 1s ease-out calc(var(--d, 0s) + 0.3s) both;
+  }
+
+  .plan .in.draw {
+    animation:
+      plan-in 0.8s cubic-bezier(0.22, 1, 0.36, 1) var(--d, 0s) both,
+      plan-draw 1.6s ease-out var(--d, 0s) both;
+  }
+
+  .plan .slab,
+  .plan .sheet {
+    animation-name: plan-drop;
+  }
+
+  .plan .stamp {
+    transform-box: fill-box;
+    transform-origin: center;
+    animation-name: plan-stamp;
+  }
+
+  .plan .pulse {
+    stroke: #7fdcff;
+    transform-box: fill-box;
+    transform-origin: center;
+    animation: plan-pulse 2.4s ease-out infinite;
+  }
+
+  .plan .playhead {
+    stroke: #ffc266;
+    animation: plan-scan 6s cubic-bezier(0.65, 0, 0.35, 1) 1.5s infinite alternate both;
+  }
+
+  .plan .charge {
+    fill: #7fdcff;
+    stroke: none;
+    transform-box: fill-box;
+    transform-origin: left;
+    animation: plan-charge 9s ease-in-out infinite;
+  }
+
+  .plan .tests {
+    stroke: none;
+    animation: plan-wipe 3.2s cubic-bezier(0.65, 0, 0.35, 1) 2.2s both;
+  }
+
+  .plan.flaky .link {
+    animation: plan-flicker 2.8s steps(1) infinite;
+  }
+
+  @keyframes plan-in {
+    from {
+      opacity: 0;
+      translate: -14px 0;
+    }
+  }
+
+  @keyframes plan-drop {
+    from {
+      opacity: 0;
+      translate: 0 -60px;
+    }
+  }
+
+  @keyframes plan-stamp {
+    from {
+      opacity: 0;
+      scale: 2.2;
+      rotate: -18deg;
+    }
+  }
+
+  @keyframes plan-draw {
+    from {
+      stroke-dashoffset: 1;
+    }
+  }
+
+  @keyframes plan-breathe {
+    50% {
+      scale: 1.25;
+    }
+  }
+
+  @keyframes plan-pulse {
+    to {
+      opacity: 0;
+      scale: 1.9;
+    }
+  }
+
+  @keyframes plan-scan {
+    from {
+      translate: 70px 0;
+    }
+
+    to {
+      translate: 590px 0;
+    }
+  }
+
+  @keyframes plan-charge {
+    0%,
+    100% {
+      scale: 0.12 1;
+    }
+
+    50%,
+    70% {
+      scale: 1 1;
+    }
+  }
+
+  @keyframes plan-wipe {
+    from {
+      clip-path: inset(0 100% 0 0);
+    }
+
+    to {
+      clip-path: inset(0);
+    }
+  }
+
+  @keyframes plan-flicker {
+    0%,
+    55% {
+      opacity: 1;
+    }
+
+    60%,
+    85% {
+      opacity: 0.12;
+    }
+  }
+</style>

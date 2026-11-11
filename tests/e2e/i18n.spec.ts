@@ -4,7 +4,7 @@ test.describe('i18n · routing bilingue', () => {
   test('la home française est servie en français', async ({ page }) => {
     await page.goto('/');
     await expect(page.locator('html')).toHaveAttribute('lang', 'fr-FR');
-    await expect(page.getByRole('link', { name: 'Contact', exact: true }).first()).toBeVisible();
+    await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
   });
 
   test('le sélecteur bascule vers l’anglais', async ({ page }) => {

@@ -41,7 +41,7 @@ const chapters: Chapter[] = isFr
       {
         title: 'Corriger sans station',
         lines: [
-          'La plupart des sites n’ont pas de station : la correction vient alors des autres.',
+          'Conakry n’a pas de station : la correction vient des stations les plus proches.',
           'Suivre la tendance nord-sud laisse 1,8 % d’erreur. Copier la station la plus proche, 2,9 %.',
         ],
       },
@@ -85,7 +85,7 @@ const chapters: Chapter[] = isFr
       {
         title: 'Correcting without a station',
         lines: [
-          'Most sites have no station: the correction then comes from the others.',
+          'Conakry has no station: the correction comes from the nearest stations.',
           'Following the north–south trend leaves 1.8% of error. Copying the nearest station, 2.9%.',
         ],
       },
@@ -110,13 +110,13 @@ const ui = isFr
       title: 'Travaux',
       play: 'Lire',
       pause: 'Pause',
-      credit: 'Satellite : modèle NASA. Terre : NASA Blue Marble. Sol : Poly Haven.',
+      credit: 'Satellite : modèle NASA. Images : NASA Blue Marble et MODIS. Sol : Poly Haven.',
     }
   : {
       title: 'Research',
       play: 'Play',
       pause: 'Pause',
-      credit: 'Satellite: NASA model. Earth: NASA Blue Marble. Ground: Poly Haven.',
+      credit: 'Satellite: NASA model. Imagery: NASA Blue Marble and MODIS. Ground: Poly Haven.',
     };
 
 const assets = {
@@ -126,6 +126,8 @@ const assets = {
   earth: '/images/terre/jour.webp',
   satellite: '/models/satellite.glb',
   draco: '/draco/',
+  region: '/images/terre/afrique-ouest.webp',
+  cell: '/images/film/guinee-modis.webp',
 };
 ---
 
@@ -133,7 +135,7 @@ const assets = {
   class="film"
   data-film
   data-assets={JSON.stringify(assets)}
-  data-labels={JSON.stringify(['Kindia', 'Mamou'])}
+  data-labels={JSON.stringify(['Kindia', 'Mamou', 'Conakry'])}
   data-state="loading"
 >
   <canvas aria-hidden="true"></canvas>

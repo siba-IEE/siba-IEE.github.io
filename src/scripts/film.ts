@@ -1,11 +1,11 @@
 /**
  * Film 3D de la page Travaux (three.js). Six plans de douze secondes, joués comme une vidéo :
  * une station de mesure dans la savane, le satellite au-dessus de l'Afrique de l'Ouest, le
- * capteur en gros plan, le transfert vu du ciel, une centrale solaire, puis la maille d'un
- * produit satellitaire.
+ * capteur en gros plan, le transfert sur une image satellite de la région, une centrale
+ * solaire, puis la maille d'un produit satellitaire sur une image satellite de la Guinée.
  *
- * Éléments réels : satellite géostationnaire modélisé par la NASA, image Blue Marble de la
- * Terre, sol de latérite photographié (Poly Haven, CC0). Le ciel est un modèle physique de
+ * Éléments réels : satellite géostationnaire modélisé par la NASA, images satellite NASA
+ * (Blue Marble, MODIS), positions des stations et des villes, sol de latérite photographié (Poly Haven, CC0). Le ciel est un modèle physique de
  * diffusion atmosphérique, qui éclaire aussi la scène. Le reste (station, centrale) est
  * construit ici avec des matériaux physiques.
  *
@@ -15,6 +15,7 @@ import * as THREE from 'three';
 import { Sky } from 'three/addons/objects/Sky.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
+import { STATIONS } from '../data/stations';
 
 export const CHAPTER_SECONDS = 12;
 export const CHAPTER_COUNT = 6;
@@ -27,6 +28,10 @@ export interface FilmAssets {
   earth: string;
   satellite: string;
   draco: string;
+  /** Image satellite de l'Afrique de l'Ouest (NASA Blue Marble). */
+  region: string;
+  /** Image satellite de la Guinée (MODIS Terra, 21 décembre 2023). */
+  cell: string;
 }
 
 export interface Film {
@@ -292,14 +297,88 @@ function buildPlant() {
   return group;
 }
 
-/** Positions du plan « transfert » : trois stations donneuses et le site sans mesure. */
-const DONORS = [vec(-140, 0, -90), vec(40, 0, -190), vec(190, 0, -60)];
-const TARGET_SITE = vec(-30, 0, 60);
+/* ---------- Plans sur image satellite ---------- */
+
+/** Matériau non éclairé, hors du rendu tonal : l'image et les tracés gardent leurs couleurs. */
+const flat = (parameters: THREE.MeshBasicMaterialParameters) =>
+  new THREE.MeshBasicMaterial({ toneMapped: false, ...parameters });
+
+/**
+ * Une image satellite posée à plat, avec de quoi y placer des repères par latitude et
+ * longitude. `bounds` : ouest, sud, est, nord, en degrés. `scale` : unités de scène par degré.
+ */
+function buildMap(texture: THREE.Texture, bounds: [number, number, number, number], scale: number) {
+  const [west, south, east, north] = bounds;
+  const scene = new THREE.Scene();
+  scene.background = new THREE.Color(0x050505);
+  const plane = new THREE.Mesh(
+    new THREE.PlaneGeometry((east - west) * scale, (north - south) * scale),
+    flat({ map: texture }),
+  );
+  plane.rotation.x = -Math.PI / 2;
+  scene.add(plane);
+  const at = (lat: number, lon: number, height = 0) =>
+    vec((lon - (west + east) / 2) * scale, height, -(lat - (south + north) / 2) * scale);
+  /** Trait posé sur la carte, entre deux points. */
+  const line = (
+    from: THREE.Vector3,
+    to: THREE.Vector3,
+    width: number,
+    material: THREE.Material,
+  ) => {
+    const mesh = new THREE.Mesh(new THREE.PlaneGeometry(from.distanceTo(to), width), material);
+    mesh.position.copy(from).lerp(to, 0.5).setY(0.05);
+    mesh.rotation.set(-Math.PI / 2, 0, Math.atan2(-(to.z - from.z), to.x - from.x));
+    scene.add(mesh);
+    return mesh;
+  };
+  /** Repère vertical, avec une étiquette facultative. */
+  const pin = (
+    lat: number,
+    lon: number,
+    height: number,
+    radius: number,
+    color: number,
+    name?: string,
+  ) => {
+    const base = at(lat, lon);
+    const stem = new THREE.Mesh(
+      new THREE.CylinderGeometry(radius, radius, height, 12),
+      flat({ color }),
+    );
+    stem.position.copy(base).setY(height / 2);
+    const head = new THREE.Mesh(new THREE.SphereGeometry(radius * 2.6, 16, 12), flat({ color }));
+    head.position.copy(base).setY(height);
+    scene.add(stem, head);
+    if (name) {
+      const text = textSprite(name, height * 2.6);
+      text.position.copy(base).setY(height * 1.5);
+      scene.add(text);
+    }
+  };
+  return { scene, at, line, pin };
+}
+
+const haversine = (a: { lat: number; lon: number }, b: { lat: number; lon: number }) => {
+  const h =
+    Math.sin(((b.lat - a.lat) * RAD) / 2) ** 2 +
+    Math.cos(a.lat * RAD) * Math.cos(b.lat * RAD) * Math.sin(((b.lon - a.lon) * RAD) / 2) ** 2;
+  return 2 * Math.asin(Math.sqrt(h));
+};
+
+/** Site sans station du plan « transfert » : Conakry. Villes du plan « maille ». */
+const CONAKRY = { lat: 9.51, lon: -13.71 };
+const KINDIA = { lat: 10.06, lon: -12.87 };
+const MAMOU = { lat: 10.38, lon: -12.09 };
+/** La maille d'un degré qui contient Kindia et Mamou : 10 à 11° N, 13 à 12° O. */
+const CELL = { south: 10, north: 11, west: -13, east: -12 };
 
 /* ---------- Le film ---------- */
 
 interface Shot {
-  space: boolean;
+  scene: THREE.Scene;
+  /** Éléments animés du plan, selon son avancement de 0 à 1. */
+  animate?: (u: number) => void;
   fog: number;
   /** Centre de l'ombre portée, pour les plans au sol. */
   shadowAt: THREE.Vector3;
@@ -435,94 +514,74 @@ export function mountFilm(
 
   land.add(buildStation(), buildPlant());
 
-  // Plan « transfert » : les stations donneuses, le site sans mesure, et les liaisons.
-  const transfer = new THREE.Group();
-  DONORS.forEach((donor) => {
-    const station = buildStation();
-    station.position.copy(donor);
-    station.scale.setScalar(5); // vues de très haut, elles doivent rester lisibles
-    transfer.add(station);
-  });
-  const stake = part(
-    new THREE.CylinderGeometry(0.5, 0.5, 30, 12),
-    new THREE.MeshBasicMaterial({ color: 0xffffff, fog: false }),
-    TARGET_SITE.x,
-    15,
-    TARGET_SITE.z,
+  /* ----- Plan « transfert » : les 31 stations sur l'image de la région ----- */
+
+  const photo = (url: string) => {
+    const texture = textures.load(url);
+    texture.colorSpace = THREE.SRGBColorSpace;
+    texture.anisotropy = 8;
+    disposables.push(texture);
+    return texture;
+  };
+  const region = buildMap(photo(assets.region), [-32, -6, 24, 32], 10);
+  const donors = [...STATIONS]
+    .sort((a, b) => haversine(a, CONAKRY) - haversine(b, CONAKRY))
+    .slice(0, 3);
+  STATIONS.forEach((station) =>
+    region.pin(station.lat, station.lon, donors.includes(station) ? 2.4 : 1.6, 0.09, 0xffffff),
   );
-  stake.castShadow = false;
-  transfer.add(stake);
-  const linkMaterial = new THREE.MeshBasicMaterial({ color: ORANGE, fog: false });
-  const links = DONORS.map((donor) => {
-    const middle = donor.clone().lerp(TARGET_SITE, 0.5).setY(95);
-    const curve = new THREE.QuadraticBezierCurve3(
-      donor.clone().setY(16),
-      middle,
-      TARGET_SITE.clone().setY(30),
-    );
-    const link = new THREE.Mesh(new THREE.TubeGeometry(curve, 80, 0.9, 8), linkMaterial);
-    transfer.add(link);
+  region.pin(CONAKRY.lat, CONAKRY.lon, 3.4, 0.12, ORANGE, labels[2]);
+  const linkMaterial = flat({ color: ORANGE });
+  const links = donors.map((donor) => {
+    const from = region.at(donor.lat, donor.lon, 2.4);
+    const to = region.at(CONAKRY.lat, CONAKRY.lon, 3.4);
+    const curve = new THREE.QuadraticBezierCurve3(from, from.clone().lerp(to, 0.5).setY(9), to);
+    const link = new THREE.Mesh(new THREE.TubeGeometry(curve, 64, 0.1, 8), linkMaterial);
+    region.scene.add(link);
     return link;
   });
-  land.add(transfer);
+  const conakry = region.at(CONAKRY.lat, CONAKRY.lon);
 
-  // Plan « maille » : une grande maille, deux villes dedans, puis la grille fine.
-  const grid = new THREE.Group();
-  const CELL = 460;
-  const strip = (
-    length: number,
-    width: number,
-    material: THREE.Material,
-    x: number,
-    z: number,
-    turned: boolean,
-  ) => {
-    const mesh = new THREE.Mesh(
-      new THREE.BoxGeometry(turned ? width : length, 0.4, turned ? length : width),
-      material,
-    );
-    mesh.position.set(x, 2, z);
-    grid.add(mesh);
-  };
-  const coarse = new THREE.MeshBasicMaterial({ color: 0xffffff, fog: false });
-  const fine = new THREE.MeshBasicMaterial({
-    color: 0xffffff,
-    fog: false,
-    transparent: true,
-    opacity: 0,
-  });
-  [-1, 1].forEach((side) => {
-    strip(CELL, 3.2, coarse, 0, (side * CELL) / 2, false);
-    strip(CELL, 3.2, coarse, (side * CELL) / 2, 0, true);
-  });
+  /* ----- Plan « maille » : la maille d'un degré sur l'image de la Guinée ----- */
+
+  const guinea = buildMap(photo(assets.cell), [-14.5, 9, -10.5, 12], 100);
+  const white = flat({ color: 0xffffff, transparent: true, opacity: 0.4 });
+  const bold = flat({ color: 0xffffff });
+  const fine = flat({ color: 0xffffff, transparent: true, opacity: 0 });
+  // La grille d'un degré du produit, sur toute l'image.
+  [-14, -13, -12, -11].forEach((lon) =>
+    guinea.line(guinea.at(9, lon), guinea.at(12, lon), 0.6, white),
+  );
+  [10, 11].forEach((lat) => guinea.line(guinea.at(lat, -14.5), guinea.at(lat, -10.5), 0.6, white));
+  // La maille de Kindia et Mamou, puis sa subdivision en mailles fines.
+  guinea.line(guinea.at(CELL.south, CELL.west), guinea.at(CELL.south, CELL.east), 1.4, bold);
+  guinea.line(guinea.at(CELL.north, CELL.west), guinea.at(CELL.north, CELL.east), 1.4, bold);
+  guinea.line(guinea.at(CELL.south, CELL.west), guinea.at(CELL.north, CELL.west), 1.4, bold);
+  guinea.line(guinea.at(CELL.south, CELL.east), guinea.at(CELL.north, CELL.east), 1.4, bold);
   for (let i = 1; i < 8; i += 1) {
-    const offset = -CELL / 2 + (i * CELL) / 8;
-    strip(CELL, 1.2, fine, 0, offset, false);
-    strip(CELL, 1.2, fine, offset, 0, true);
+    const step = i / 8;
+    guinea.line(
+      guinea.at(CELL.south + step, CELL.west),
+      guinea.at(CELL.south + step, CELL.east),
+      0.35,
+      fine,
+    );
+    guinea.line(
+      guinea.at(CELL.south, CELL.west + step),
+      guinea.at(CELL.north, CELL.west + step),
+      0.35,
+      fine,
+    );
   }
   const wash = new THREE.Mesh(
-    new THREE.PlaneGeometry(CELL, CELL),
-    new THREE.MeshBasicMaterial({
-      color: 0xffe600,
-      transparent: true,
-      opacity: 0.22,
-      fog: false,
-      depthWrite: false,
-    }),
+    new THREE.PlaneGeometry(100, 100),
+    flat({ color: 0xffe600, transparent: true, opacity: 0.25, depthWrite: false }),
   );
   wash.rotation.x = -Math.PI / 2;
-  wash.position.y = 1.5;
-  wash.material.depthTest = false;
-  wash.renderOrder = 1;
-  grid.add(wash);
-  [vec(-120, 0, 60), vec(105, 0, -75)].forEach((town, i) => {
-    const pin = new THREE.Mesh(new THREE.CylinderGeometry(1.6, 1.6, 46, 12), coarse);
-    pin.position.set(town.x, 23, town.z);
-    const name = textSprite(labels[i] ?? '', 110);
-    name.position.set(town.x, 66, town.z);
-    grid.add(pin, name);
-  });
-  land.add(grid);
+  wash.position.copy(guinea.at(10.5, -12.5, 0.03));
+  guinea.scene.add(wash);
+  guinea.pin(KINDIA.lat, KINDIA.lon, 12, 0.4, 0xffffff, labels[0]);
+  guinea.pin(MAMOU.lat, MAMOU.lon, 12, 0.4, 0xffffff, labels[1]);
 
   /* ----- Scène en orbite ----- */
 
@@ -648,13 +707,13 @@ export function mountFilm(
   const origin = vec(0, 0, 0);
   const shots: Shot[] = [
     {
-      space: false,
+      scene: land,
       fog: 0.0014,
       shadowAt: origin,
       camera: lookFrom(vec(15, 1.9, 17), vec(8.5, 2.6, 9.5), vec(0, 2.2, 0)),
     },
     {
-      space: true,
+      scene: space,
       fog: 0,
       shadowAt: origin,
       camera: lookFrom(
@@ -663,30 +722,50 @@ export function mountFilm(
         orbit,
         onGlobe(9, -4, EARTH * 0.7),
       ),
+      animate: (u) => (bandMaterial.opacity = smooth(0.4, 0.72, u)),
     },
     {
-      space: false,
+      scene: land,
       fog: 0.0014,
       shadowAt: origin,
       camera: lookFrom(vec(0.1, 3.3, 1.5), vec(-1.3, 3.16, 0.7), SENSOR),
     },
     {
-      space: false,
-      fog: 0.0009,
+      scene: region.scene,
+      fog: 0,
       shadowAt: origin,
-      camera: lookFrom(vec(-90, 80, 230), vec(-40, 150, 300), vec(20, 10, -50)),
+      camera: lookFrom(
+        vec(20, 120, 150),
+        conakry.clone().add(vec(18, 26, 42)),
+        vec(10, 0, 20),
+        conakry.clone().add(vec(12, 0, -6)),
+      ),
+      // Les liaisons se tracent l'une après l'autre, des stations vers le site.
+      animate: (u) =>
+        links.forEach((link, i) => {
+          const count = link.geometry.index?.count ?? 0;
+          link.geometry.setDrawRange(
+            0,
+            Math.floor((count * smooth(0.3 + i * 0.1, 0.7 + i * 0.1, u)) / 3) * 3,
+          );
+        }),
     },
     {
-      space: false,
+      scene: land,
       fog: 0.0014,
       shadowAt: PLANT,
       camera: lookFrom(vec(42, 2.2, -4), vec(84, 6, 6), vec(66, 1.4, -26), vec(76, 1.4, -34)),
     },
     {
-      space: false,
-      fog: 0.0004,
+      scene: guinea.scene,
+      fog: 0,
       shadowAt: origin,
-      camera: lookFrom(vec(0, 560, 420), vec(0, 760, 180), origin),
+      camera: lookFrom(vec(0, 230, 170), vec(0, 175, 120), vec(0, 0, 10), vec(0, 0, 14)),
+      // À mi-plan, la maille se subdivise.
+      animate: (u) => {
+        fine.opacity = smooth(0.52, 0.78, u) * 0.8;
+        wash.material.opacity = 0.25 * (1 - smooth(0.52, 0.78, u));
+      },
     },
   ];
   const duration = CHAPTER_SECONDS * CHAPTER_COUNT;
@@ -719,25 +798,13 @@ export function mountFilm(
     camera.position.copy(position);
     camera.lookAt(target);
 
-    if (shot.space) {
-      bandMaterial.opacity = smooth(0.4, 0.72, u);
-    } else {
+    if (shot.scene === land) {
       (land.fog as THREE.FogExp2).density = shot.fog;
       sun.target.position.copy(shot.shadowAt);
       sun.position.copy(shot.shadowAt).addScaledVector(sunDirection, 200);
-      transfer.visible = chapter === 3;
-      grid.visible = chapter === 5;
-      links.forEach((link, i) => {
-        const count = link.geometry.index?.count ?? 0;
-        link.geometry.setDrawRange(
-          0,
-          Math.floor((count * smooth(0.18 + i * 0.12, 0.6 + i * 0.12, u)) / 3) * 3,
-        );
-      });
-      fine.opacity = smooth(0.52, 0.78, u) * 0.85;
-      wash.material.opacity = 0.22 * (1 - smooth(0.52, 0.78, u));
     }
-    renderer.render(shot.space ? space : land, camera);
+    shot.animate?.(u);
+    renderer.render(shot.scene, camera);
 
     // Fondu au noir à chaque changement de plan.
     const fade = Math.max(
@@ -799,7 +866,7 @@ export function mountFilm(
       observer.disconnect();
       window.removeEventListener('resize', resize);
       THREE.DefaultLoadingManager.onLoad = () => {};
-      [land, space].forEach((scene) =>
+      [land, space, region.scene, guinea.scene].forEach((scene) =>
         scene.traverse((object) => {
           if (object instanceof THREE.Mesh) object.geometry.dispose();
         }),

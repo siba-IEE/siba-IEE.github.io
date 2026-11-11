@@ -1,0 +1,951 @@
+---
+/**
+ * La page d'accueil tient dans une seule scène 3D (src/scripts/stage.ts), pilotée par le
+ * défilement. Ce composant porte tout le texte : l'ouverture, le parcours qui défile pendant
+ * la marche, l'écran de projection et ses chaînes, les fiches des publications.
+ * Sans WebGL ou sans JavaScript, ces contenus se lisent à la suite.
+ */
+import { SITE } from '../../lib/site';
+import { getLangFromUrl } from '../../lib/i18n';
+import {
+  getProfile,
+  getExperience,
+  getEducation,
+  getProjects,
+  getPublications,
+  statusLabels,
+} from '../../lib/content';
+import { timeline } from '../../scripts/stage';
+
+const lang = getLangFromUrl(Astro.url);
+const isFr = lang === 'fr';
+const profile = getProfile();
+
+const since = isFr ? 'Depuis' : 'Since';
+const dates = (start: string, end: string, current = false) =>
+  current ? `${since} ${start}` : end ? `${start}–${end}` : start;
+
+/* ---------- Parcours : formation et postes, dans l'ordre du temps ---------- */
+
+const milestones = [
+  ...getEducation().map((item) => ({
+    year: Number(item.start),
+    when: dates(item.start, item.end),
+    title: isFr ? item.titleFr : item.titleEn,
+    place: [item.school, isFr ? item.locationFr : item.locationEn].filter(Boolean).join(', '),
+    text: '',
+  })),
+  ...getExperience().map((item) => ({
+    year: Number(item.start) + 0.5,
+    when: dates(item.start, item.end, item.current),
+    title: isFr ? item.roleFr : item.roleEn,
+    place: `${item.org}, ${isFr ? item.locationFr : item.locationEn}`,
+    text: isFr ? item.descFr : item.descEn,
+  })),
+].sort((a, b) => a.year - b.year);
+
+/* ---------- Réalisations : une chaîne par projet ---------- */
+
+const sentences = (text: string) => text.split(/(?<=[.!?])\s+/).filter(Boolean);
+const channels = getProjects()
+  .filter((project) => project.image)
+  .map((project) => ({
+    slug: project.slug,
+    title: project.title,
+    status: project.status === 'live' ? '' : statusLabels[project.status][lang],
+    image: project.image!,
+    url: project.url,
+    // Le « film » d'un projet : son résumé, puis sa description, phrase par phrase.
+    lines: [
+      isFr ? project.summaryFr : project.summaryEn,
+      ...sentences(isFr ? project.bodyFr : project.bodyEn),
+    ],
+  }));
+
+/* ---------- Recherche : un volume par publication ---------- */
+
+const types: Record<string, { fr: string; en: string }> = {
+  'journal-article': { fr: 'Article', en: 'Article' },
+  preprint: { fr: 'Prépublication', en: 'Preprint' },
+  'data-set': { fr: 'Jeu de données', en: 'Dataset' },
+  software: { fr: 'Logiciel', en: 'Software' },
+};
+const cloths = ['#1f3a5f', '#7a2a2a', '#2f4a3a', '#c9a23f', '#3d3f47', '#b5532a', '#d8cdb8'];
+const papers = getPublications().map((pub, index) => ({
+  title: pub.title,
+  mention: `${pub.year} · ${types[pub.type]?.[lang] ?? pub.type}`.replace(' · ', ', '),
+  authors: [pub.authors.join(', '), pub.venue].filter(Boolean).join('. '),
+  doi: pub.doi,
+  url: pub.url ?? `https://doi.org/${pub.doi}`,
+  color: cloths[index % cloths.length],
+}));
+const volumes = papers.map(({ title, mention, color }) => ({ title, mention, color }));
+
+const T = timeline(milestones.length, papers.length);
+const pad = (n: number) => String(n).padStart(2, '0');
+
+const t = isFr
+  ? {
+      role: profile.roleFr,
+      scroll: 'Défiler',
+      pick: 'Choisissez une chaîne',
+      channel: 'Chaîne',
+      change: 'Changer de chaîne',
+      previous: 'Chaîne précédente',
+      next: 'Chaîne suivante',
+      open: 'Ouvrir',
+      replay: 'Revoir',
+      read: 'Lire',
+    }
+  : {
+      role: profile.roleEn,
+      scroll: 'Scroll',
+      pick: 'Pick a channel',
+      channel: 'Channel',
+      change: 'Change channel',
+      previous: 'Previous channel',
+      next: 'Next channel',
+      open: 'Open',
+      replay: 'Replay',
+      read: 'Read',
+    };
+
+const config = { avatar: '/models/avatar.glb', milestones: milestones.length, volumes };
+/** Position des ancres du menu, en hauteurs d'écran. */
+const anchors = [
+  { id: 'parcours', at: T.walk },
+  { id: 'realisations', at: T.screen + 0.2 },
+  { id: 'recherche', at: T.books },
+];
+---
+
+<section
+  class="scene"
+  data-scene
+  data-config={JSON.stringify(config)}
+  data-state="loading"
+  style={`--units:${(T.end + 1.4).toFixed(2)}`}
+>
+  <div class="stage">
+    {/* L'écran de projection est sous le canvas : le personnage passe devant. */}
+    <div class="screen" data-screen data-mode="grid">
+      <div class="grid">
+        <p class="hint">{t.pick}</p>
+        <ul>
+          {
+            channels.map((channel, index) => (
+              <li>
+                <button type="button" data-channel={index} data-url={channel.url ?? undefined}>
+                  <img src={channel.image} alt="" loading="lazy" />
+                  <span class="number">{pad(index + 1)}</span>
+                  <span class="name">{channel.title}</span>
+                </button>
+              </li>
+            ))
+          }
+        </ul>
+      </div>
+
+      {
+        channels.map((channel, index) => (
+          <article class="program" data-program={index} hidden>
+            <img src={channel.image} alt="" loading="lazy" />
+            <header>
+              <span class="number">
+                {t.channel} {pad(index + 1)}
+              </span>
+              <h3>{channel.title}</h3>
+              {channel.status && <span class="status">{channel.status}</span>}
+            </header>
+            <ol class="lines">
+              {channel.lines.map((line) => (
+                <li>{line}</li>
+              ))}
+            </ol>
+            <i class="bar" />
+          </article>
+        ))
+      }
+
+      <div class="remote">
+        <button type="button" data-remote="previous" aria-label={t.previous}>
+          <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M10 3 5 8l5 5"></path></svg>
+        </button>
+        <button type="button" data-remote="grid">{t.change}</button>
+        <button type="button" data-remote="next" aria-label={t.next}>
+          <svg viewBox="0 0 16 16" aria-hidden="true"><path d="m6 3 5 5-5 5"></path></svg>
+        </button>
+        <a data-remote="open" target="_blank" rel="noopener">{t.open}</a>
+      </div>
+    </div>
+
+    <canvas aria-hidden="true"></canvas>
+
+    <div class="intro">
+      <h1>{SITE.name}</h1>
+      <p>{t.role}</p>
+      <span class="cue">{t.scroll}</span>
+    </div>
+
+    <ol class="path">
+      {
+        milestones.map((item, index) => (
+          <li data-milestone={index}>
+            <p class="when">{item.when}</p>
+            <h2>{item.title}</h2>
+            <p class="place">{item.place}</p>
+            {item.text && <p class="text">{item.text}</p>}
+          </li>
+        ))
+      }
+    </ol>
+
+    <ol class="papers">
+      {
+        papers.map((paper, index) => (
+          <li data-paper={index}>
+            <p class="when">{paper.mention}</p>
+            <h2>{paper.title}</h2>
+            <p class="place">{paper.authors}</p>
+            <a href={paper.url} target="_blank" rel="noopener">
+              {t.read}
+              <span>doi:{paper.doi?.toLowerCase()}</span>
+            </a>
+          </li>
+        ))
+      }
+    </ol>
+  </div>
+
+  {/* Piste de défilement, et ancres du menu posées à leur place dans la piste. */}
+  <div class="track" aria-hidden="true">
+    {anchors.map((anchor) => <span id={anchor.id} style={`--at:${anchor.at.toFixed(2)}`} />)}
+  </div>
+</section>
+
+<style>
+  .scene {
+    --nav: 4rem;
+    --stage: calc(100svh - var(--nav));
+
+    position: relative;
+    height: calc(var(--stage) * var(--units));
+    background: radial-gradient(120% 90% at 50% 30%, #0e1a33 0%, #070b16 65%);
+    color: #fff;
+  }
+
+  .stage {
+    position: sticky;
+    top: var(--nav);
+    height: var(--stage);
+    overflow: hidden;
+  }
+
+  .track span {
+    position: absolute;
+    top: calc(var(--stage) * var(--at));
+    scroll-margin-top: var(--nav);
+  }
+
+  canvas {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 1s ease;
+  }
+
+  .scene:not([data-state='loading']) canvas {
+    opacity: 1;
+  }
+
+  /* Chargement : un trait qui pulse. */
+  .scene[data-state='loading'] .stage::after {
+    content: '';
+    position: absolute;
+    top: 62%;
+    left: 50%;
+    width: 6rem;
+    height: 1.5px;
+    background: #fff;
+    translate: -50% 0;
+    animation: load 1.2s ease-in-out infinite;
+  }
+
+  @keyframes load {
+    0%,
+    100% {
+      scale: 0.2 1;
+      opacity: 0.4;
+    }
+
+    50% {
+      scale: 1 1;
+      opacity: 1;
+    }
+  }
+
+  /* ---------- Ouverture ---------- */
+
+  .intro {
+    position: absolute;
+    inset: auto 1.25rem 2.5rem;
+    transition:
+      opacity 0.5s ease,
+      translate 0.7s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  .scene:not([data-act='intro']) .intro {
+    opacity: 0;
+    translate: 0 -1.5rem;
+    pointer-events: none;
+  }
+
+  h1 {
+    margin: 0;
+    font-family: var(--font-display);
+    font-size: clamp(3.2rem, 11vw, 11rem);
+    font-weight: 400;
+    line-height: 0.86;
+    letter-spacing: -0.02em;
+    color: #fff;
+  }
+
+  .intro p {
+    max-width: 26rem;
+    margin: 1.2rem 0 0;
+    font-size: 1rem;
+    color: rgb(255 255 255 / 75%);
+  }
+
+  .cue {
+    display: inline-grid;
+    justify-items: center;
+    gap: 0.5rem;
+    margin-top: 2rem;
+    font-size: 0.72rem;
+    color: rgb(255 255 255 / 70%);
+  }
+
+  .cue::after {
+    content: '';
+    width: 1.5px;
+    height: 2.2rem;
+    background: #fff;
+    transform-origin: top;
+    animation: drip 1.8s cubic-bezier(0.65, 0, 0.35, 1) infinite;
+  }
+
+  @keyframes drip {
+    0% {
+      transform: scaleY(0);
+    }
+
+    50% {
+      transform: scaleY(1);
+      transform-origin: top;
+    }
+
+    51% {
+      transform-origin: bottom;
+    }
+
+    100% {
+      transform: scaleY(0);
+      transform-origin: bottom;
+    }
+  }
+
+  /* ---------- Parcours et publications : une fiche à la fois ---------- */
+
+  .path,
+  .papers {
+    position: absolute;
+    inset: auto 1.25rem 2.25rem;
+    display: grid;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    pointer-events: none;
+  }
+
+  .path li,
+  .papers li {
+    grid-area: 1 / 1;
+    align-self: end;
+    max-width: 30rem;
+    opacity: 0;
+    translate: 0 1rem;
+    transition:
+      opacity 0.35s ease,
+      translate 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  .path li[data-on],
+  .papers li[data-on] {
+    opacity: 1;
+    translate: 0;
+    pointer-events: auto;
+    transition-delay: 0.1s;
+  }
+
+  .when {
+    margin: 0 0 0.6rem;
+    font-family: var(--font-mono);
+    font-size: 0.76rem;
+    color: #4fd8ff;
+  }
+
+  h2 {
+    margin: 0;
+    font-family: var(--font-display);
+    font-size: clamp(1.9rem, 3.8vw, 3.4rem);
+    font-weight: 400;
+    line-height: 1;
+    letter-spacing: -0.015em;
+    color: #fff;
+    text-wrap: balance;
+  }
+
+  .papers h2 {
+    font-size: clamp(1.4rem, 2.3vw, 2.1rem);
+    line-height: 1.08;
+  }
+
+  .place {
+    margin: 0.7rem 0 0;
+    font-size: 0.95rem;
+    color: rgb(255 255 255 / 75%);
+  }
+
+  .text {
+    margin: 0.9rem 0 0;
+    font-size: 0.9rem;
+    line-height: 1.5;
+    color: rgb(255 255 255 / 62%);
+    text-wrap: pretty;
+  }
+
+  .papers a {
+    display: inline-flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0.4rem 1rem;
+    margin-top: 1.2rem;
+    padding: 0.7rem 1.1rem;
+    border-radius: 2rem;
+    background: #fff;
+    color: #070b16;
+    font-size: 0.9rem;
+    font-weight: 500;
+  }
+
+  .papers a span {
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    font-weight: 400;
+    overflow-wrap: anywhere;
+  }
+
+  /* ---------- Écran de projection ---------- */
+
+  .screen {
+    position: absolute;
+    inset: 3% 4% auto;
+    aspect-ratio: 5 / 6;
+    max-height: 54%;
+    margin-inline: auto;
+    overflow: hidden;
+    background: #0b1222;
+    box-shadow: 0 0 6rem rgb(120 200 255 / 22%);
+    opacity: 0;
+    scale: 0.96;
+    transition:
+      opacity 0.6s ease,
+      scale 0.8s cubic-bezier(0.22, 1, 0.36, 1);
+    pointer-events: none;
+  }
+
+  .scene[data-act='screen'] .screen {
+    opacity: 1;
+    scale: 1;
+    pointer-events: auto;
+  }
+
+  .grid {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    grid-template-rows: auto 1fr;
+    gap: 0.75rem;
+    padding: 1rem;
+    transition: opacity 0.4s ease;
+  }
+
+  .screen[data-mode='program'] .grid {
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  .hint {
+    margin: 0;
+    font-size: 0.8rem;
+    color: rgb(255 255 255 / 70%);
+  }
+
+  .grid ul {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.6rem;
+    min-height: 0;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .grid li {
+    min-height: 0;
+  }
+
+  .grid button {
+    position: relative;
+    display: block;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    color: #fff;
+    text-align: left;
+    cursor: pointer;
+  }
+
+  .grid img,
+  .program > img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: left top;
+  }
+
+  .grid img {
+    filter: brightness(0.55) saturate(0.8);
+    transition:
+      filter 0.4s ease,
+      scale 0.9s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  .grid button:hover img,
+  .grid button:focus-visible img {
+    filter: none;
+    scale: 1.06;
+  }
+
+  .number {
+    position: relative;
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
+    color: #4fd8ff;
+  }
+
+  .grid .number,
+  .grid .name {
+    position: absolute;
+    left: 0.6rem;
+    text-shadow: 0 0 10px rgb(0 0 0 / 80%);
+  }
+
+  .grid .number {
+    top: 0.5rem;
+  }
+
+  .grid .name {
+    bottom: 0.5rem;
+    font-family: var(--font-display);
+    font-size: clamp(1rem, 1.9vw, 1.6rem);
+    line-height: 1;
+  }
+
+  /* Programme : l'image glisse lentement, les explications passent une à une. */
+  .program {
+    position: absolute;
+    inset: 0;
+  }
+
+  .program[hidden] {
+    display: none;
+  }
+
+  /* Voiles haut et bas : le titre et les explications restent lisibles sur toute image. */
+  .program::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    background: linear-gradient(#070b16f2, #070b1699 34%, #070b1680 48%, #070b16f5 86%);
+  }
+
+  .program > :is(header, .lines, .bar) {
+    z-index: 2;
+  }
+
+  .program > img {
+    animation: pan 30s ease-in-out infinite alternate;
+  }
+
+  @keyframes pan {
+    from {
+      scale: 1.05;
+      translate: 0 0;
+    }
+
+    to {
+      scale: 1.3;
+      translate: -6% -8%;
+    }
+  }
+
+  .program header {
+    position: absolute;
+    inset: 1rem 1rem auto;
+    display: grid;
+    justify-items: start;
+    gap: 0.4rem;
+  }
+
+  .program h3 {
+    margin: 0;
+    font-family: var(--font-display);
+    font-size: clamp(1.6rem, 3.4vw, 3rem);
+    font-weight: 400;
+    line-height: 1;
+    color: #fff;
+  }
+
+  .status {
+    font-size: 0.75rem;
+    color: rgb(255 255 255 / 70%);
+  }
+
+  .lines {
+    position: absolute;
+    inset: auto 1rem 3.6rem;
+    display: grid;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .lines li {
+    grid-area: 1 / 1;
+    align-self: end;
+    max-width: 34rem;
+    font-size: clamp(0.95rem, 1.5vw, 1.25rem);
+    line-height: 1.3;
+    text-shadow: 0 1px 14px rgb(0 0 0 / 85%);
+    text-wrap: pretty;
+    opacity: 0;
+    translate: 0 0.6rem;
+    transition:
+      opacity 0.5s ease,
+      translate 0.7s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  .lines li[data-on] {
+    opacity: 1;
+    translate: 0;
+  }
+
+  .bar {
+    position: absolute;
+    inset: auto 0 0;
+    height: 3px;
+    background: #4fd8ff;
+    transform: scaleX(var(--played, 0));
+    transform-origin: left;
+  }
+
+  .remote {
+    position: absolute;
+    z-index: 3;
+    inset: auto 1rem 0.75rem;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.76rem;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.4s ease;
+  }
+
+  .screen[data-mode='program'] .remote {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  .remote button,
+  .remote a {
+    display: grid;
+    place-items: center;
+    height: 2.1rem;
+    padding-inline: 0.9rem;
+    border-radius: 2rem;
+    background: rgb(255 255 255 / 14%);
+    backdrop-filter: blur(8px);
+    color: #fff;
+    white-space: nowrap;
+    cursor: pointer;
+    transition: background 0.2s ease;
+  }
+
+  .remote button:hover,
+  .remote a:hover {
+    background: rgb(255 255 255 / 28%);
+  }
+
+  .remote [data-remote='grid'] {
+    background: #fff;
+    color: #070b16;
+    font-weight: 500;
+  }
+
+  .remote a {
+    margin-left: auto;
+  }
+
+  .remote svg {
+    width: 0.8rem;
+    height: 0.8rem;
+    fill: none;
+    stroke: currentcolor;
+    stroke-width: 1.8;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  @media (min-width: 1024px) {
+    .intro {
+      inset: auto auto 4rem 50%;
+    }
+
+    .path {
+      inset: 0 4rem 0 52%;
+      align-content: center;
+    }
+
+    .path li {
+      align-self: center;
+    }
+
+    .papers {
+      inset: auto auto 3.5rem 4rem;
+      max-width: 23rem;
+    }
+
+    .screen {
+      inset: 5% 4% auto 33%;
+      aspect-ratio: 16 / 10;
+      max-height: 78%;
+      margin: 0;
+    }
+
+    .grid {
+      padding: 1.5rem;
+    }
+
+    .grid ul {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 0.9rem;
+    }
+
+    .program header,
+    .lines,
+    .remote {
+      inset-inline: 1.75rem;
+    }
+  }
+
+  /* ---------- Sans JavaScript ou sans WebGL : tout se lit à la suite ---------- */
+
+  :global(html:not(.js)) .scene,
+  .scene[data-flat] {
+    height: auto;
+  }
+
+  :global(html:not(.js)) .stage,
+  .scene[data-flat] .stage {
+    position: static;
+    height: auto;
+    padding: 4rem 1.25rem;
+  }
+
+  :global(html:not(.js)) :is(canvas, .remote, .cue, .program),
+  .scene[data-flat] :is(canvas, .remote, .cue) {
+    display: none;
+  }
+
+  :global(html:not(.js)) :is(.intro, .path, .papers, .screen, .grid),
+  .scene[data-flat] :is(.intro, .path, .papers, .screen, .grid) {
+    position: static;
+    display: block;
+    max-height: none;
+    aspect-ratio: auto;
+    opacity: 1;
+    scale: 1;
+    translate: 0;
+    pointer-events: auto;
+  }
+
+  :global(html:not(.js)) :is(.path li, .papers li),
+  .scene[data-flat] :is(.path li, .papers li) {
+    margin-top: 2.5rem;
+    opacity: 1;
+    translate: 0;
+    pointer-events: auto;
+  }
+
+  :global(html:not(.js)) .grid button,
+  .scene[data-flat] .grid button {
+    height: 9rem;
+  }
+</style>
+
+<script>
+  import type { Stage } from '../../scripts/stage';
+  import type { Volume } from '../../scripts/stack';
+
+  /** Durée d'une explication à l'écran, en millisecondes. */
+  const LINE_MS = 5200;
+
+  let stage: Stage | null = null;
+  let onScroll: (() => void) | null = null;
+  let timer = 0;
+
+  const stop = () => {
+    stage?.destroy();
+    stage = null;
+    if (onScroll) window.removeEventListener('scroll', onScroll);
+    onScroll = null;
+    window.clearInterval(timer);
+  };
+
+  const init = async () => {
+    stop();
+    const root = document.querySelector<HTMLElement>('[data-scene]');
+    const canvas = root?.querySelector('canvas');
+    if (!root || !canvas) return;
+
+    const config = JSON.parse(root.dataset.config ?? '{}') as {
+      avatar: string;
+      milestones: number;
+      volumes: Volume[];
+    };
+    const milestones = [...root.querySelectorAll<HTMLElement>('[data-milestone]')];
+    const papers = [...root.querySelectorAll<HTMLElement>('[data-paper]')];
+
+    // Les dos des livres sont composés avec les polices du site : on attend qu'elles soient là.
+    await Promise.all([
+      document.fonts.load('400 96px "Instrument Serif"'),
+      document.fonts.load('400 32px "Geist Mono Variable"'),
+    ]);
+    const { mountStage, timeline } = await import('../../scripts/stage');
+    const T = timeline(config.milestones, config.volumes.length);
+    stage = mountStage(canvas, config, () => (root.dataset.state = 'ready'));
+    if (!stage) {
+      root.setAttribute('data-flat', '');
+      return;
+    }
+
+    /* ----- Défilement : quel acte, quel jalon, quel volume ----- */
+
+    const only = (items: HTMLElement[], index: number) =>
+      items.forEach((item, i) => item.toggleAttribute('data-on', i === index));
+
+    onScroll = () => {
+      const unit =
+        window.innerHeight - parseFloat(getComputedStyle(root).getPropertyValue('--nav')) * 16;
+      const p = Math.max(
+        0,
+        (window.scrollY - (root.getBoundingClientRect().top + window.scrollY)) / unit,
+      );
+      stage?.setProgress(p);
+
+      const act =
+        p < T.walk - 0.35
+          ? 'intro'
+          : p < T.seat + 0.15
+            ? 'walk'
+            : p < T.rise
+              ? p > T.screen - 0.25
+                ? 'screen'
+                : 'seat'
+              : 'books';
+      root.dataset.act = act;
+      only(
+        milestones,
+        act === 'walk'
+          ? Math.min(milestones.length - 1, Math.floor((p - T.walk + 0.35) / T.STEP))
+          : -1,
+      );
+      only(
+        papers,
+        p > T.books - 0.3 ? Math.min(papers.length - 1, Math.round((p - T.books) / T.BOOK)) : -1,
+      );
+    };
+    window.addEventListener('scroll', onScroll, { passive: true });
+    onScroll();
+
+    /* ----- Écran : chaînes et programmes ----- */
+
+    const screen = root.querySelector<HTMLElement>('[data-screen]')!;
+    const programs = [...screen.querySelectorAll<HTMLElement>('[data-program]')];
+    const open = screen.querySelector<HTMLAnchorElement>('[data-remote="open"]')!;
+    const links = [...screen.querySelectorAll<HTMLButtonElement>('[data-channel]')];
+    let current = -1;
+
+    const play = (index: number) => {
+      current = (index + programs.length) % programs.length;
+      screen.dataset.mode = 'program';
+      programs.forEach((program, i) => (program.hidden = i !== current));
+      const program = programs[current];
+      const lines = [...program.querySelectorAll<HTMLElement>('.lines li')];
+      const href = links[current].dataset.url;
+      open.hidden = !href;
+      if (href) open.href = href;
+
+      // Les explications passent une à une ; la barre suit ; la dernière reste à l'écran.
+      const started = performance.now();
+      window.clearInterval(timer);
+      const step = () => {
+        const elapsed = performance.now() - started;
+        const line = Math.min(lines.length - 1, Math.floor(elapsed / LINE_MS));
+        only(lines, line);
+        program.style.setProperty(
+          '--played',
+          Math.min(1, elapsed / (lines.length * LINE_MS)).toFixed(4),
+        );
+      };
+      step();
+      timer = window.setInterval(step, 120);
+    };
+    const showGrid = () => {
+      window.clearInterval(timer);
+      screen.dataset.mode = 'grid';
+      programs.forEach((program) => (program.hidden = true));
+    };
+
+    links.forEach((button, index) => button.addEventListener('click', () => play(index)));
+    screen
+      .querySelector('[data-remote="previous"]')
+      ?.addEventListener('click', () => play(current - 1));
+    screen
+      .querySelector('[data-remote="next"]')
+      ?.addEventListener('click', () => play(current + 1));
+    screen.querySelector('[data-remote="grid"]')?.addEventListener('click', showGrid);
+  };
+
+  document.addEventListener('astro:page-load', init);
+  document.addEventListener('astro:before-swap', stop);
+</script>

@@ -1,17 +1,96 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
-import Hero from '../home/Hero.astro';
-import { SITE } from '../../lib/site';
+import Stage from '../home/Stage.astro';
+import { SITE, socialLinks } from '../../lib/site';
 import { getLangFromUrl } from '../../lib/i18n';
 import { getProfile } from '../../lib/content';
 
 const lang = getLangFromUrl(Astro.url);
 const isFr = lang === 'fr';
-
 const profile = getProfile();
 const tagline = (isFr ? profile.taglineFr : profile.taglineEn) || SITE.tagline[lang];
+const address = (href: string) =>
+  href.replace(/^(https?:\/\/(www\.)?|mailto:)/, '').replace(/\/$/, '');
 ---
 
-<BaseLayout description={tagline.slice(0, 158)} footer={false}>
-  <Hero />
+<BaseLayout description={tagline.slice(0, 158)}>
+  <Stage />
+
+  <section id="contact" class="contact">
+    <h2>Contact</h2>
+    <a href={`mailto:${SITE.email}`} class="mail">{SITE.email}</a>
+    <ul>
+      {
+        socialLinks
+          .filter((link) => link.key !== 'email')
+          .map((link) => (
+            <li>
+              <a href={link.href} target="_blank" rel="me noopener">
+                {address(link.href)}
+              </a>
+            </li>
+          ))
+      }
+    </ul>
+  </section>
 </BaseLayout>
+
+<style>
+  .contact {
+    display: grid;
+    align-content: center;
+    gap: 1.5rem;
+    min-height: 70svh;
+    padding: 5rem 1.25rem;
+    background: #070b16;
+    color: #fff;
+    scroll-margin-top: 4rem;
+  }
+
+  h2 {
+    margin: 0;
+    font-size: 0.9rem;
+    font-weight: 400;
+    color: rgb(255 255 255 / 55%);
+  }
+
+  .mail {
+    justify-self: start;
+    font-family: var(--font-display);
+    font-size: clamp(2rem, 8.4vw, 8.5rem);
+    line-height: 0.95;
+    letter-spacing: -0.015em;
+    overflow-wrap: anywhere;
+    background: linear-gradient(#4fd8ff, #4fd8ff) 0 100% / 100% 0 no-repeat;
+    transition:
+      background-size 0.45s cubic-bezier(0.22, 1, 0.36, 1),
+      color 0.3s ease;
+  }
+
+  .mail:hover {
+    background-size: 100% 100%;
+    color: #070b16;
+  }
+
+  ul {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem 2rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    font-family: var(--font-mono);
+    font-size: 0.78rem;
+    color: rgb(255 255 255 / 70%);
+  }
+
+  ul a:hover {
+    color: #fff;
+  }
+
+  @media (min-width: 1024px) {
+    .contact {
+      padding-inline: 4rem;
+    }
+  }
+</style>

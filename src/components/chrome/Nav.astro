@@ -1,172 +1,129 @@
 ---
-import ThemeToggle from '../ui/ThemeToggle.astro';
+/**
+ * Barre du haut : le nom, les ancres de la page unique et le changement de langue.
+ */
 import OrcidIcon from '../ui/OrcidIcon.astro';
 import LinkedInIcon from '../ui/LinkedInIcon.astro';
 import { SITE, orcidUrl } from '../../lib/site';
-import {
-  getLangFromUrl,
-  useTranslations,
-  localizePath,
-  alternatePath,
-  type UiKey,
-  type Lang,
-} from '../../lib/i18n';
+import { getLangFromUrl, localizePath, alternatePath, type Lang } from '../../lib/i18n';
 
 const lang = getLangFromUrl(Astro.url);
-const t = useTranslations(lang);
-const path = Astro.url.pathname.replace(/\/$/, '') || '/';
-
 const other: Lang = lang === 'fr' ? 'en' : 'fr';
-const switchHref = alternatePath(Astro.url.pathname, other);
+const home = localizePath('/', lang);
 
-const items: { key: UiKey; href: string }[] = [
-  { key: 'nav.about', href: localizePath('/a-propos', lang) },
-  { key: 'nav.research', href: localizePath('/travaux', lang) },
-  // Les projets vivent sur le globe de l'accueil, à sa dernière vue.
-  { key: 'nav.projects', href: `${localizePath('/', lang)}#projets` },
-  { key: 'nav.services', href: localizePath('/services', lang) },
-  { key: 'nav.contact', href: localizePath('/contact', lang) },
-];
-
-const isActive = (href: string) => path === href || path.startsWith(`${href}/`);
+const items =
+  lang === 'fr'
+    ? [
+        ['Parcours', 'parcours'],
+        ['Réalisations', 'realisations'],
+        ['Recherche', 'recherche'],
+        ['Contact', 'contact'],
+      ]
+    : [
+        ['Background', 'parcours'],
+        ['Work', 'realisations'],
+        ['Research', 'recherche'],
+        ['Contact', 'contact'],
+      ];
 ---
 
-{/* Papier et filet d'encre : la nav est le bord supérieur de la planche. */}
-<header
-  id="site-nav"
-  data-scrolled="false"
-  class="sticky top-0 z-40 border-b border-border bg-surface"
->
-  <nav class="shell flex h-16 items-center gap-4" aria-label="Principale">
-    <a href={localizePath('/', lang)} class="inline-flex items-center" aria-label="Accueil">
-      <span class="font-display text-[1.35rem] font-medium text-heading sm:text-2xl">
-        Siba Kalivogui
-      </span>
+<header>
+  <nav aria-label={lang === 'fr' ? 'Principale' : 'Main'}>
+    <a href={home} class="name">{SITE.name}</a>
+    <ul>
+      {
+        items.map(([label, id]) => (
+          <li>
+            <a href={`${home}#${id}`}>{label}</a>
+          </li>
+        ))
+      }
+    </ul>
+    <a href={orcidUrl} target="_blank" rel="me noopener" aria-label="ORCID" class="icon"
+      ><OrcidIcon class="size-5" /></a
+    >
+    <a href={SITE.linkedin} target="_blank" rel="me noopener" aria-label="LinkedIn" class="icon">
+      <LinkedInIcon class="size-5" />
     </a>
-
-    <div class="ml-auto flex items-center gap-2 sm:gap-3">
-      <div class="hidden items-center gap-1 md:flex">
-        {
-          items.map((item) => (
-            <a
-              href={item.href}
-              aria-current={isActive(item.href) ? 'page' : undefined}
-              class:list={[
-                'px-3 py-2 text-sm transition-colors',
-                isActive(item.href)
-                  ? 'text-heading underline decoration-heading decoration-2 underline-offset-8'
-                  : 'text-text-muted hover:text-heading',
-              ]}
-            >
-              {t(item.key)}
-            </a>
-          ))
-        }
-      </div>
-
-      <div class="flex items-center gap-1.5">
-        <a
-          href={orcidUrl}
-          target="_blank"
-          rel="me noopener"
-          aria-label="ORCID"
-          class="hidden size-9 items-center justify-center rounded-sm transition-colors hover:bg-surface-2 md:inline-flex"
-        >
-          <OrcidIcon class="size-5" />
-        </a>
-        <a
-          href={SITE.linkedin}
-          target="_blank"
-          rel="me noopener"
-          aria-label="LinkedIn"
-          class="hidden size-9 items-center justify-center rounded-sm transition-colors hover:bg-surface-2 md:inline-flex"
-        >
-          <LinkedInIcon class="size-5" />
-        </a>
-        <span
-          class="mx-0.5 hidden h-5 w-px bg-border transition-colors md:block"
-          aria-hidden="true"
-        >
-        </span>
-        <a
-          href={switchHref}
-          hreflang={other}
-          aria-label={t('lang.switch')}
-          class="inline-flex h-9 items-center justify-center rounded-sm border border-border px-3 text-sm font-medium text-text transition-colors hover:bg-surface-2"
-        >
-          {other.toUpperCase()}
-        </a>
-        <ThemeToggle />
-        <button
-          type="button"
-          id="nav-toggle"
-          class="inline-flex size-9 items-center justify-center rounded-sm border border-border text-heading transition-colors hover:bg-surface-2 md:hidden"
-          aria-label="Menu"
-          aria-expanded="false"
-          aria-controls="nav-mobile"
-        >
-          <svg
-            class="size-5"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="1.6"
-            aria-hidden="true"
-          >
-            <path d="M4 7h16M4 12h16M4 17h16" stroke-linecap="round"></path>
-          </svg>
-        </button>
-      </div>
-    </div>
+    <a
+      href={alternatePath(Astro.url.pathname, other)}
+      hreflang={other}
+      class="lang"
+      aria-label={other === 'en' ? 'English' : 'Français'}
+    >
+      {other.toUpperCase()}
+    </a>
   </nav>
-
-  <div id="nav-mobile" class="hidden border-t border-border bg-surface px-5 py-2 md:hidden">
-    {
-      items.map((item) => (
-        <a
-          href={item.href}
-          aria-current={isActive(item.href) ? 'page' : undefined}
-          class:list={[
-            'block px-3 py-3 text-base transition-colors hover:bg-surface-2',
-            isActive(item.href) ? 'text-heading' : 'text-text-muted hover:text-heading',
-          ]}
-        >
-          {t(item.key)}
-        </a>
-      ))
-    }
-  </div>
 </header>
 
-<script>
-  // État de la nav : encre pleine en haut, translucide dès qu'on scrolle (ou menu ouvert).
-  // Délégation sur document : survit aux transitions de page (View Transitions).
-  const evalNav = () => {
-    const nav = document.getElementById('site-nav');
-    if (!nav) return;
-    const menuOpen = document.getElementById('nav-mobile')?.classList.contains('hidden') === false;
-    nav.dataset.scrolled = String(menuOpen || window.scrollY > 16);
-  };
+<style>
+  header {
+    position: sticky;
+    top: 0;
+    z-index: 40;
+    height: 4rem;
+    background: #070b16;
+    color: #fff;
+  }
 
-  evalNav();
-  window.addEventListener('scroll', evalNav, { passive: true });
-  document.addEventListener('astro:page-load', evalNav);
-  document.addEventListener('astro:after-swap', evalNav);
+  nav {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    height: 100%;
+    padding-inline: 1.25rem;
+  }
 
-  document.addEventListener('click', (event) => {
-    const target = event.target as HTMLElement | null;
-    const toggle = target?.closest('#nav-toggle');
-    if (toggle) {
-      const panel = document.getElementById('nav-mobile');
-      const open = panel?.classList.toggle('hidden') === false;
-      toggle.setAttribute('aria-expanded', String(open));
-      evalNav();
-      return;
+  .name {
+    margin-right: auto;
+    font-family: var(--font-display);
+    font-size: 1.45rem;
+  }
+
+  ul {
+    display: none;
+    gap: 1.75rem;
+    margin: 0 1rem 0 0;
+    padding: 0;
+    list-style: none;
+    font-size: 0.88rem;
+  }
+
+  ul a {
+    color: rgb(255 255 255 / 65%);
+    transition: color 0.2s ease;
+  }
+
+  ul a:hover {
+    color: #fff;
+  }
+
+  .icon {
+    display: none;
+  }
+
+  .lang {
+    display: grid;
+    place-items: center;
+    height: 2.1rem;
+    padding-inline: 0.75rem;
+    border: 1px solid rgb(255 255 255 / 25%);
+    font-size: 0.82rem;
+    transition: background 0.2s ease;
+  }
+
+  .lang:hover {
+    background: rgb(255 255 255 / 12%);
+  }
+
+  @media (min-width: 900px) {
+    nav {
+      padding-inline: 4rem;
     }
-    if (target?.closest('#nav-mobile a')) {
-      document.getElementById('nav-mobile')?.classList.add('hidden');
-      document.getElementById('nav-toggle')?.setAttribute('aria-expanded', 'false');
-      evalNav();
+
+    ul,
+    .icon {
+      display: flex;
     }
-  });
-</script>
+  }
+</style>

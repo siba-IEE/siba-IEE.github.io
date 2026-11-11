@@ -376,7 +376,7 @@ export function buildRoom(frames: Frame[]): Room {
       ['side_table_01', 1.12, 0, doorZ - 4.15, 0],
       ['filmstrip_projector_8mm', 1.12, 0.55, doorZ - 4.15, Math.PI],
       ['steel_frame_shelves_03', -ROOM_HALF + 0.4, 0, doorZ - 5.5, Math.PI / 2, 0.9],
-      ['ceramic_vase_01', 0.85, 0.68, far + 0.36, 0],
+      ['ceramic_vase_01', 1.5, 0.68, far + 0.36, 0],
     ];
   let disposed = false;
   for (const [file, x, y, z, turn, scale = 1] of furniture) {

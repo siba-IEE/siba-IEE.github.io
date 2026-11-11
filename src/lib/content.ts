@@ -172,6 +172,9 @@ export interface Experience {
   order: number;
   descFr: string;
   descEn: string;
+  /** L'étape racontée à la première personne, pour le couloir de l'accueil. */
+  storyFr?: string;
+  storyEn?: string;
 }
 
 const experienceModules = import.meta.glob<{ default: Experience }>(
@@ -216,6 +219,9 @@ export interface Education {
   order: number;
   noteFr: string;
   noteEn: string;
+  /** L'étape racontée à la première personne, pour le couloir de l'accueil. */
+  storyFr?: string;
+  storyEn?: string;
 }
 
 const educationModules = import.meta.glob<{ default: Education }>('../content/education/*.json', {

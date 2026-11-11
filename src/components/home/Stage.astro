@@ -34,14 +34,15 @@ const milestones = [
     when: dates(item.start, item.end),
     title: isFr ? item.titleFr : item.titleEn,
     place: [item.school, isFr ? item.locationFr : item.locationEn].filter(Boolean).join(', '),
-    text: '',
+    story: (isFr ? item.storyFr : item.storyEn) ?? '',
   })),
   ...getExperience().map((item) => ({
-    year: Number(item.start) + 0.5,
+    // Un poste suit la formation commencée la même année ; le poste en cours ferme la marche.
+    year: Number(item.start) + (item.current ? 0.75 : 0.5),
     when: dates(item.start, item.end, item.current),
     title: isFr ? item.roleFr : item.roleEn,
     place: `${item.org}, ${isFr ? item.locationFr : item.locationEn}`,
-    text: isFr ? item.descFr : item.descEn,
+    story: (isFr ? item.storyFr : item.storyEn) ?? '',
   })),
 ].sort((a, b) => a.year - b.year);
 
@@ -108,8 +109,8 @@ const t = isFr
   ? {
       role: profile.roleFr,
       scroll: 'Défiler',
-      pick: 'Choisissez une chaîne',
-      tip: 'Cliquez sur une chaîne de l’écran',
+      pick: 'Mes réalisations',
+      tip: 'Choisissez une chaîne sur l’écran',
       channel: 'Chaîne',
       change: 'Changer de chaîne',
       previous: 'Chaîne précédente',
@@ -122,8 +123,8 @@ const t = isFr
   : {
       role: profile.roleEn,
       scroll: 'Scroll',
-      pick: 'Pick a channel',
-      tip: 'Click a channel on the screen',
+      pick: 'My work',
+      tip: 'Pick a channel on the screen',
       channel: 'Channel',
       change: 'Change channel',
       previous: 'Previous channel',
@@ -174,10 +175,11 @@ const programs = channels.map(({ title, status, url, beats }, index) => ({
       {
         milestones.map((item, index) => (
           <li data-milestone={index}>
+            {/* Le récit, à la première personne ; le titre exact est sur le cadre et ici en petit. */}
             <p class="when">{item.when}</p>
+            <p class="story">{item.story || item.title}</p>
             <h2>{item.title}</h2>
             <p class="place">{item.place}</p>
-            {item.text && <p class="text">{item.text}</p>}
           </li>
         ))
       }
@@ -519,6 +521,27 @@ const programs = channels.map(({ title, status, url, beats }, index) => ({
     letter-spacing: -0.015em;
     color: #fff;
     text-wrap: balance;
+  }
+
+  .story {
+    margin: 0;
+    font-size: clamp(1.1rem, 1.7vw, 1.6rem);
+    line-height: 1.28;
+    text-wrap: pretty;
+  }
+
+  .path h2 {
+    margin-top: 1rem;
+    font-family: var(--font-sans);
+    font-size: 0.86rem;
+    font-weight: 500;
+    line-height: 1.3;
+    letter-spacing: 0;
+  }
+
+  .path .place {
+    margin-top: 0.15rem;
+    font-size: 0.82rem;
   }
 
   .papers h2 {

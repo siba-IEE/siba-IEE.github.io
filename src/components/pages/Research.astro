@@ -1,11 +1,11 @@
 ---
 /**
- * Page Travaux. Composition d'après les articles de la revue Distill : le titre, une figure
- * interactive en pleine largeur, puis une colonne de texte étroite.
+ * Page Travaux : une maquette 3D qui raconte les travaux étape par étape, puis la figure
+ * interactive de la prépublication (d'après les articles de la revue Distill) et les publications.
  */
-import { marked } from 'marked';
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import BiasFigure from '../research/BiasFigure.astro';
+import Diorama from '../research/Diorama.astro';
 import { SITE } from '../../lib/site';
 import { getLangFromUrl } from '../../lib/i18n';
 import { getResearch, getPublications } from '../../lib/content';
@@ -13,38 +13,22 @@ import { getResearch, getPublications } from '../../lib/content';
 const lang = getLangFromUrl(Astro.url);
 const isFr = lang === 'fr';
 
-const [paper, ...others] = getResearch();
+const [paper] = getResearch();
 const publications = getPublications();
-const figures = (paper.figures ?? []).filter(
-  (figure) => !figure.featured && figure.section === 'result',
-);
 const doi = paper.url?.replace('https://doi.org/', '');
 
 const t = isFr
-  ? {
-      title: 'Travaux',
-      meta: 'Prépublication, octobre 2026',
-      limits: 'Limites',
-      read: 'Lire la prépublication',
-      ongoing: 'En cours',
-      publications: 'Publications',
-    }
-  : {
-      title: 'Research',
-      meta: 'Preprint, October 2026',
-      limits: 'Limits',
-      read: 'Read the preprint',
-      ongoing: 'In progress',
-      publications: 'Publications',
-    };
+  ? { title: 'Travaux', meta: 'Prépublication, octobre 2026', publications: 'Publications' }
+  : { title: 'Research', meta: 'Preprint, October 2026', publications: 'Publications' };
 ---
 
 <BaseLayout title={t.title} description={isFr ? paper.summaryFr : paper.summaryEn}>
-  <article class="block first">
-    <div class="shell">
-      <h1 class="paper-title">{isFr ? paper.titleFr : paper.titleEn}</h1>
-      <BiasFigure />
+  <Diorama />
 
+  <article class="block">
+    <div class="shell">
+      <h2 class="paper-title">{isFr ? paper.titleFr : paper.titleEn}</h2>
+      <BiasFigure />
       <p class="byline">
         <span>{SITE.name}</span>
         <span>{t.meta}</span>
@@ -56,55 +40,11 @@ const t = isFr
           )
         }
       </p>
-
-      <div class="column">
-        <p class="lead">{isFr ? paper.summaryFr : paper.summaryEn}</p>
-        <div class="prose" set:html={marked.parse(isFr ? paper.resultsFr : paper.resultsEn)} />
-      </div>
-
-      {
-        figures.map((figure) => (
-          <figure class="figure wide" data-reveal>
-            <img src={!isFr && figure.srcEn ? figure.srcEn : figure.src} alt="" loading="lazy" />
-            <figcaption>{isFr ? figure.captionFr : figure.captionEn}</figcaption>
-          </figure>
-        ))
-      }
-
-      <div class="column">
-        <h2 class="label">{t.limits}</h2>
-        <ul class="prose">
-          {(isFr ? paper.questionsFr : paper.questionsEn).map((item) => <li>{item}</li>)}
-        </ul>
-        {
-          paper.url && (
-            <a href={paper.url} target="_blank" rel="noopener" class="more">
-              {t.read}
-            </a>
-          )
-        }
-      </div>
     </div>
   </article>
 
   <section class="block last">
     <div class="shell">
-      {
-        others.length > 0 && (
-          <>
-            <h2 class="label">{t.ongoing}</h2>
-            <ul class="rows wip">
-              {others.map((work) => (
-                <li data-reveal>
-                  <span class="what">{isFr ? work.titleFr : work.titleEn}</span>
-                  <span class="where">{isFr ? work.summaryFr : work.summaryEn}</span>
-                </li>
-              ))}
-            </ul>
-          </>
-        )
-      }
-
       <h2 class="label">{t.publications}</h2>
       <ul class="rows">
         {
@@ -158,34 +98,5 @@ const t = isFr
     font-family: var(--font-mono);
     font-size: 0.78rem;
     color: var(--heading);
-  }
-
-  /* Colonne de lecture étroite, décalée vers la droite comme dans la revue. */
-  .column {
-    max-width: 40rem;
-    margin-top: 4rem;
-  }
-
-  .column .prose {
-    margin-top: 2rem;
-  }
-
-  .column ul {
-    padding-left: 1.1rem;
-    list-style: disc;
-  }
-
-  .figure.wide {
-    margin-top: 4rem;
-  }
-
-  @media (min-width: 1024px) {
-    .column {
-      margin-left: 25%;
-    }
-
-    .figure.wide {
-      margin-left: 12.5%;
-    }
   }
 </style>

@@ -1,0 +1,94 @@
+{
+  "titleFr": "Calage de CAMS sans station locale",
+  "titleEn": "Site adaptation of CAMS without a local station",
+  "summaryFr": "En Afrique de l’Ouest, la plupart des sites n’ont aucune station pour caler les estimations satellitaires. Ce travail mesure ce que coûte le transfert d’un calage appris ailleurs, et quelle part du biais se laisse transférer.",
+  "summaryEn": "In West Africa, most sites have no station to adapt satellite estimates. This work measures what it costs to transfer an adaptation learned elsewhere, and how much of the bias can be transferred.",
+  "status": "live",
+  "order": 1,
+  "progressFr": "Prépublication déposée sur Zenodo en octobre 2026 (article et supplément). La méthode a servi à corriger les séries de 340 localités de Guinée.",
+  "progressEn": "Preprint deposited on Zenodo in October 2026 (paper and supplement). The method was used to correct the series of 340 localities in Guinea.",
+  "pullFr": "La tendance nord-sud du biais se transfère d’une station à l’autre. L’écart propre à chaque station ne se transfère pas.",
+  "pullEn": "The north–south trend of the bias transfers from one station to another. Each station’s own offset does not.",
+  "metrics": [
+    {
+      "value": "31",
+      "labelFr": "stations ESMAP/WAPP, 13 pays",
+      "labelEn": "ESMAP/WAPP stations, 13 countries"
+    },
+    {
+      "value": "6,6 → 1,1 %",
+      "labelFr": "erreur annuelle du GHI, calage sur site",
+      "labelEn": "annual GHI error, on-site adaptation"
+    },
+    {
+      "value": "≈ 1 pt",
+      "labelFr": "coût du transfert sans station",
+      "labelEn": "cost of transfer with no station"
+    },
+    {
+      "value": "−1,62 pt/°",
+      "labelFr": "pente du biais vers le nord",
+      "labelEn": "slope of the bias northward"
+    }
+  ],
+  "figures": [
+    {
+      "src": "/images/recherche/cams-stations-fr.png",
+      "srcEn": "/images/recherche/cams-stations-en.png",
+      "section": "method",
+      "captionFr": "Les 31 stations. Cercles pleins : Tier 1 (DNI par pyrhéliomètre). Cercles vides : Tier 2 (DNI par radiomètre à bande d’ombrage). Fond de carte : Natural Earth.",
+      "captionEn": "The 31 stations. Filled circles: Tier 1 (DNI from a pyrheliometer). Open circles: Tier 2 (DNI from a rotating shadowband radiometer). Base map: Natural Earth."
+    },
+    {
+      "src": "/images/recherche/cams-biais-latitude-fr.png",
+      "srcEn": "/images/recherche/cams-biais-latitude-en.png",
+      "section": "result",
+      "featured": true,
+      "captionFr": "Biais brut de CAMS en fonction de la latitude. Droite : moindres carrés sur les 22 stations Tier 1 situées sous 600 m, avec sa bande de confiance à 95 % et l’intervalle de prédiction à 95 % pour un nouveau site. Tarambaly (860 m) est hors du domaine.",
+      "captionEn": "Raw CAMS bias versus latitude. Line: least squares on the 22 Tier 1 stations below 600 m, with its 95% confidence band and the 95% prediction interval for a new site. Tarambaly (860 m) lies outside the domain."
+    },
+    {
+      "src": "/images/recherche/cams-protocole-fr.png",
+      "srcEn": "/images/recherche/cams-protocole-en.png",
+      "section": "result",
+      "captionFr": "Apprentissage et évaluation pour une station cible. Le calage sur site est appris sur l’année 1 de la cible ; un transfert n’utilise que l’année 1 des autres stations. Les deux sont évalués sur l’année 2 de la cible.",
+      "captionEn": "Learning and evaluation for a target station. On-site adaptation is learned on the target’s year 1; a transfer uses only year 1 of the other stations. Both are evaluated on the target’s year 2."
+    },
+    {
+      "src": "/images/recherche/cams-residus-fr.png",
+      "srcEn": "/images/recherche/cams-residus-en.png",
+      "section": "result",
+      "captionFr": "Résidu signé des cumuls journaliers de l’année 2, par cible (du nord au sud) et par méthode. Rouge : la série surestime la mesure ; bleu : elle la sous-estime. Hachures : pas une cible.",
+      "captionEn": "Signed residual of the year-2 daily totals, by target (north to south) and by method. Red: the series overestimates the measurement; blue: it underestimates it. Hatched: not a target."
+    }
+  ],
+  "problemFr": "Le calage au sol corrige le rayonnement estimé par satellite à partir de mesures locales, puis applique cette correction à une série longue. En Afrique de l’Ouest, les stations sont rares : le réseau ESMAP/WAPP étudié ici en compte 31 dans 13 pays. Pour un site sans mesure, la question est de savoir quelle erreur ajoute le transfert d’un calage appris ailleurs.\n\nJ’y réponds pour le **CAMS Radiation Service** (version 4.6) et je cherche quelle part de son biais peut être transférée. Les nuages bas de la mousson atténuent fortement le rayonnement au sol, et les produits satellitaires le surestiment au cœur de la zone de stratus : ce contexte suggère une variation nord-sud du biais. Reste à savoir ce qu’un calage régional corrige à un nouveau site, et quelle part de l’écart observé vient des instruments eux-mêmes.",
+  "problemEn": "Site adaptation corrects satellite-estimated irradiance using local measurements, then applies that correction to a long series. In West Africa stations are scarce: the ESMAP/WAPP network studied here has 31 across 13 countries. For a site with no measurement, the question is what error is added by transferring an adaptation learned elsewhere.\n\nI answer it for the **CAMS Radiation Service** (version 4.6) and look for the share of its bias that can be transferred. Low monsoon clouds strongly attenuate surface irradiance, and satellite products overestimate it in the core of the stratus zone: this context suggests a north–south variation of the bias. What remains to be established is what a regional adaptation corrects at a new site, and how much of the observed gap comes from the instruments themselves.",
+  "hypothesesFr": [
+    "Seule hypothèse fixée avant les premiers résultats : un transfert fondé sur la latitude fait mieux qu’un transfert fondé sur la distance.",
+    "Le biais brut de CAMS se décompose en une tendance régionale, un écart persistant propre à chaque station et une variation annuelle ; seule la tendance se transfère.",
+    "Une part de l’excès d’erreur observé après transfert vient de l’étalonnage des capteurs, et non du rayonnement."
+  ],
+  "hypothesesEn": [
+    "The only hypothesis fixed before the first results: a latitude-based transfer does better than a distance-based transfer.",
+    "The raw CAMS bias splits into a regional trend, a persistent offset specific to each station and a yearly variation; only the trend transfers.",
+    "Part of the excess error observed after transfer comes from sensor calibration, not from irradiance."
+  ],
+  "methodFr": "Chaque station est découpée en une année 1 et une année 2. Toutes les corrections sont apprises sur une année et évaluées sur la suivante : le calage sur site sur l’année 1 de la cible, un transfert sur la seule année 1 des autres stations. Cela laisse 29 cibles en rayonnement global (GHI) et 28 en direct normal (DNI).\n\nDeux familles de correction sont comparées. La première est une correction par quantiles empiriques, apprise séparément pour les heures claires et nuageuses. La seconde est multiplicative : le biais relatif $\\hat b$ de la cible est prédit à partir de celui des donneurs (interpolation en inverse de la distance, droite en latitude, ou tendance en latitude, longitude et altitude), puis chaque heure diurne $x$ est corrigée.\n\n$$x' = \\frac{x}{1 + \\hat b/100}, \\qquad r_i = 100\\,\\frac{\\overline{(x - y)}}{\\bar y}, \\qquad C = \\overline{|r|}_m - \\overline{|r|}_{\\mathrm{r\\acute ef}}$$\n\nLe résidu $r_i$ estime l’erreur relative du cumul annuel à la cible $i$, et $C$ est le coût de l’absence de station, en points de pourcentage. Les intervalles viennent d’un bootstrap des cibles (10 000 tirages), les comparaisons multiples sont corrigées par la procédure de Holm, et un budget d’étalonnage sépare ce qui tient aux capteurs de ce qui tient au rayonnement.",
+  "methodEn": "Each station record is split into a year 1 and a year 2. Every correction is learned on one year and evaluated on the next: on-site adaptation on the target’s year 1, a transfer on year 1 of the other stations only. This leaves 29 targets for global horizontal irradiance (GHI) and 28 for direct normal irradiance (DNI).\n\nTwo families of correction are compared. The first is empirical quantile mapping, learned separately for clear and cloudy hours. The second is multiplicative: the target’s relative bias $\\hat b$ is predicted from that of the donors (inverse-distance interpolation, a line in latitude, or a trend in latitude, longitude and altitude), then each daytime hour $x$ is corrected.\n\n$$x' = \\frac{x}{1 + \\hat b/100}, \\qquad r_i = 100\\,\\frac{\\overline{(x - y)}}{\\bar y}, \\qquad C = \\overline{|r|}_m - \\overline{|r|}_{\\mathrm{ref}}$$\n\nThe residual $r_i$ estimates the relative error of the annual total at target $i$, and $C$ is the cost of having no station, in percentage points. Intervals come from a bootstrap over targets (10,000 draws), multiple comparisons are corrected with Holm’s procedure, and a calibration budget separates what is due to the sensors from what is due to irradiance.",
+  "resultsFr": "**Le transfert coûte environ un point en GHI.** Le calage sur site ramène le résidu absolu moyen de 6,63 % pour CAMS brut à 1,11 % l’année suivante. Les transferts gardent l’essentiel de ce gain : entre 1,83 % et 2,37 % pour les cinq meilleurs, soit un coût de 0,7 à 1,3 point selon la méthode.\n\n**La tendance se transfère, pas l’effet de station.** Sur les stations Tier 1 situées sous 600 m, le biais brut du GHI décroît de 1,62 point par degré de latitude vers le nord. L’écart persistant de chaque station autour de cette droite reste important, et une fois la tendance retirée, deux stations proches ne se ressemblent guère plus que deux stations éloignées : reprendre la correction de la station la plus proche fait moins bien que suivre la tendance.\n\n**Une part de l’écart est instrumentale.** Avec des erreurs d’étalonnage indépendantes de 0,95 %, l’excès d’erreur d’une correction par la tendance n’est plus détectable avec ce réseau. Sa borne unilatérale à 90 % sur l’erreur annuelle est de 2,6 à 2,7 %, contre 2,2 % pour une année de mesure sur site.\n\n**En DNI, une année ne suffit pas.** Même sur site, le résidu atteint 4,9 à 5,8 % l’année suivante, et aucun coût de transfert ne résiste à la correction pour comparaisons multiples.",
+  "resultsEn": "**Transfer costs about one point in GHI.** On-site adaptation brings the mean absolute residual from 6.63% for raw CAMS down to 1.11% the following year. Transfers keep most of that gain: between 1.83% and 2.37% for the five best, a cost of 0.7 to 1.3 points depending on the method.\n\n**The trend transfers, the station effect does not.** On Tier 1 stations below 600 m, the raw GHI bias falls by 1.62 points per degree of latitude northward. Each station’s persistent offset around that line remains large, and once the trend is removed, two nearby stations are hardly more alike than two distant ones: reusing the nearest station’s correction does worse than following the trend.\n\n**Part of the gap is instrumental.** With independent calibration errors of 0.95%, the excess error of a trend-based correction is no longer detectable with this network. Its one-sided 90% bound on the annual error is 2.6 to 2.7%, against 2.2% for one year of on-site measurement.\n\n**For DNI, one year is not enough.** Even on site, the residual reaches 4.9 to 5.8% the following year, and no transfer cost survives the correction for multiple comparisons.",
+  "questionsFr": [
+    "Les 31 stations ne couvrent que deux années chacune, pendant lesquelles les entrées de CAMS ont changé : les intervalles décrivent cette période, et un autre usage demande une nouvelle vérification.",
+    "La droite biais-latitude ne s’applique pas au-delà de 600 m d’altitude ni hors du domaine 5,9 à 14,0° N.",
+    "Le budget d’étalonnage suppose des erreurs indépendantes : il ne couvre ni erreur commune à tous les capteurs, ni dérive, ni encrassement.",
+    "Le DNI demande des campagnes de deux à trois ans, et les stations à radiomètre à bande d’ombrage, non vérifiées, une prudence particulière."
+  ],
+  "questionsEn": [
+    "The 31 stations cover only two years each, during which the inputs to CAMS changed: the intervals describe that period, and any other use calls for a new check.",
+    "The bias–latitude line does not apply above 600 m of altitude or outside the 5.9 to 14.0° N domain.",
+    "The calibration budget assumes independent errors: it covers neither an error common to all sensors, nor drift, nor soiling.",
+    "DNI calls for two- to three-year campaigns, and the unverified shadowband-radiometer stations for particular caution."
+  ],
+  "url": "https://doi.org/10.5281/zenodo.23381054"
+}

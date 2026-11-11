@@ -1,13 +1,13 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" role="img" aria-label="Siba Kalivogui">
-  <rect width="32" height="32" rx="7" fill="#16294a" />
+  <rect width="32" height="32" fill="#1f1a17" />
   <text
     x="16"
     y="21.5"
-    font-family="ui-sans-serif, system-ui, sans-serif"
+    font-family="Georgia, 'Times New Roman', serif"
     font-size="14.5"
-    font-weight="700"
+    font-weight="400"
     letter-spacing="-0.5"
-    fill="#ffffff"
+    fill="#f3efe8"
     text-anchor="middle"
   >SK</text>
 </svg>

@@ -16,27 +16,19 @@ const name = 'Siba Kalivogui';
 const role = 'Ingénieur en efficacité énergétique';
 const meta = 'Fondateur de Kuma Science';
 
+// Même planche que l'accueil : papier, encre noire, un filet vermillon.
 const svg = `<svg width="1200" height="630" viewBox="0 0 1200 630" xmlns="http://www.w3.org/2000/svg">
-  <defs>
-    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="#0f2036"/>
-      <stop offset="1" stop-color="#16294a"/>
-    </linearGradient>
-    <radialGradient id="glow" cx="0.5" cy="0" r="0.85">
-      <stop offset="0" stop-color="#38b5cc" stop-opacity="0.22"/>
-      <stop offset="1" stop-color="#38b5cc" stop-opacity="0"/>
-    </radialGradient>
-  </defs>
-  <rect width="1200" height="630" fill="url(#bg)"/>
-  <rect width="1200" height="630" fill="url(#glow)"/>
-  <rect x="0" y="0" width="1200" height="8" fill="#38b5cc"/>
-  <g font-family="Arial, Helvetica, sans-serif">
-    <rect x="80" y="150" width="96" height="96" rx="20" fill="#2a4a7c"/>
-    <text x="128" y="214" font-size="46" font-weight="700" fill="#ffffff" text-anchor="middle" letter-spacing="-1">SK</text>
-    <text x="80" y="360" font-size="76" font-weight="700" fill="#f7f4ec">${name}</text>
-    <text x="80" y="424" font-size="36" font-weight="600" fill="#45b8cd">${role}</text>
-    <text x="80" y="486" font-size="30" fill="#9fb0c6">${meta}</text>
-    <text x="80" y="560" font-size="24" fill="#6f8098" letter-spacing="1">ORCID 0009-0002-8292-1905</text>
+  <rect width="1200" height="630" fill="#f3efe8"/>
+  <rect x="0" y="0" width="1200" height="10" fill="#1f1a17"/>
+  <g font-family="Georgia, 'Times New Roman', serif">
+    <text x="80" y="250" font-size="96" fill="#1f1a17" letter-spacing="-2">${name}</text>
+    <text x="80" y="330" font-size="42" font-style="italic" fill="#d9431f">${role}</text>
+  </g>
+  <rect x="80" y="400" width="1040" height="2" fill="#1f1a17"/>
+  <g font-family="Courier New, monospace" font-size="24" fill="#5c544c">
+    <text x="80" y="456">${meta}</text>
+    <text x="80" y="496">ORCID 0009-0002-8292-1905</text>
+    <text x="1120" y="456" text-anchor="end">siba-iee.github.io</text>
   </g>
 </svg>`;
 

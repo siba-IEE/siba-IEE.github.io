@@ -3,15 +3,15 @@
   "kind": "tool",
   "status": "wip",
   "featured": false,
-  "order": 5,
+  "order": 7,
   "year": "2026",
   "url": null,
   "repo": null,
-  "summaryFr": "Un logiciel de bureau pour les bureaux d’études PV : il convertit les exports de dataloggers solaires, tous fabricants confondus.",
-  "summaryEn": "A desktop app for PV design offices: it converts solar datalogger exports, whatever the vendor.",
+  "summaryFr": "Logiciel de bureau qui convertit les exports de dataloggers solaires de différents fabricants vers un format commun.",
+  "summaryEn": "Desktop software that converts solar datalogger exports from different vendors into a common format.",
   "stack": ["Tauri", "React", "TypeScript"],
   "tags": ["Outil", "Solaire", "Desktop"],
   "image": "/images/kuma-solar-bridge.jpeg",
-  "bodyFr": "Le premier outil issu de l’écosystème, et le premier à consommer l’API Kuma Data Core. Solar Bridge s’adresse aux bureaux d’études photovoltaïques d’Afrique de l’Ouest : il prend les CSV produits par des dataloggers de marques différentes et les remet dans un format exploitable. Au passage, il applique les partis pris de Kuma : de la transparence, une interface qui ne s’impose pas, des libellés cohérents d’un bout à l’autre.",
-  "bodyEn": "The first tool to come out of the ecosystem, and the first to consume the Kuma Data Core API. Solar Bridge is aimed at West African photovoltaic design offices: it takes the CSV files produced by dataloggers of different makes and puts them back into a workable format. Along the way it carries Kuma’s choices: transparency, an interface that stays out of the way, labels that stay consistent throughout."
+  "bodyFr": "Solar Bridge est destiné aux bureaux d’études photovoltaïques d’Afrique de l’Ouest. Il lit les fichiers CSV produits par des dataloggers de marques différentes et les convertit vers un format commun. C’est le premier outil qui utilise l’API de Kuma Data Core.",
+  "bodyEn": "Solar Bridge is intended for photovoltaic design offices in West Africa. It reads the CSV files produced by dataloggers of different makes and converts them into a common format. It is the first tool that uses the Kuma Data Core API."
 }

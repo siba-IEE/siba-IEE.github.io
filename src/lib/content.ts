@@ -42,6 +42,10 @@ export interface ProjectRaw {
   summaryEn: string;
   stack: string[];
   tags: string[];
+  /** Chiffres clés affichés sur l'accueil. Optionnel. */
+  facts?: { value: string; labelFr: string; labelEn: string }[];
+  /** Adresses publiques (site, API, DOI, dépôt). Optionnel. */
+  links?: { label: string; url: string }[];
   /** Visuel de carte (chemin sous /public, ex. "/images/projets/rds.jpg"). Optionnel. */
   image?: string;
   bodyFr: string;
@@ -59,7 +63,10 @@ const projectModules = import.meta.glob<{ default: ProjectRaw }>('../content/pro
 export function getProjects(): Project[] {
   return Object.entries(projectModules)
     .map(([path, mod]) => ({
-      slug: path.split('/').pop()!.replace(/\.json$/, ''),
+      slug: path
+        .split('/')
+        .pop()!
+        .replace(/\.json$/, ''),
       ...mod.default,
     }))
     .sort((a, b) => a.order - b.order);
@@ -126,9 +133,14 @@ export function getPublications(): Publication[] {
   }));
 
   const orcidWorks = (orcidSnapshot.works ?? []) as OrcidWork[];
-  const seen = new Set(manual.map((pub) => pub.doi ?? pub.title));
+  // Dédoublonnage insensible à la casse, sur le DOI et sur le titre : ORCID renvoie parfois
+  // le DOI d'une version là où la curation cite le DOI de concept.
+  const norm = (value: string) => value.trim().toLowerCase();
+  const seen = new Set(
+    manual.flatMap((pub) => [pub.doi, pub.title].filter(Boolean).map((v) => norm(v!))),
+  );
   const fromOrcid: Publication[] = orcidWorks
-    .filter((work) => !seen.has(work.doi ?? work.title))
+    .filter((work) => !(work.doi && seen.has(norm(work.doi))) && !seen.has(norm(work.title)))
     .map((work) => ({
       title: work.title,
       authors: [],
@@ -226,6 +238,8 @@ export interface ResearchMetric {
 export interface ResearchFigure {
   /** Chemin sous /public (ex. "/images/recherche/calage-variogramme.png"). */
   src: string;
+  /** Variante anglaise de la figure (libellés traduits). Optionnel. */
+  srcEn?: string;
   /** Section d'ancrage : la figure s'affiche sous cette section. */
   section: 'method' | 'result';
   captionFr: string;
@@ -296,7 +310,9 @@ export interface Service {
 }
 
 export function getServices(): Service[] {
-  return (servicesData.services as Service[]).slice().sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+  return (servicesData.services as Service[])
+    .slice()
+    .sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
 }
 
 export const serviceCategoryLabels: Record<ServiceCategory, Record<Lang, string>> = {

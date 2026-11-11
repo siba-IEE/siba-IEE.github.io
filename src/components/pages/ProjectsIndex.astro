@@ -11,27 +11,28 @@ const projects = getProjects();
 
 // Domaines (regroupement par nature) et leur intro.
 const domainOrder: ProjectKind[] = ['data', 'platform', 'tool'];
-const domainMeta: Record<ProjectKind, { fr: string; en: string; introFr: string; introEn: string }> = {
+const domainMeta: Record<
+  ProjectKind,
+  { fr: string; en: string; introFr: string; introEn: string }
+> = {
   data: {
     fr: 'Données & recherche',
     en: 'Data & research',
-    introFr:
-      'Les référentiels et la tuyauterie qui rendent la donnée solaire ouest-africaine mesurable et vérifiable, source à l’appui.',
-    introEn:
-      'The references and plumbing that make West African solar data measurable and checkable, with its source attached.',
+    introFr: 'Référentiels de données solaires et énergétiques, et moteur qui les produit.',
+    introEn: 'Solar and energy reference datasets, and the engine that produces them.',
   },
   platform: {
     fr: 'Plateformes',
     en: 'Platforms',
-    introFr: 'Les portails qui mettent la donnée et les outils en libre accès, méthode comprise.',
-    introEn: 'The portals that put the data and tools in the open, method included.',
+    introFr: 'Portails qui donnent accès aux données, aux méthodes et aux outils.',
+    introEn: 'Portals that give access to the data, methods and tools.',
   },
   tool: {
     fr: 'Outils & logiciels',
     en: 'Tools & software',
     introFr:
-      'Les logiciels qui amènent la donnée qualifiée là où on en a besoin, du terrain au bureau d’études.',
-    introEn: 'The software that brings qualified data where it’s needed, from the field to the design office.',
+      'Logiciels de dimensionnement et de traitement pour les bureaux d’études et le terrain.',
+    introEn: 'Sizing and processing software for design offices and fieldwork.',
   },
 };
 
@@ -43,14 +44,11 @@ const domains = domainOrder
 <BaseLayout title={t('projects.pageTitle')} description={t('projects.pageLede')}>
   {/* En-tête encre : titre + accroche + liens vers les domaines */}
   <section class="relative overflow-hidden bg-brand-900 text-white">
-    <div
-      class="pointer-events-none absolute inset-0 opacity-[0.1] [background-image:linear-gradient(rgba(255,255,255,0.7)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.7)_1px,transparent_1px)] [background-size:44px_44px] [mask-image:radial-gradient(80%_80%_at_20%_0%,black,transparent)]"
-      aria-hidden="true"
-    >
-    </div>
     <div class="shell relative grid gap-10 py-16 sm:py-20 lg:grid-cols-[1fr_1fr] lg:gap-16">
       <div>
-        <h1 class="font-display text-4xl font-bold tracking-tight text-balance text-white sm:text-5xl">
+        <h1
+          class="font-display text-4xl font-medium tracking-tight text-balance text-white sm:text-5xl"
+        >
           {t('projects.pageTitle')}
         </h1>
         <p class="mt-5 max-w-md text-lg text-white/80 text-pretty">{t('projects.pageLede')}</p>
@@ -64,7 +62,7 @@ const domains = domainOrder
             domains.map((d) => (
               <a
                 href={`#${d.kind}`}
-                class="rounded-full bg-white/10 px-4 py-2.5 text-sm font-medium ring-1 ring-white/15 transition-colors hover:bg-white/20"
+                class="rounded-sm bg-white/10 px-4 py-2.5 text-sm font-medium ring-1 ring-white/15 transition-colors hover:bg-white/20"
               >
                 {isFr ? d.meta.fr : d.meta.en}
               </a>
@@ -81,7 +79,7 @@ const domains = domainOrder
       <section id={d.kind} class:list={['scroll-mt-20', di % 2 === 0 ? 'bg-surface-2' : '']}>
         <div class="shell border-t border-border py-16 sm:py-24">
           <div class="max-w-3xl">
-            <h2 class="font-display text-4xl font-bold tracking-tight text-balance sm:text-5xl">
+            <h2 class="font-display text-4xl font-medium tracking-tight text-balance sm:text-5xl">
               {isFr ? d.meta.fr : d.meta.en}
             </h2>
             <p class="mt-5 text-lg leading-relaxed text-text text-pretty">
@@ -94,13 +92,16 @@ const domains = domainOrder
               const body = isFr ? project.bodyFr : project.bodyEn;
               const bodyHtml = body ? (marked.parse(body) as string) : '';
               return (
-                <details id={project.slug} class="acc group scroll-mt-24 border-t border-border py-7">
+                <details
+                  id={project.slug}
+                  class="acc group scroll-mt-24 border-t border-border py-7"
+                >
                   <summary class="flex cursor-pointer list-none items-center justify-between gap-6">
                     <div class="flex flex-wrap items-center gap-3">
-                      <h3 class="font-display text-xl font-bold tracking-tight sm:text-2xl">
+                      <h3 class="font-display text-xl font-medium tracking-tight sm:text-2xl">
                         {project.title}
                       </h3>
-                      <span class="rounded-full bg-surface-3 px-2.5 py-0.5 text-[0.65rem] font-medium tracking-wide text-text-subtle uppercase">
+                      <span class="rounded-sm bg-surface-3 px-2.5 py-0.5 text-[0.65rem] font-medium tracking-wide text-text-subtle uppercase">
                         {statusLabels[project.status][lang]}
                       </span>
                     </div>
@@ -130,7 +131,7 @@ const domains = domainOrder
                         href={project.url}
                         target="_blank"
                         rel="me noopener"
-                        class="font-medium text-brand-700 hover:underline"
+                        class="font-medium text-link hover:underline"
                       >
                         {isFr ? 'Visiter' : 'Visit'}
                       </a>
@@ -140,7 +141,7 @@ const domains = domainOrder
                         href={project.repo}
                         target="_blank"
                         rel="noopener"
-                        class="font-medium text-brand-700 hover:underline"
+                        class="font-medium text-link hover:underline"
                       >
                         Code
                       </a>

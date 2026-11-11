@@ -30,17 +30,15 @@ const items: { key: UiKey; href: string }[] = [
 const isActive = (href: string) => path === href || path.startsWith(`${href}/`);
 ---
 
-{/* En haut : encre (épouse l'en-tête de page). Au scroll : surface + flou. */}
+{/* Papier et filet d'encre : la nav est le bord supérieur de la planche. */}
 <header
   id="site-nav"
   data-scrolled="false"
-  class="group/nav sticky top-0 z-40 border-b border-transparent bg-brand-900 transition-colors duration-300 data-[scrolled=true]:border-border/70 data-[scrolled=true]:bg-surface/85 supports-[backdrop-filter]:data-[scrolled=true]:bg-surface/70 data-[scrolled=true]:backdrop-blur-md"
+  class="sticky top-0 z-40 border-b border-heading bg-surface"
 >
   <nav class="shell flex h-16 items-center gap-4" aria-label="Principale">
     <a href={localizePath('/', lang)} class="inline-flex items-center" aria-label="Accueil">
-      <span
-        class="font-display text-xl font-bold tracking-tight text-white transition-colors group-data-[scrolled=true]/nav:text-text sm:text-2xl lg:text-[1.75rem]"
-      >
+      <span class="font-display text-[1.35rem] font-medium text-heading sm:text-2xl">
         Siba Kalivogui
       </span>
     </a>
@@ -53,10 +51,10 @@ const isActive = (href: string) => path === href || path.startsWith(`${href}/`);
               href={item.href}
               aria-current={isActive(item.href) ? 'page' : undefined}
               class:list={[
-                'rounded-lg px-3 py-2 text-sm transition-colors',
+                'px-3 py-2 text-sm transition-colors',
                 isActive(item.href)
-                  ? 'font-medium text-white group-data-[scrolled=true]/nav:text-text'
-                  : 'text-white/70 hover:text-white group-data-[scrolled=true]/nav:text-text-muted group-data-[scrolled=true]/nav:hover:text-text',
+                  ? 'text-heading underline decoration-accent-500 decoration-2 underline-offset-8'
+                  : 'text-text-muted hover:text-heading',
               ]}
             >
               {t(item.key)}
@@ -71,7 +69,7 @@ const isActive = (href: string) => path === href || path.startsWith(`${href}/`);
           target="_blank"
           rel="me noopener"
           aria-label="ORCID"
-          class="hidden size-9 items-center justify-center rounded-lg transition-colors hover:bg-white/10 group-data-[scrolled=true]/nav:hover:bg-surface-2 md:inline-flex"
+          class="hidden size-9 items-center justify-center rounded-sm transition-colors hover:bg-surface-2 md:inline-flex"
         >
           <OrcidIcon class="size-5" />
         </a>
@@ -80,12 +78,12 @@ const isActive = (href: string) => path === href || path.startsWith(`${href}/`);
           target="_blank"
           rel="me noopener"
           aria-label="LinkedIn"
-          class="hidden size-9 items-center justify-center rounded-lg transition-colors hover:bg-white/10 group-data-[scrolled=true]/nav:hover:bg-surface-2 md:inline-flex"
+          class="hidden size-9 items-center justify-center rounded-sm transition-colors hover:bg-surface-2 md:inline-flex"
         >
           <LinkedInIcon class="size-5" />
         </a>
         <span
-          class="mx-0.5 hidden h-5 w-px bg-white/25 transition-colors group-data-[scrolled=true]/nav:bg-border md:block"
+          class="mx-0.5 hidden h-5 w-px bg-border transition-colors md:block"
           aria-hidden="true"
         >
         </span>
@@ -93,7 +91,7 @@ const isActive = (href: string) => path === href || path.startsWith(`${href}/`);
           href={switchHref}
           hreflang={other}
           aria-label={t('lang.switch')}
-          class="inline-flex h-9 items-center justify-center rounded-lg border border-white/25 px-3 text-sm font-medium text-white/90 transition-colors hover:bg-white/10 group-data-[scrolled=true]/nav:border-border group-data-[scrolled=true]/nav:text-text-muted group-data-[scrolled=true]/nav:hover:bg-surface-2 group-data-[scrolled=true]/nav:hover:text-text"
+          class="inline-flex h-9 items-center justify-center rounded-sm border border-border px-3 text-sm font-medium text-text transition-colors hover:bg-surface-2"
         >
           {other.toUpperCase()}
         </a>
@@ -101,12 +99,19 @@ const isActive = (href: string) => path === href || path.startsWith(`${href}/`);
         <button
           type="button"
           id="nav-toggle"
-          class="inline-flex size-9 items-center justify-center rounded-lg border border-white/25 text-white transition-colors hover:bg-white/10 group-data-[scrolled=true]/nav:border-border group-data-[scrolled=true]/nav:text-text-muted group-data-[scrolled=true]/nav:hover:bg-surface-2 md:hidden"
+          class="inline-flex size-9 items-center justify-center rounded-sm border border-border text-heading transition-colors hover:bg-surface-2 md:hidden"
           aria-label="Menu"
           aria-expanded="false"
           aria-controls="nav-mobile"
         >
-          <svg class="size-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true">
+          <svg
+            class="size-5"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.6"
+            aria-hidden="true"
+          >
             <path d="M4 7h16M4 12h16M4 17h16" stroke-linecap="round"></path>
           </svg>
         </button>
@@ -121,8 +126,8 @@ const isActive = (href: string) => path === href || path.startsWith(`${href}/`);
           href={item.href}
           aria-current={isActive(item.href) ? 'page' : undefined}
           class:list={[
-            'block rounded-lg px-3 py-2.5 text-sm transition-colors hover:bg-surface-2',
-            isActive(item.href) ? 'font-medium text-text' : 'text-text-muted hover:text-text',
+            'block px-3 py-3 text-base transition-colors hover:bg-surface-2',
+            isActive(item.href) ? 'text-heading' : 'text-text-muted hover:text-heading',
           ]}
         >
           {t(item.key)}
@@ -133,7 +138,7 @@ const isActive = (href: string) => path === href || path.startsWith(`${href}/`);
 </header>
 
 <script>
-  // État de la nav : encre en haut, surface dès qu'on scrolle (ou menu ouvert).
+  // État de la nav : encre pleine en haut, translucide dès qu'on scrolle (ou menu ouvert).
   // Délégation sur document : survit aux transitions de page (View Transitions).
   const evalNav = () => {
     const nav = document.getElementById('site-nav');

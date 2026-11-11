@@ -1,351 +1,640 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
+import Story from '../home/Story.astro';
 import OrcidIcon from '../ui/OrcidIcon.astro';
 import { SITE, orcidUrl } from '../../lib/site';
-import { getLangFromUrl, localizePath, useTranslations } from '../../lib/i18n';
-import { getProfile, getProjects, getPublications, statusLabels } from '../../lib/content';
+import { getLangFromUrl, localizePath } from '../../lib/i18n';
+import {
+  getProfile,
+  getProjects,
+  getPublications,
+  getExperience,
+  getResearch,
+} from '../../lib/content';
 
 const lang = getLangFromUrl(Astro.url);
-const t = useTranslations(lang);
 const isFr = lang === 'fr';
 
 const profile = getProfile();
 const bio = (isFr ? profile.bioFr : profile.bioEn) || SITE.bio[lang];
+const tagline = (isFr ? profile.taglineFr : profile.taglineEn) || SITE.tagline[lang];
 
 const projects = getProjects();
+const live = projects.filter((p) => p.status === 'live');
+const building = projects.filter((p) => p.status === 'wip');
+const openResearch = getResearch().filter((w) => w.status === 'wip');
 const publications = getPublications();
+const experience = getExperience();
 
-const prettyType = (type: string) =>
-  type.replace(/[-_]/g, ' ').replace(/^\w/, (character) => character.toUpperCase());
+const since = isFr ? 'Depuis' : 'Since';
+const dates = (start: string, end: string, current: boolean) =>
+  current ? `${since} ${start}` : end ? `${start}–${end}` : start;
 
-// Kuma Data Core et RDS Guinée sont déjà présentés en publications (Zenodo) plus haut :
-// on les retire de la liste de l'accueil pour éviter le doublon (ils restent sur /projets).
-const shownAsPublication = new Set(['kuma-data-core', 'rds-guinee']);
-const homeProjects = projects.filter((p) => !shownAsPublication.has(p.slug));
+const typeLabels: Record<string, { fr: string; en: string }> = {
+  'journal-article': { fr: 'Article', en: 'Article' },
+  preprint: { fr: 'Prépublication', en: 'Preprint' },
+  'data-set': { fr: 'Jeu de données', en: 'Dataset' },
+  software: { fr: 'Logiciel', en: 'Software' },
+};
+const typeLabel = (type: string) => typeLabels[type]?.[lang] ?? type.replace(/[-_]/g, ' ');
 
-// Réalisations = abouti (en ligne) ; Projets = en cours.
-const realisations = homeProjects.filter((p) => p.status === 'live');
-const enCours = homeProjects.filter((p) => p.status !== 'live');
+const host = (url: string) => new URL(url).hostname;
+// Seuls les services que j'héberge sont sondés depuis le navigateur du visiteur.
+const pingable = (url: string) => host(url).endsWith('kumascience.com');
 
-// Accroche de mission (à affiner librement).
-const mission = isFr
-  ? 'Fiabiliser le solaire ouest-africain'
-  : 'Making West African solar trustworthy';
-const missionLede = isFr
-  ? 'Chercheur et ingénieur, je m’attaque au maillon faible du solaire ouest-africain : la fiabilité de la donnée.'
-  : 'A researcher and engineer going after the weak link of West African solar: whether you can trust the data.';
+const t = isFr
+  ? {
+      prodKicker: 'En production',
+      prodTitle: 'Systèmes en ligne',
+      prodLede: `${live.length} systèmes sont en ligne et maintenus. Les adresses, les DOI et les dépôts sont indiqués pour chacun.`,
+      allProjects: 'Tous les projets',
+      pingOk: 'a répondu en',
+      aboutKicker: 'Parcours',
+      aboutTitle: 'Montréal et Conakry',
+      aboutMore: 'Parcours détaillé, formation et compétences',
+      photoAlt: `${SITE.name} à son poste de travail`,
+      pubKicker: 'Publications',
+      pubTitle: 'Articles, jeux de données et logiciel',
+      orcid: 'Profil ORCID',
+      wipKicker: 'En cours',
+      wipTitle: 'Travaux et outils en développement',
+      research: 'Recherche',
+      tool: 'Outil',
+      contactTitle: 'Contact',
+      contactLede:
+        'Pour un programme de données énergétiques, une étude de ressource solaire ou un appui technique à un projet en Guinée, écrivez-moi par courriel. Je réponds en français ou en anglais.',
+      services: 'Prestations et tarifs',
+    }
+  : {
+      prodKicker: 'In production',
+      prodTitle: 'Systems online',
+      prodLede: `${live.length} systems are online and maintained. Addresses, DOIs and repositories are given for each.`,
+      allProjects: 'All projects',
+      pingOk: 'responded in',
+      aboutKicker: 'Background',
+      aboutTitle: 'Montréal and Conakry',
+      aboutMore: 'Detailed background, education and skills',
+      photoAlt: `${SITE.name} at work`,
+      pubKicker: 'Publications',
+      pubTitle: 'Papers, datasets and software',
+      orcid: 'ORCID profile',
+      wipKicker: 'In progress',
+      wipTitle: 'Research and tools under development',
+      research: 'Research',
+      tool: 'Tool',
+      contactTitle: 'Contact',
+      contactLede:
+        'For an energy-data programme, a solar resource study or technical support for a project in Guinea, write to me by email. I reply in French or English.',
+      services: 'Services and prices',
+    };
 
-const pillars = [
-  {
-    n: '01',
-    title: isFr ? 'Recherche & méthode' : 'Research & method',
-    desc: isFr
-      ? 'Qualifier et transférer une donnée solaire, méthode à l’appui : calage spatial, incertitude, dégénérescence de pixel. Validé, puis publié.'
-      : 'Qualifying and transferring solar data, with a method behind it: spatial calibration, uncertainty, pixel degeneracy. Validated, then published.',
+const upcoming = [
+  ...openResearch.map((w) => ({
+    kind: t.research,
+    title: isFr ? w.titleFr : w.titleEn,
+    text: isFr ? w.summaryFr : w.summaryEn,
     href: localizePath('/travaux', lang),
-  },
-  {
-    n: '02',
-    title: isFr ? 'Infrastructure de données' : 'Data infrastructure',
-    desc: isFr
-      ? 'Kuma Data Core : la brique qui ingère la donnée solaire, lui attribue un niveau de confiance (A/B/C) et la sert par millions de points.'
-      : 'Kuma Data Core: the piece that ingests solar data, gives it a confidence level (A/B/C) and serves it by the million.',
-    href: `${localizePath('/projets', lang)}#kuma-data-core`,
-  },
-  {
-    n: '03',
-    title: isFr ? 'Outils & logiciels' : 'Tools & software',
-    desc: isFr
-      ? 'Des applis de dimensionnement, sur bureau et sur mobile, pour que la donnée qualifiée arrive vraiment jusqu’aux bureaux d’études.'
-      : 'Sizing apps, desktop and mobile, so the qualified data actually reaches the design offices that need it.',
-    href: localizePath('/projets', lang),
-  },
-  {
-    n: '04',
-    title: isFr ? 'Ingénierie énergétique' : 'Energy engineering',
-    desc: isFr
-      ? 'Mon métier d’origine : la performance énergétique des bâtiments. Audits, DPE, bilans carbone, simulation thermique.'
-      : 'My original trade: building energy performance. Audits, EPC ratings, carbon assessments, thermal simulation.',
-    href: localizePath('/a-propos', lang),
-  },
+  })),
+  ...building.map((p) => ({
+    kind: t.tool,
+    title: p.title,
+    text: isFr ? p.summaryFr : p.summaryEn,
+    href: `${localizePath('/projets', lang)}#${p.slug}`,
+  })),
 ];
 ---
 
-<BaseLayout description={missionLede.slice(0, 155)}>
-  {/* Hero de mission : bandeau encre */}
-  <section class="relative overflow-hidden bg-brand-900 text-white">
-    <div
-      class="pointer-events-none absolute inset-0 opacity-[0.12] [background-image:linear-gradient(rgba(255,255,255,0.7)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.7)_1px,transparent_1px)] [background-size:46px_46px] [mask-image:radial-gradient(80%_75%_at_25%_0%,black,transparent)]"
-      aria-hidden="true"
-    >
-    </div>
-    <div class="shell relative py-14 sm:py-20">
-      <p class="inline-flex items-center gap-2 text-xs font-medium tracking-[0.15em] text-white/70 uppercase">
-        <span class="relative flex size-2">
-          <span class="absolute inline-flex size-full animate-ping rounded-full bg-accent-400 opacity-75"></span>
-          <span class="relative inline-flex size-2 rounded-full bg-accent-400"></span>
-        </span>
-        {t('hero.availability')}
-      </p>
+<BaseLayout description={tagline.slice(0, 158)}>
+  <Story />
 
-      <h1 class="mt-5 font-display text-4xl font-bold tracking-tight text-balance text-white sm:text-5xl lg:whitespace-nowrap">
-        {mission}
-      </h1>
-      <p class="mt-4 max-w-2xl text-base text-white/75 text-pretty">{missionLede}</p>
+  {/* En production : un registre, pas une galerie de cartes */}
+  <section id="production" class="scroll-mt-16 bg-surface">
+    <div class="shell pt-20 pb-10 sm:pt-32 sm:pb-16">
+      <header class="grid gap-6 lg:grid-cols-12 lg:items-end">
+        <div class="lg:col-span-7" data-reveal>
+          <p class="eyebrow">{t.prodKicker}</p>
+          <h2 class="display mt-4">{t.prodTitle}</h2>
+        </div>
+        <p
+          class="max-w-md text-lg text-text-muted text-pretty lg:col-span-4 lg:col-start-9"
+          data-reveal
+        >
+          {t.prodLede}
+        </p>
+      </header>
 
-      <div class="mt-8 flex flex-wrap items-center gap-4">
-        <a
-          href={localizePath('/projets', lang)}
-          class="inline-flex items-center gap-2 rounded-full bg-white px-6 py-3 text-sm font-semibold text-brand-900 transition-transform hover:-translate-y-0.5"
-        >
-          {isFr ? 'Voir mes travaux' : 'See my work'}
-        </a>
-        <a
-          href={localizePath('/contact', lang)}
-          class="inline-flex items-center gap-2 text-sm font-semibold text-white/90 underline-offset-4 hover:underline"
-        >
-          {t('nav.contact')}
-        </a>
-      </div>
+      <ol class="mt-12 border-t border-heading sm:mt-20">
+        {
+          live.map((project, i) => (
+            <li class="ledger-row group border-b border-border" data-reveal>
+              <div class="grid gap-x-8 gap-y-5 py-8 sm:py-10 lg:grid-cols-12">
+                <div class="lg:col-span-5">
+                  <div class="flex items-baseline gap-4">
+                    <span class="font-mono text-xs text-text-subtle">
+                      {String(i + 1).padStart(2, '0')}
+                    </span>
+                    <h3 class="font-display text-3xl font-normal text-heading sm:text-[2.6rem] sm:leading-none">
+                      <a
+                        href={project.url ?? `${localizePath('/projets', lang)}#${project.slug}`}
+                        target={project.url ? '_blank' : undefined}
+                        rel={project.url ? 'noopener' : undefined}
+                        class="ledger-title"
+                      >
+                        {project.title}
+                      </a>
+                    </h3>
+                  </div>
+                  <p class="mt-4 max-w-md text-text-muted text-pretty sm:pl-9">
+                    {isFr ? project.summaryFr : project.summaryEn}
+                  </p>
+                </div>
+
+                {project.facts && (
+                  <dl class="grid grid-cols-3 gap-x-5 gap-y-4 sm:pl-9 lg:col-span-4 lg:pl-0">
+                    {project.facts.map((fact) => (
+                      <div class={project.facts!.length < 3 ? 'col-span-3 sm:col-span-1' : ''}>
+                        <dd class="font-display text-2xl leading-none text-heading sm:text-[1.7rem]">
+                          {fact.value}
+                        </dd>
+                        <dt class="mt-2 text-xs leading-snug text-text-subtle">
+                          {isFr ? fact.labelFr : fact.labelEn}
+                        </dt>
+                      </div>
+                    ))}
+                  </dl>
+                )}
+
+                <ul class="space-y-2 font-mono text-[0.8rem] sm:pl-9 lg:col-span-3 lg:pl-0">
+                  {(project.links ?? []).map((link) => (
+                    <li>
+                      <a
+                        href={link.url}
+                        target="_blank"
+                        rel="noopener"
+                        class="ledger-link"
+                        data-ping={pingable(link.url) ? link.url : undefined}
+                      >
+                        <span class="break-all">{link.label}</span>
+                        <svg viewBox="0 0 12 12" aria-hidden="true">
+                          <path d="M3 9 9 3M4.5 3H9v4.5" />
+                        </svg>
+                      </a>
+                      {pingable(link.url) && (
+                        <span class="ping" data-ping-out data-label={t.pingOk} />
+                      )}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </li>
+          ))
+        }
+      </ol>
+
+      <a href={localizePath('/projets', lang)} class="arrow-link mt-8">{t.allProjects}</a>
     </div>
   </section>
 
-  {/* Présentation : panneau encre + portrait */}
-  <section data-reveal class="bg-surface-2/60">
-    <div class="shell py-12 sm:py-16">
-      <div class="grid overflow-hidden rounded-2xl border border-border sm:grid-cols-[1.05fr_0.95fr]">
-        <div class="flex flex-col justify-center gap-6 bg-brand-900 p-8 text-white sm:p-10">
-          <p class="text-lg leading-relaxed text-white/90 text-pretty">{bio}</p>
-          <div class="flex flex-wrap items-center gap-4">
-            <a
-              href={localizePath('/contact', lang)}
-              class="inline-flex items-center gap-2 rounded-full bg-white px-6 py-3 text-sm font-semibold text-brand-900 transition-transform hover:-translate-y-0.5"
-            >
-              {t('nav.contact')}
-            </a>
-            <a
-              href={localizePath('/a-propos', lang)}
-              class="text-sm font-semibold text-white/90 underline-offset-4 hover:underline"
-            >
-              {t('about.pageTitle')}
-            </a>
+  {/* Parcours : texte courant, portrait en marge, puis le tableau des postes */}
+  <section class="bg-surface">
+    <div class="shell py-16 sm:py-28">
+      <div data-reveal>
+        <p class="eyebrow">{t.aboutKicker}</p>
+        <h2 class="display mt-4">{t.aboutTitle}</h2>
+      </div>
+
+      <div class="bio mt-10" data-reveal>
+        <figure class="portrait">
+          <img src="/images/ph.jpeg" alt={t.photoAlt} width="920" height="2048" loading="lazy" />
+          <figcaption>
             <a
               href={orcidUrl}
               target="_blank"
               rel="me noopener"
-              class="inline-flex items-center gap-2 rounded-full bg-white/10 px-4 py-2.5 text-sm font-medium text-white/85 ring-1 ring-white/15 transition-colors hover:bg-white/15"
+              class="inline-flex items-center gap-1.5 hover:text-text"
             >
-              <OrcidIcon class="size-4" />
-              <span class="font-mono text-xs tracking-tight">{SITE.orcid}</span>
+              <OrcidIcon class="size-3.5" />
+              {SITE.orcid}
             </a>
-          </div>
-        </div>
-        <div class="relative min-h-[22rem] bg-surface-3">
-          <img
-            src="/images/ph.jpeg"
-            alt={isFr ? `${SITE.name}, à son poste de travail` : `${SITE.name}, at work`}
-            loading="lazy"
-            class="absolute inset-0 size-full object-cover object-[50%_55%]"
-          />
-        </div>
+          </figcaption>
+        </figure>
+        <p>{bio}</p>
       </div>
-    </div>
-  </section>
 
-  {/* Ce que je fais : titre figé (sticky) + piliers qui défilent */}
-  <section class="relative bg-brand-900 text-white">
-    <div
-      class="pointer-events-none absolute inset-0 opacity-[0.08] [background-image:linear-gradient(rgba(255,255,255,0.7)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.7)_1px,transparent_1px)] [background-size:46px_46px]"
-      aria-hidden="true"
-    >
-    </div>
-    <div class="shell relative py-16 sm:py-24">
-      <div class="grid gap-10 lg:grid-cols-[0.72fr_1.28fr] lg:gap-16">
-        <div class="lg:sticky lg:top-24 lg:self-start">
-          <h2 class="font-display text-2xl font-bold tracking-tight text-white sm:text-3xl">
-            {isFr ? 'Ce que je fais' : 'What I do'}
-          </h2>
-          <p class="mt-4 max-w-sm text-white/70 text-pretty">
-            {
-              isFr
-                ? 'Ça part toujours du même endroit : rendre la ressource solaire mesurable, puis en faire quelque chose d’utile.'
-                : 'It always starts in the same place: making the solar resource measurable, then turning it into something useful.'
-            }
-          </p>
-        </div>
-        <div>
+      <table class="career mt-14" data-reveal>
+        <tbody>
           {
-            pillars.map((p) => (
-              <a
-                href={p.href}
-                class="group flex gap-5 border-t border-white/15 py-6 first:border-t-0 first:pt-0 sm:gap-8"
-              >
-                <span class="pt-1 font-mono text-sm text-accent-400">{p.n}</span>
-                <div class="flex-1">
-                  <h3 class="font-display text-xl font-bold tracking-tight text-white sm:text-2xl">{p.title}</h3>
-                  <p class="mt-2 text-white/70 text-pretty">{p.desc}</p>
-                  <span class="mt-3 inline-block text-sm font-medium text-white/90 group-hover:underline">
-                    {isFr ? 'En savoir plus' : 'Learn more'}
-                  </span>
-                </div>
-              </a>
+            experience.map((item) => (
+              <tr>
+                <th scope="row">{dates(item.start, item.end, item.current)}</th>
+                <td class="role">{isFr ? item.roleFr : item.roleEn}</td>
+                <td>{item.org}</td>
+                <td class="place">{isFr ? item.locationFr : item.locationEn}</td>
+              </tr>
             ))
           }
-        </div>
-      </div>
+        </tbody>
+      </table>
+      <a href={localizePath('/a-propos', lang)} class="arrow-link mt-8">{t.aboutMore}</a>
     </div>
   </section>
 
-  {/* Publications : cartes, synchronisées depuis ORCID (sans photos) */}
-  <section data-reveal class="border-t border-border">
-    <div class="shell py-12 sm:py-16">
-      <div class="flex flex-wrap items-end justify-between gap-4">
+  {/* Publications : une bibliographie */}
+  <section class="border-t border-border bg-surface-2">
+    <div class="shell py-16 sm:py-28">
+      <header class="flex flex-wrap items-end justify-between gap-6" data-reveal>
         <div>
-          <h2 class="font-display text-2xl font-bold tracking-tight sm:text-3xl">
-            {isFr ? 'Contributions scientifiques' : 'Scientific contributions'}
-          </h2>
-          <p class="mt-3 max-w-2xl text-text-muted text-pretty">{t('publications.pageLede')}</p>
+          <p class="eyebrow">{t.pubKicker}</p>
+          <h2 class="display mt-4">{t.pubTitle}</h2>
         </div>
         <a
           href={orcidUrl}
           target="_blank"
           rel="me noopener"
-          class="inline-flex items-center gap-2 text-sm font-medium text-brand-700 underline-offset-4 hover:underline"
+          class="inline-flex items-center gap-2 text-sm text-link hover:underline"
         >
           <OrcidIcon class="size-4" />
-          {t('publications.viewOrcid')}
+          {t.orcid}
         </a>
-      </div>
+      </header>
 
-      {
-        publications.length === 0 ? (
-          <p class="mt-8 text-text-muted">{t('publications.empty')}</p>
-        ) : (
-          <div class="mt-8 grid gap-4 sm:grid-cols-2">
-            {publications.map((pub) => (
-              <article class="flex flex-col rounded-2xl border border-border p-6 transition-colors hover:border-brand-300">
-                <div class="flex items-center gap-2 text-xs">
-                  <span class="rounded bg-surface-2 px-2 py-0.5 font-medium text-text-muted">
-                    {prettyType(pub.type)}
-                  </span>
-                  {pub.year && <span class="font-mono text-text-subtle">{pub.year}</span>}
-                </div>
-                <h3 class="mt-3 font-display text-lg font-bold leading-snug tracking-tight text-pretty">
+      <ol class="mt-12 border-t border-heading">
+        {
+          publications.map((pub) => (
+            <li
+              class="grid gap-x-8 gap-y-2 border-b border-border py-6 lg:grid-cols-12"
+              data-reveal
+            >
+              <p class="font-mono text-xs text-text-subtle lg:col-span-2 lg:pt-1.5">
+                {pub.year}
+                <span class="mx-2 text-border">/</span>
+                {typeLabel(pub.type)}
+              </p>
+              <div class="lg:col-span-7">
+                <h3 class="font-display text-xl leading-snug font-normal text-heading text-pretty sm:text-2xl">
                   {pub.url ? (
-                    <a
-                      href={pub.url}
-                      target="_blank"
-                      rel="noopener"
-                      class="underline-offset-4 hover:text-brand-700 hover:underline"
-                    >
+                    <a href={pub.url} target="_blank" rel="noopener" class="cite-title">
                       {pub.title}
                     </a>
                   ) : (
                     pub.title
                   )}
                 </h3>
-                {pub.venue && <p class="mt-2 text-sm text-text-muted text-pretty">{pub.venue}</p>}
-                {pub.authors.length > 0 && (
-                  <p class="mt-1 text-xs text-text-subtle text-pretty">{pub.authors.join(', ')}</p>
-                )}
-                {(pub.doi || pub.url) && (
-                  <div class="mt-auto flex flex-wrap items-center gap-x-4 gap-y-1 pt-4 text-sm">
-                    {pub.doi && (
-                      <a
-                        href={`https://doi.org/${pub.doi}`}
-                        target="_blank"
-                        rel="noopener"
-                        class="font-mono text-xs text-brand-700 hover:underline"
-                      >
-                        DOI
-                      </a>
-                    )}
-                    {pub.url && (
-                      <a
-                        href={pub.url}
-                        target="_blank"
-                        rel="noopener"
-                        class="font-medium text-brand-700 hover:underline"
-                      >
-                        {isFr ? 'Lire' : 'Read'}
-                      </a>
-                    )}
-                  </div>
-                )}
-              </article>
-            ))}
-          </div>
-        )
-      }
-    </div>
-  </section>
-
-  {/* Réalisations & projets : aperçu en liste, détail sur /projets */}
-  <section class="border-t border-border">
-    <div class="shell py-12 sm:py-16">
-      <div class="flex flex-wrap items-end justify-between gap-4">
-        <h2 class="font-display text-2xl font-bold tracking-tight sm:text-3xl">
-          {isFr ? 'Réalisations & projets' : 'Work & projects'}
-        </h2>
-        <a
-          href={localizePath('/projets', lang)}
-          class="text-sm font-medium text-brand-700 hover:underline"
-        >
-          {isFr ? 'Tout voir en détail' : 'See it all in detail'}
-        </a>
-      </div>
-
-      <ul class="mt-8 border-t border-border">
-        {
-          [...realisations, ...enCours].map((project) => {
-            // Lien vers le vrai produit s'il existe (site officiel), sinon vers
-            // l'entrée correspondante dans la page /projets (pas de sous-page).
-            const external = Boolean(project.url);
-            const href = project.url ?? `${localizePath('/projets', lang)}#${project.slug}`;
-            return (
-              <li class="border-b border-border">
+                <p class="mt-2 text-sm leading-relaxed text-text-muted text-pretty">
+                  {pub.authors.length > 0 && (
+                    <>
+                      {pub.authors.map((author, a) => (
+                        <>
+                          {a > 0 && ', '}
+                          {author.includes('Kalivogui') ? (
+                            <strong class="font-semibold text-text">{author}</strong>
+                          ) : (
+                            author
+                          )}
+                        </>
+                      ))}
+                      {'. '}
+                    </>
+                  )}
+                  {pub.venue && <em>{pub.venue}</em>}
+                </p>
+              </div>
+              {pub.doi && (
                 <a
-                  href={href}
-                  target={external ? '_blank' : undefined}
-                  rel={external ? 'me noopener' : undefined}
-                  class="group grid gap-1 py-5 sm:grid-cols-[1fr_auto] sm:items-baseline sm:gap-8"
+                  href={`https://doi.org/${pub.doi}`}
+                  target="_blank"
+                  rel="noopener"
+                  class="font-mono text-xs text-link hover:underline lg:col-span-3 lg:pt-1.5 lg:text-right"
                 >
-                  <div>
-                    <span class="font-display text-lg font-bold tracking-tight group-hover:underline">
-                      {project.title}
-                    </span>
-                    <p class="mt-1 max-w-2xl text-sm text-text-muted text-pretty">
-                      {isFr ? project.summaryFr : project.summaryEn}
-                    </p>
-                  </div>
-                  <span class="rounded-full bg-surface-3 px-2.5 py-0.5 text-[0.65rem] font-medium tracking-wide text-text-subtle uppercase sm:justify-self-end">
-                    {statusLabels[project.status][lang]}
-                  </span>
+                  doi:{pub.doi.toLowerCase()}
                 </a>
-              </li>
-            );
-          })
+              )}
+            </li>
+          ))
         }
-      </ul>
+      </ol>
     </div>
   </section>
 
-  {/* Contact : bandeau encre */}
-  <section data-reveal class="bg-brand-900 text-white">
-    <div
-      class="shell flex flex-col items-start gap-6 py-16 sm:flex-row sm:items-center sm:justify-between sm:py-20"
-    >
-      <div>
-        <h2 class="font-display text-2xl font-bold tracking-tight text-white sm:text-3xl">{t('nav.contact')}</h2>
-        <p class="mt-3 max-w-xl text-white/80 text-pretty">{t('contact.pageLede')}</p>
+  {/* En chantier */}
+  {
+    upcoming.length > 0 && (
+      <section class="border-t border-border bg-surface">
+        <div class="shell py-16 sm:py-24">
+          <div data-reveal>
+            <p class="eyebrow">{t.wipKicker}</p>
+            <h2 class="display mt-4">{t.wipTitle}</h2>
+          </div>
+          <ul class="mt-10 grid gap-x-10 gap-y-8 border-t border-border pt-8 md:grid-cols-3">
+            {upcoming.map((item) => (
+              <li data-reveal>
+                <p class="font-mono text-xs text-text-subtle">{item.kind}</p>
+                <h3 class="mt-2 font-display text-2xl font-normal text-heading">
+                  <a href={item.href} class="cite-title">
+                    {item.title}
+                  </a>
+                </h3>
+                <p class="mt-2 text-sm leading-relaxed text-text-muted text-pretty">{item.text}</p>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </section>
+    )
+  }
+
+  {/* Contact */}
+  <section class="bg-brand-900 text-white">
+    <div class="shell py-20 sm:py-32">
+      <p class="eyebrow !text-white/60" data-reveal>{t.contactTitle}</p>
+      <a href={`mailto:${SITE.email}`} class="mail mt-6 block" data-reveal>{SITE.email}</a>
+      <div class="mt-10 grid gap-8 lg:grid-cols-12 lg:items-end" data-reveal>
+        <p class="max-w-xl text-lg text-white/70 text-pretty lg:col-span-6">{t.contactLede}</p>
+        <div class="flex flex-wrap items-center gap-x-8 gap-y-4 lg:col-span-6 lg:justify-end">
+          <a
+            href={localizePath('/services', lang)}
+            class="text-sm text-white/80 underline decoration-white/40 underline-offset-[5px] hover:decoration-accent-400"
+          >
+            {t.services}
+          </a>
+        </div>
       </div>
-      <a
-        href={`mailto:${SITE.email}`}
-        class="inline-flex shrink-0 items-center gap-2 rounded-full bg-white px-6 py-3 text-sm font-semibold text-brand-900 transition-transform hover:-translate-y-0.5"
-      >
-        {SITE.email}
-      </a>
     </div>
   </section>
-
 </BaseLayout>
+
+<style>
+  .eyebrow {
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--text-subtle);
+  }
+
+  .display {
+    font-family: var(--font-display);
+    font-size: clamp(2.4rem, 6vw, 4.6rem);
+    font-weight: 400;
+    line-height: 1;
+    letter-spacing: -0.025em;
+    text-wrap: balance;
+  }
+
+  /* Registre de production */
+  .ledger-title {
+    background: linear-gradient(currentcolor, currentcolor) 0 100% / 0 1px no-repeat;
+    transition: background-size 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  .ledger-row:hover .ledger-title,
+  .ledger-title:focus-visible {
+    background-size: 100% 1px;
+  }
+
+  .ledger-link {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 0.4rem;
+    color: var(--link);
+  }
+
+  .ledger-link:hover span {
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+
+  .ledger-link svg {
+    flex: none;
+    width: 0.6rem;
+    height: 0.6rem;
+    fill: none;
+    stroke: currentcolor;
+    stroke-width: 1.4;
+    transition: transform 0.25s ease;
+  }
+
+  .ledger-link:hover svg {
+    transform: translate(2px, -2px);
+  }
+
+  /* Résultat de la sonde : n'apparaît que si le service a effectivement répondu. */
+  .ping {
+    display: none;
+    align-items: center;
+    gap: 0.45rem;
+    margin-top: 0.15rem;
+    font-size: 0.7rem;
+    color: var(--text-subtle);
+  }
+
+  .ping[data-state='ok'] {
+    display: flex;
+  }
+
+  .ping::before {
+    content: '';
+    width: 0.4rem;
+    height: 0.4rem;
+    border-radius: 50%;
+    background: oklch(0.62 0.15 150);
+  }
+
+  .arrow-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.6rem;
+    font-size: 0.95rem;
+    font-weight: 500;
+    color: var(--heading);
+    text-decoration: underline;
+    text-decoration-color: var(--border);
+    text-underline-offset: 6px;
+    transition: text-decoration-color 0.2s ease;
+  }
+
+  .arrow-link::after {
+    content: '→';
+    transition: transform 0.25s ease;
+  }
+
+  .arrow-link:hover {
+    text-decoration-color: var(--link);
+  }
+
+  .arrow-link:hover::after {
+    transform: translateX(4px);
+  }
+
+  .cite-title {
+    text-decoration: underline;
+    text-decoration-color: transparent;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 4px;
+    transition: text-decoration-color 0.2s ease;
+  }
+
+  .cite-title:hover {
+    text-decoration-color: var(--link);
+  }
+
+  /* Parcours */
+  .bio {
+    max-width: 68rem;
+  }
+
+  .bio p {
+    font-family: var(--font-display);
+    font-size: clamp(1.25rem, 2.1vw, 1.9rem);
+    line-height: 1.32;
+    letter-spacing: -0.012em;
+    color: var(--heading);
+    text-wrap: pretty;
+  }
+
+  .portrait {
+    float: right;
+    width: clamp(7.5rem, 18vw, 15rem);
+    margin: 0.4rem 0 1rem 2rem;
+    shape-outside: margin-box;
+  }
+
+  .portrait img {
+    width: 100%;
+    aspect-ratio: 4 / 5;
+    object-fit: cover;
+    object-position: 50% 72%;
+    filter: grayscale(1) contrast(1.05);
+    mix-blend-mode: multiply;
+  }
+
+  :global([data-theme='dark']) .portrait img {
+    mix-blend-mode: normal;
+  }
+
+  .portrait figcaption {
+    margin-top: 0.5rem;
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
+    color: var(--text-subtle);
+  }
+
+  .career {
+    width: 100%;
+    border-collapse: collapse;
+    border-top: 1px solid var(--heading);
+    clear: both;
+  }
+
+  .career tr {
+    border-bottom: 1px solid var(--border);
+  }
+
+  .career th,
+  .career td {
+    padding: 0.85rem 1.5rem 0.85rem 0;
+    text-align: left;
+    vertical-align: baseline;
+    font-size: 0.95rem;
+    color: var(--text-muted);
+  }
+
+  .career th {
+    width: 9rem;
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    font-weight: 400;
+    color: var(--text-subtle);
+    white-space: nowrap;
+  }
+
+  .career .role {
+    font-weight: 500;
+    color: var(--heading);
+  }
+
+  @media (max-width: 760px) {
+    .career tr {
+      display: grid;
+      grid-template-columns: 5.5rem 1fr;
+      padding-block: 0.8rem;
+    }
+
+    .career th,
+    .career td {
+      padding: 0;
+    }
+
+    .career th {
+      grid-row: span 3;
+      width: auto;
+    }
+
+    .career .place {
+      font-size: 0.85rem;
+    }
+  }
+
+  .mail {
+    font-family: var(--font-display);
+    font-size: clamp(1.9rem, 6.6vw, 6rem);
+    line-height: 1.05;
+    letter-spacing: -0.02em;
+    overflow-wrap: anywhere;
+    color: #fff;
+    text-decoration: underline;
+    text-decoration-color: var(--color-accent-400);
+    text-decoration-thickness: 2px;
+    text-underline-offset: 0.14em;
+    transition: color 0.2s ease;
+  }
+
+  .mail:hover {
+    color: var(--color-accent-300);
+  }
+</style>
+
+<script>
+  // Sonde de disponibilité : quand le registre entre à l'écran, le navigateur du visiteur
+  // interroge chaque service et affiche le délai mesuré. Un échec reste silencieux.
+  const initPing = () => {
+    const section = document.getElementById('production');
+    if (!section || section.dataset.pinged) return;
+    const links = [...section.querySelectorAll<HTMLAnchorElement>('[data-ping]')];
+    if (!links.length || !('IntersectionObserver' in window)) return;
+
+    const probe = async (link: HTMLAnchorElement) => {
+      const out = link.parentElement?.querySelector<HTMLElement>('[data-ping-out]');
+      if (!out) return;
+      const controller = new AbortController();
+      const timer = window.setTimeout(() => controller.abort(), 8000);
+      const started = performance.now();
+      try {
+        await fetch(link.dataset.ping!, {
+          mode: 'no-cors',
+          cache: 'no-store',
+          signal: controller.signal,
+        });
+        const ms = Math.round(performance.now() - started);
+        out.textContent = `${out.dataset.label} ${ms} ms`;
+        out.dataset.state = 'ok';
+      } catch {
+        /* service injoignable depuis ce réseau : on n'affiche rien. */
+      } finally {
+        window.clearTimeout(timer);
+      }
+    };
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (!entries.some((entry) => entry.isIntersecting)) return;
+        observer.disconnect();
+        section.dataset.pinged = 'true';
+        links.forEach(probe);
+      },
+      { rootMargin: '0px 0px -20% 0px' },
+    );
+    observer.observe(section);
+  };
+  document.addEventListener('astro:page-load', initPing);
+</script>

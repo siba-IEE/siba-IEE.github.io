@@ -1,7 +1,0 @@
-{
-  "categoryFr": "Développement logiciel",
-  "categoryEn": "Software development",
-  "order": 3,
-  "itemsFr": ["Python", "FastAPI", "PostgreSQL", "TypeScript", "React", "Astro", "Tauri", "React Native", "Docker", "GitHub Actions"],
-  "itemsEn": ["Python", "FastAPI", "PostgreSQL", "TypeScript", "React", "Astro", "Tauri", "React Native", "Docker", "GitHub Actions"]
-}

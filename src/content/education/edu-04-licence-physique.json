@@ -1,12 +1,12 @@
 {
-  "titleFr": "DEUG en physique",
-  "titleEn": "Two-year university diploma (DEUG) in physics",
+  "titleFr": "Licence de physique",
+  "titleEn": "Bachelor’s degree in physics",
   "school": "Université Ibn Zohr",
   "locationFr": "Agadir, Maroc",
   "locationEn": "Agadir, Morocco",
   "start": "2016",
-  "end": "2018",
-  "order": 5,
+  "end": "2019",
+  "order": 4,
   "noteFr": "",
   "noteEn": ""
 }

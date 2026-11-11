@@ -4,51 +4,54 @@
 @custom-variant dark (&:where([data-theme='dark'], [data-theme='dark'] *));
 
 @theme {
-  --font-sans: 'Inter Variable', ui-sans-serif, system-ui, -apple-system, sans-serif;
-  --font-display: 'Manrope Variable', 'Inter Variable', ui-sans-serif, sans-serif;
-  --font-mono: 'Source Code Pro Variable', ui-monospace, SFMono-Regular, monospace;
+  --font-sans: 'IBM Plex Sans Variable', ui-sans-serif, system-ui, -apple-system, sans-serif;
+  --font-display: 'Newsreader Variable', 'Iowan Old Style', 'Palatino Linotype', georgia, serif;
+  --font-mono: 'IBM Plex Mono', ui-monospace, sfmono-regular, monospace;
 
-  /* Palette de marque, encre bleue (OKLCH) : accent unique et sobre, registre revue scientifique. */
-  --color-brand-50: oklch(0.96 0.015 255);
-  --color-brand-100: oklch(0.91 0.03 255);
-  --color-brand-200: oklch(0.83 0.055 255);
-  --color-brand-300: oklch(0.72 0.08 255);
-  --color-brand-400: oklch(0.6 0.1 255);
-  --color-brand-500: oklch(0.5 0.11 255);
-  --color-brand-600: oklch(0.42 0.11 255);
-  --color-brand-700: oklch(0.35 0.09 256);
-  --color-brand-800: oklch(0.29 0.07 258);
-  --color-brand-900: oklch(0.24 0.05 260);
+  /* Vermillon (50 à 600) : l'encre d'accompagnement, celle du biais sur la carte.
+     Encre (700 à 900) : le noir chaud des bandeaux. Deux encres sur papier, pas davantage. */
+  --color-brand-50: oklch(0.965 0.016 40);
+  --color-brand-100: oklch(0.925 0.035 38);
+  --color-brand-200: oklch(0.86 0.075 36);
+  --color-brand-300: oklch(0.77 0.13 35);
+  --color-brand-400: oklch(0.68 0.19 34);
+  --color-brand-500: oklch(0.6 0.215 33);
+  --color-brand-600: oklch(0.52 0.2 32);
+  --color-brand-700: oklch(0.3 0.014 62);
+  --color-brand-800: oklch(0.235 0.012 62);
+  --color-brand-900: oklch(0.19 0.012 60);
 
-  /* Accent secondaire, réservé aux touches de données (graphes, points). */
-  --color-accent-400: oklch(0.72 0.12 205);
-  --color-accent-500: oklch(0.62 0.13 205);
-  --color-accent-600: oklch(0.54 0.12 208);
+  --color-accent-300: oklch(0.77 0.13 35);
+  --color-accent-400: oklch(0.68 0.19 34);
+  --color-accent-500: oklch(0.6 0.215 33);
+  --color-accent-600: oklch(0.52 0.2 32);
 }
 
 /* Jetons sémantiques, valeurs qui basculent en sombre. */
 :root {
   color-scheme: light;
-  --surface: oklch(0.985 0.008 82);
-  --surface-2: oklch(0.965 0.01 80);
-  --surface-3: oklch(0.93 0.013 78);
-  --border: oklch(0.88 0.013 78);
-  --text: oklch(0.23 0.016 62);
-  --text-muted: oklch(0.46 0.016 62);
-  --text-subtle: oklch(0.6 0.014 64);
-  --heading: oklch(0.33 0.055 262);
+  --surface: oklch(0.955 0.013 88);
+  --surface-2: oklch(0.928 0.015 88);
+  --surface-3: oklch(0.9 0.016 86);
+  --border: oklch(0.8 0.014 80);
+  --text: oklch(0.24 0.014 60);
+  --text-muted: oklch(0.43 0.014 60);
+  --text-subtle: oklch(0.55 0.013 62);
+  --heading: oklch(0.19 0.012 60);
+  --link: oklch(0.5 0.2 32);
 }
 
 [data-theme='dark'] {
   color-scheme: dark;
-  --surface: oklch(0.16 0.018 262);
-  --surface-2: oklch(0.2 0.02 262);
-  --surface-3: oklch(0.25 0.022 262);
-  --border: oklch(0.31 0.02 262);
-  --text: oklch(0.95 0.008 85);
-  --text-muted: oklch(0.72 0.011 85);
-  --text-subtle: oklch(0.57 0.011 85);
-  --heading: oklch(0.95 0.01 88);
+  --surface: oklch(0.19 0.012 60);
+  --surface-2: oklch(0.225 0.012 60);
+  --surface-3: oklch(0.27 0.012 60);
+  --border: oklch(0.32 0.012 70);
+  --text: oklch(0.93 0.01 85);
+  --text-muted: oklch(0.75 0.012 85);
+  --text-subtle: oklch(0.6 0.012 85);
+  --heading: oklch(0.965 0.01 88);
+  --link: oklch(0.74 0.16 36);
 }
 
 /* Expose les jetons sémantiques comme utilitaires Tailwind (bg-surface, text-text, border-border...). */
@@ -61,13 +64,20 @@
   --color-text-muted: var(--text-muted);
   --color-text-subtle: var(--text-subtle);
   --color-heading: var(--heading);
+  --color-link: var(--link);
 }
 
-/* Titres en bleu-encre par défaut (clair) / crème (sombre) ; les bandeaux
-   encre remettent leurs titres en blanc via l'utilitaire text-white. */
+/* Titres en encre (clair) / crème (sombre) ; les bandeaux encre remettent leurs
+   titres en blanc via l'utilitaire text-white. */
 @layer base {
   :where(h1, h2, h3) {
     color: var(--heading);
+  }
+
+  /* Le sérif d'affichage se compose serré, avec sa taille optique. */
+  .font-display {
+    font-optical-sizing: auto;
+    letter-spacing: -0.015em;
   }
 }
 
@@ -103,19 +113,20 @@
     background-color: var(--surface);
     color: var(--text);
     font-family: var(--font-sans);
+    font-feature-settings: 'ss01', 'zero';
     -webkit-font-smoothing: antialiased;
     text-rendering: optimizeLegibility;
   }
 
   :focus-visible {
-    outline: 2px solid var(--color-brand-500);
+    outline: 2px solid var(--color-accent-500);
     outline-offset: 2px;
     border-radius: 2px;
   }
 
   ::selection {
-    background-color: var(--color-brand-200);
-    color: var(--color-brand-900);
+    background-color: var(--color-brand-900);
+    color: oklch(0.955 0.013 88);
   }
 
   @media (prefers-reduced-motion: reduce) {

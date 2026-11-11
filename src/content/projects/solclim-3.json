@@ -1,16 +1,34 @@
 {
   "title": "SolClim-3",
-  "kind": "platform",
-  "status": "wip",
+  "kind": "tool",
+  "status": "live",
   "featured": true,
-  "order": 4,
+  "order": 5,
   "year": "2026",
-  "url": null,
+  "url": "https://solclim3.kumascience.com",
   "repo": null,
-  "summaryFr": "Des données solaires calées au sol pour l’Afrique de l’Ouest, avec un tableau de bord sur le pilote guinéen.",
-  "summaryEn": "Ground-calibrated solar data for West Africa, with a dashboard of the Guinean pilot.",
-  "stack": ["Astro", "Tailwind", "MapLibre", "D3"],
-  "tags": ["Plateforme", "Données", "Solaire"],
-  "bodyFr": "Une plateforme de données solaires calées au sol pour l’Afrique de l’Ouest, signée Kuma Science. Son tableau de bord donne à explorer le référentiel ouvert du pilote guinéen, ses 34 communes : chaque bloc garde en mémoire sa source, sa période et son niveau de confiance, et dit d’où viennent ses calculs.\n\nLes séries sont servies sous forme d’extraits statiques, triés à la main depuis le dépôt de données, avec une palette de couleurs pensée pour rester lisible en cas de daltonisme.",
-  "bodyEn": "A ground-calibrated solar-data platform for West Africa, from Kuma Science. Its dashboard opens up the open reference of the Guinean pilot and its 34 communes: each block remembers its source, its period and its confidence level, and says where its figures come from.\n\nThe series are served as static extracts, hand-picked from the data repository, with a colour palette meant to stay readable for colour-blind viewers."
+  "summaryFr": "Logiciel de dimensionnement photovoltaïque et de stockage pour bureaux d’études. Les calculs sont vérifiés contre pvlib.",
+  "summaryEn": "PV and storage sizing software for design offices. The calculations are verified against pvlib.",
+  "stack": ["pvlib", "Tests automatisés"],
+  "tags": ["Outil", "Solaire", "Dimensionnement"],
+  "bodyFr": "SolClim-3 dimensionne des installations photovoltaïques et leur stockage pour les bureaux d’études.\n\nLes calculs sont vérifiés contre pvlib, la bibliothèque de référence du domaine, et couverts par 800 tests automatisés.",
+  "bodyEn": "SolClim-3 sizes photovoltaic systems and their storage for design offices.\n\nThe calculations are verified against pvlib, the field’s reference library, and covered by 800 automated tests.",
+  "facts": [
+    {
+      "value": "800",
+      "labelFr": "tests automatisés",
+      "labelEn": "automated tests"
+    },
+    {
+      "value": "pvlib",
+      "labelFr": "référence de vérification des calculs",
+      "labelEn": "reference used to verify the calculations"
+    }
+  ],
+  "links": [
+    {
+      "label": "solclim3.kumascience.com",
+      "url": "https://solclim3.kumascience.com"
+    }
+  ]
 }

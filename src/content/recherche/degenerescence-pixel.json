@@ -13,7 +13,11 @@
     { "value": "34", "labelFr": "communes de Guinée", "labelEn": "communes of Guinea" },
     { "value": "22", "labelFr": "valeurs distinctes", "labelEn": "distinct values" },
     { "value": "20", "labelFr": "communes co-maillées", "labelEn": "co-celled communes" },
-    { "value": "504", "labelFr": "mois identiques (42 ans)", "labelEn": "identical months (42 yrs)" }
+    {
+      "value": "504",
+      "labelFr": "mois identiques (42 ans)",
+      "labelEn": "identical months (42 yrs)"
+    }
   ],
   "problemFr": "Un produit satellitaire ou de réanalyse restitue le rayonnement sur une grille. Deux sites réels distincts qui tombent dans la même maille reçoivent la même valeur, à l'octet près. La note fondatrice l'a documenté sur une paire : Kindia et Mamou, distantes de 92 km et de 378 m d'altitude, auxquelles NASA POWER attribue des séries strictement identiques sur des décennies.\n\nCe travail généralise le constat d'une paire à un territoire, et le quantifie : quelle fraction de l'information spatiale un produit efface sur la Guinée, et où. Le phénomène reçoit ici un nom, la **dégénérescence de pixel** : l'incapacité d'un produit à distinguer des sites réellement distincts parce qu'ils partagent une maille.\n\nÀ distinguer de la représentativité spatiale d'une mesure au sol (Hakuba 2013, Schwarz 2018) et de l'interpolation de la ressource : ce n'est pas une erreur point-vers-aire, c'est une propriété *intrinsèque du produit*, mesurée sur un référentiel de sites réels.",
   "problemEn": "A satellite or reanalysis product delivers radiation on a grid. Two genuinely distinct sites that fall into the same cell receive the same value, to the byte. The founding note documented this on a single pair: Kindia and Mamou, 92 km apart and 378 m in altitude, to which NASA POWER assigns strictly identical series over decades.\n\nThis work generalises the observation from a pair to a territory, and quantifies it: how much spatial information a product erases over Guinea, and where. The phenomenon is named here **pixel degeneracy**: a product's inability to tell apart genuinely distinct sites because they share a cell.\n\nTo be distinguished from the spatial representativeness of a ground measurement (Hakuba 2013, Schwarz 2018) and from resource interpolation: this is not a point-to-area error, it is an *intrinsic property of the product*, measured against a reference of real sites.",

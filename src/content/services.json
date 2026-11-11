@@ -4,8 +4,8 @@
       "category": "research",
       "nameFr": "Revue de littérature",
       "nameEn": "Literature review",
-      "descFr": "Un état de l’art sérieux et sourcé sur votre question technique ou scientifique : je cadre le sujet, je trie ce qui compte, et vous repartez avec une bibliographie que vous pouvez vraiment utiliser.",
-      "descEn": "A serious, sourced state of the art on your technical or scientific question: I frame the topic, sort out what matters, and you leave with a bibliography you can actually use.",
+      "descFr": "État de l’art sourcé sur une question technique ou scientifique, avec cadrage du sujet, sélection des références et bibliographie exploitable.",
+      "descEn": "Sourced state of the art on a technical or scientific question, with scoping, selection of references and a usable bibliography.",
       "priceFrom": "1 000 €",
       "order": 1
     },
@@ -13,8 +13,8 @@
       "category": "dev",
       "nameFr": "Site web",
       "nameEn": "Website",
-      "descFr": "Un site vitrine ou éditorial, bilingue si besoin, rapide et accessible, construit pour durer et pour être trouvé sur Google.",
-      "descEn": "A showcase or editorial site, bilingual if needed, fast and accessible, built to last and to be found on Google.",
+      "descFr": "Site vitrine ou éditorial, bilingue si nécessaire, rapide, accessible et référencé.",
+      "descEn": "Showcase or editorial website, bilingual if needed, fast, accessible and search-engine friendly.",
       "priceFrom": "2 500 €",
       "order": 2
     },
@@ -22,8 +22,8 @@
       "category": "dev",
       "nameFr": "Tableau de bord",
       "nameEn": "Dashboard",
-      "descFr": "Un tableau de bord branché sur vos données : les bons indicateurs, un suivi dans le temps, et des graphiques assez clairs pour trancher.",
-      "descEn": "A dashboard wired to your own data: the right indicators, tracking over time, and charts clear enough to make the call.",
+      "descFr": "Tableau de bord connecté à vos données, avec les indicateurs utiles et leur suivi dans le temps.",
+      "descEn": "Dashboard connected to your data, with the relevant indicators and their tracking over time.",
       "priceFrom": "4 000 €",
       "order": 3
     },
@@ -31,8 +31,8 @@
       "category": "dev",
       "nameFr": "Application métier",
       "nameEn": "Business application",
-      "descFr": "Une application sur mesure, bureau ou web, taillée pour un besoin métier précis : du calcul, de la gestion, du dimensionnement, ce que le travail réclame.",
-      "descEn": "A tailor-made app, desktop or web, cut to a precise business need: calculation, management, sizing, whatever the job calls for.",
+      "descFr": "Application sur mesure, de bureau ou web, pour un besoin métier défini : calcul, gestion ou dimensionnement.",
+      "descEn": "Custom desktop or web application for a defined business need: calculation, management or sizing.",
       "priceFrom": "8 000 €",
       "order": 4
     },
@@ -40,8 +40,8 @@
       "category": "platforms",
       "nameFr": "Forum & communauté",
       "nameEn": "Forum & community",
-      "descFr": "Un forum Discourse installé et prêt à vivre : hébergement, thème sur mesure, catégories, modération et connexion unique (SSO).",
-      "descEn": "A Discourse forum installed and ready to live: hosting, custom theme, categories, moderation and single sign-on (SSO).",
+      "descFr": "Forum Discourse installé et configuré : hébergement, thème, catégories, modération et connexion unique (SSO).",
+      "descEn": "Discourse forum installed and configured: hosting, theme, categories, moderation and single sign-on (SSO).",
       "priceFrom": "5 000 €",
       "order": 5
     },
@@ -49,8 +49,8 @@
       "category": "platforms",
       "nameFr": "Plateforme de formation",
       "nameEn": "Learning platform",
-      "descFr": "Une plateforme de cours en ligne dans l’esprit FUN MOOC : Open edX déployé avec Tutor, habillé à vos couleurs, avec contenus, intégrations et certificats.",
-      "descEn": "An online course platform in the FUN MOOC spirit: Open edX deployed with Tutor, dressed in your colours, with content, integrations and certificates.",
+      "descFr": "Plateforme de cours en ligne Open edX déployée avec Tutor, à votre charte graphique, avec contenus, intégrations et certificats.",
+      "descEn": "Open edX online course platform deployed with Tutor, in your visual identity, with content, integrations and certificates.",
       "priceFrom": "15 000 €",
       "order": 6
     },
@@ -58,8 +58,8 @@
       "category": "platforms",
       "nameFr": "Portail de données",
       "nameEn": "Data portal",
-      "descFr": "Un portail de données pensé pour tenir la charge : ingestion, qualification, API, cartographie et accès contrôlé.",
-      "descEn": "A data portal built to handle scale: ingestion, qualification, API, mapping and controlled access.",
+      "descFr": "Portail de données avec ingestion, qualification, API, cartographie et contrôle d’accès.",
+      "descEn": "Data portal with ingestion, qualification, API, mapping and access control.",
       "priceFrom": "30 000 €",
       "order": 7
     }

@@ -44,8 +44,11 @@ const timelines = [
 ].filter((s) => s.items.length > 0);
 
 const reperes = [
-  { k: isFr ? 'Rôle' : 'Role', v: isFr ? 'Ingénieur & chercheur' : 'Engineer & researcher' },
-  { k: isFr ? 'Terrain' : 'Field', v: isFr ? 'Guinée, Afrique de l’Ouest' : 'Guinea, West Africa' },
+  {
+    k: isFr ? 'Rôle' : 'Role',
+    v: isFr ? 'Ingénieur en efficacité énergétique' : 'Energy-efficiency engineer',
+  },
+  { k: isFr ? 'Lieux' : 'Based in', v: isFr ? 'Montréal et Conakry' : 'Montréal and Conakry' },
   { k: isFr ? 'Actuellement' : 'Currently', v: 'Kuma Science' },
 ];
 ---
@@ -65,11 +68,11 @@ const reperes = [
                 alt={SITE.name}
                 width="128"
                 height="128"
-                class="size-28 shrink-0 rounded-2xl object-cover object-top sm:size-32"
+                class="size-28 shrink-0 rounded-sm object-cover object-top sm:size-32"
               />
             ) : (
               <span
-                class="grid size-28 shrink-0 place-items-center rounded-2xl bg-brand-800 font-display text-4xl font-bold text-white sm:size-32"
+                class="grid size-28 shrink-0 place-items-center rounded-sm bg-brand-800 font-display text-4xl font-medium text-white sm:size-32"
                 aria-hidden="true"
               >
                 S
@@ -104,15 +107,19 @@ const reperes = [
       timelines.map((sec) => (
         <div class="mt-16 sm:mt-20">
           <div class="flex items-center gap-4 border-b border-border pb-3">
-            <span class="font-mono text-sm font-medium text-brand-500">{sec.n}</span>
-            <h2 class="text-xs font-semibold tracking-[0.16em] text-brand-600 uppercase">{sec.label}</h2>
+            <span class="font-mono text-sm font-medium text-link">{sec.n}</span>
+            <h2 class="text-xs font-semibold tracking-[0.16em] text-link uppercase">{sec.label}</h2>
           </div>
 
           <ol class="mt-8">
             {sec.items.map((item, i) => {
               const isLast = i === sec.items.length - 1;
               return (
-                <li class="grid grid-cols-[auto_1fr] gap-x-5" data-reveal style={`--reveal-delay:${i * 60}ms`}>
+                <li
+                  class="grid grid-cols-[auto_1fr] gap-x-5"
+                  data-reveal
+                  style={`--reveal-delay:${i * 60}ms`}
+                >
                   <div class="flex flex-col items-center">
                     <span class="relative mt-1.5 flex size-3 shrink-0">
                       {item.current && (
@@ -130,12 +137,16 @@ const reperes = [
 
                   <div class:list={['min-w-0 max-w-3xl', isLast ? 'pb-1' : 'pb-9']}>
                     <p class="font-mono text-xs tracking-wide text-text-subtle">{item.dates}</p>
-                    <h3 class="mt-1 font-display text-lg font-bold tracking-tight text-heading text-pretty">
+                    <h3 class="mt-1 font-display text-lg font-medium tracking-tight text-heading text-pretty">
                       {item.title}
                       {item.org && <span class="font-normal text-text-muted">, {item.org}</span>}
                     </h3>
                     {item.location && <p class="text-sm text-text-subtle">{item.location}</p>}
-                    {item.note && <p class="mt-1.5 text-sm leading-relaxed text-text-muted text-pretty">{item.note}</p>}
+                    {item.note && (
+                      <p class="mt-1.5 text-sm leading-relaxed text-text-muted text-pretty">
+                        {item.note}
+                      </p>
+                    )}
                   </div>
                 </li>
               );
@@ -150,16 +161,22 @@ const reperes = [
       skills.length > 0 && (
         <div class="mt-16 sm:mt-20">
           <div class="flex items-center gap-4 border-b border-border pb-3">
-            <span class="font-mono text-sm font-medium text-brand-500">
+            <span class="font-mono text-sm font-medium text-link">
               {String(timelines.length + 1).padStart(2, '0')}
             </span>
-            <h2 class="text-xs font-semibold tracking-[0.16em] text-brand-600 uppercase">{t('about.skills')}</h2>
+            <h2 class="text-xs font-semibold tracking-[0.16em] text-link uppercase">
+              {t('about.skills')}
+            </h2>
           </div>
 
           <div class="mt-8 grid gap-x-12 gap-y-8 sm:grid-cols-2">
             {skills.map((group, i) => (
-              <div class="border-t border-border pt-5" data-reveal style={`--reveal-delay:${i * 70}ms`}>
-                <h3 class="font-display text-base font-bold tracking-tight text-heading">
+              <div
+                class="border-t border-border pt-5"
+                data-reveal
+                style={`--reveal-delay:${i * 70}ms`}
+              >
+                <h3 class="font-display text-base font-medium tracking-tight text-heading">
                   {isFr ? group.categoryFr : group.categoryEn}
                 </h3>
                 <ul class="mt-3 flex flex-wrap gap-x-2 gap-y-1.5">
@@ -177,10 +194,12 @@ const reperes = [
     {/* Ailleurs */}
     <div class="mt-16 sm:mt-20">
       <div class="flex items-center gap-4 border-b border-border pb-3">
-        <span class="font-mono text-sm font-medium text-brand-500">
+        <span class="font-mono text-sm font-medium text-link">
           {String(timelines.length + 2).padStart(2, '0')}
         </span>
-        <h2 class="text-xs font-semibold tracking-[0.16em] text-brand-600 uppercase">{t('about.elsewhere')}</h2>
+        <h2 class="text-xs font-semibold tracking-[0.16em] text-link uppercase">
+          {t('about.elsewhere')}
+        </h2>
       </div>
 
       <ul class="mt-6 flex flex-wrap gap-2.5">
@@ -191,7 +210,7 @@ const reperes = [
                 href={link.href}
                 target={link.key === 'email' ? undefined : '_blank'}
                 rel={link.key === 'email' ? undefined : 'me noopener'}
-                class="inline-flex items-center gap-2 rounded-full border border-border px-4 py-2 text-sm font-medium transition-colors hover:bg-surface-2"
+                class="inline-flex items-center gap-2 rounded-sm border border-border px-4 py-2 text-sm font-medium transition-colors hover:bg-surface-2"
               >
                 {link.label}
               </a>

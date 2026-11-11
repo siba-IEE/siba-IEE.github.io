@@ -20,8 +20,8 @@ const groups = order
 
 const pageTitle = 'Services';
 const pageLede = isFr
-  ? 'Ce que je peux construire pour vous, du logiciel métier à la plateforme de données. Les prix affichés sont des points de départ ; chaque projet a droit à son propre devis.'
-  : 'What I can build for you, from business software to a data platform. The prices shown are starting points; every project gets its own quote.';
+  ? 'Prestations de recherche, de développement logiciel et de plateformes de données. Les prix indiqués sont des prix de départ, et chaque projet fait l’objet d’un devis.'
+  : 'Research, software development and data-platform services. The prices shown are starting prices, and each project gets its own quote.';
 ---
 
 <BaseLayout title={pageTitle} description={pageLede}>
@@ -33,17 +33,17 @@ const pageLede = isFr
         groups.map((g, gi) => (
           <div>
             <div class="flex items-center gap-4 border-b border-border pb-3">
-              <span class="font-mono text-sm font-medium text-brand-500">
+              <span class="font-mono text-sm font-medium text-link">
                 {String(gi + 1).padStart(2, '0')}
               </span>
-              <h2 class="text-xs font-semibold tracking-[0.16em] text-brand-600 uppercase">{g.label}</h2>
+              <h2 class="text-xs font-semibold tracking-[0.16em] text-link uppercase">{g.label}</h2>
             </div>
 
             <ul class="mt-2">
               {g.items.map((s) => (
                 <li class="grid gap-x-8 gap-y-3 border-b border-border py-6 sm:grid-cols-[1fr_auto] sm:items-baseline">
                   <div class="max-w-2xl">
-                    <h3 class="font-display text-lg font-bold tracking-tight text-heading sm:text-xl">
+                    <h3 class="font-display text-lg font-medium tracking-tight text-heading sm:text-xl">
                       {isFr ? s.nameFr : s.nameEn}
                     </h3>
                     <p class="mt-1.5 text-sm leading-relaxed text-text-muted text-pretty">
@@ -54,7 +54,7 @@ const pageLede = isFr
                     <span class="block text-[0.65rem] font-medium tracking-[0.12em] text-text-subtle uppercase">
                       {isFr ? 'À partir de' : 'From'}
                     </span>
-                    <span class="font-display text-xl font-bold tracking-tight whitespace-nowrap text-heading">
+                    <span class="font-display text-xl font-medium tracking-tight whitespace-nowrap text-heading">
                       {s.priceFrom}
                     </span>
                   </div>
@@ -71,13 +71,13 @@ const pageLede = isFr
       <p class="max-w-2xl text-sm leading-relaxed text-text-muted text-pretty">
         {
           isFr
-            ? 'Prix de départ indicatifs, hors frais tiers (hébergement, licences, données). Le périmètre et le devis détaillé se décident une fois qu’on a cadré le besoin ensemble.'
-            : 'Indicative starting prices, third-party costs aside (hosting, licences, data). Scope and detailed quote get settled once we’ve framed the need together.'
+            ? 'Prix de départ indicatifs, hors frais tiers (hébergement, licences, données). Le périmètre et le devis détaillé sont établis après un premier échange sur le besoin.'
+            : 'Indicative starting prices, excluding third-party costs (hosting, licences, data). Scope and detailed quote are set after a first discussion of the need.'
         }
       </p>
       <a
         href={localizePath('/contact', lang)}
-        class="mt-6 inline-flex items-center gap-2 rounded-full bg-brand-700 px-6 py-3 text-sm font-semibold text-white transition-transform hover:-translate-y-0.5"
+        class="mt-6 inline-flex items-center gap-2 rounded-sm bg-brand-700 px-6 py-3 text-sm font-semibold text-white transition-transform hover:-translate-y-0.5"
       >
         {isFr ? 'Discuter d’un projet' : 'Discuss a project'}
       </a>

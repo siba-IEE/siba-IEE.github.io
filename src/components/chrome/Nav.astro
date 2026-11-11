@@ -1,32 +1,55 @@
 ---
 /**
- * Seul élément fixe de la page : le changement de langue, posé dans le coin de la scène.
+ * Seuls éléments fixes de la page, dans le coin de la scène : les profils LinkedIn et ORCID,
+ * et le changement de langue.
  */
+import { SITE, orcidUrl } from '../../lib/site';
 import { getLangFromUrl, alternatePath, type Lang } from '../../lib/i18n';
 
 const lang = getLangFromUrl(Astro.url);
 const other: Lang = lang === 'fr' ? 'en' : 'fr';
 ---
 
-<a
-  href={alternatePath(Astro.url.pathname, other)}
-  hreflang={other}
-  aria-label={other === 'en' ? 'English' : 'Français'}
->
-  {other.toUpperCase()}
-</a>
+<nav aria-label={lang === 'fr' ? 'Profils et langue' : 'Profiles and language'}>
+  <a href={SITE.linkedin} target="_blank" rel="me noopener" aria-label="LinkedIn" title="LinkedIn">
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <path
+        d="M6.94 5a2 2 0 1 1-4 0 2 2 0 0 1 4 0ZM7 8.48H3V21h4V8.48Zm6.32 0H9.34V21h3.94v-6.57c0-3.66 4.77-4 4.77 0V21H22v-7.93c0-6.17-7.06-5.94-8.72-2.91l.04-1.68Z"
+      ></path>
+    </svg>
+  </a>
+  <a href={orcidUrl} target="_blank" rel="me noopener" aria-label="ORCID" title="ORCID">
+    <svg viewBox="0 0 256 256" aria-hidden="true">
+      <path
+        d="M86.3 186.2H70.9V79.1h15.4v107.1zM108.9 79.1h41.6c39.6 0 57 28.3 57 53.6 0 27.5-21.5 53.6-56.8 53.6h-41.8V79.1zm15.4 93.3h24.5c34.9 0 42.9-26.5 42.9-39.7 0-21.5-13.7-39.7-43.7-39.7h-23.7v79.4zM88.7 56.8c0 5.5-4.5 10.1-10.1 10.1-5.6 0-10.1-4.6-10.1-10.1 0-5.6 4.5-10.1 10.1-10.1 5.6 0 10.1 4.6 10.1 10.1z"
+      ></path>
+    </svg>
+  </a>
+  <a
+    href={alternatePath(Astro.url.pathname, other)}
+    hreflang={other}
+    aria-label={other === 'en' ? 'English' : 'Français'}
+  >
+    {other.toUpperCase()}
+  </a>
+</nav>
 
 <style>
-  a {
+  nav {
     position: fixed;
     top: 1.25rem;
     right: 1.25rem;
     z-index: 40;
+    display: flex;
+    gap: 0.35rem;
+  }
+
+  a {
     display: grid;
     place-items: center;
+    width: 2.1rem;
     height: 2.1rem;
-    padding-inline: 0.75rem;
-    border-radius: 2rem;
+    border-radius: 50%;
     background: rgb(11 12 14 / 60%);
     backdrop-filter: blur(8px);
     color: #fff;
@@ -38,8 +61,14 @@ const other: Lang = lang === 'fr' ? 'en' : 'fr';
     background: rgb(11 12 14 / 90%);
   }
 
+  svg {
+    width: 1rem;
+    height: 1rem;
+    fill: currentcolor;
+  }
+
   @media (min-width: 1024px) {
-    a {
+    nav {
       top: 2rem;
       right: 4rem;
     }

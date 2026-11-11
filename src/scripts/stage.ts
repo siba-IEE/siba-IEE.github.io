@@ -61,7 +61,10 @@ export interface Stage {
   tune: (index: number) => void;
   /** Projette une scène du film au-dessus de la table basse ; `null` éteint le projecteur. */
   project: (scene: Scene | null) => void;
-  /** Position à l'écran, en pixels du canvas, d'un élément nommé de la scène projetée. */
+  /**
+   * Position à l'écran, en pixels du canvas, d'un élément nommé : un élément de la scène
+   * projetée, ou `cadre:n` pour le cadre du couloir d'indice n.
+   */
   locate: (name: string) => { x: number; y: number } | null;
   destroy: () => void;
 }
@@ -494,7 +497,7 @@ export function mountStage(
     /* Caméra. */
     const index = Math.min(options.frames.length - 1, Math.max(0, Math.floor(distance / GAP)));
     lean += (room.frame(index).side - lean) * Math.min(1, delta * 2.2);
-    const wide = portrait ? 0.3 : 1;
+    const wide = portrait ? 0.8 : 1;
     // Ouverture, de face.
     position.set(portrait ? 0.2 : -0.85, 1.45, portrait ? 5.2 : 3.7);
     target.set(portrait ? 0 : -1.05, portrait ? 0.85 : 1.15, 0);
@@ -609,7 +612,11 @@ export function mountStage(
       tv.setProgram(index);
     },
     locate: (name) => {
-      if (!holo.locate(name, spot)) return null;
+      if (name.startsWith('cadre:')) {
+        // Un cadre du couloir : au centre du tirage, sur son mur.
+        const { z, side } = room.frame(Number(name.slice(6)));
+        spot.set(side * 1.28, 1.55, z);
+      } else if (!holo.locate(name, spot)) return null;
       spot.project(camera);
       if (spot.z > 1) return null;
       return {

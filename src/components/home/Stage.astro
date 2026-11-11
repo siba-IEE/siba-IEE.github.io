@@ -69,7 +69,13 @@ const channels = getProjects()
           focus:
             beat.focus ??
             scene.map?.mark?.[0] ??
-            (scene.panels?.length ? 'panneau1' : scene.map ? 'carte' : scene.model ? 'maquette' : ''),
+            (scene.panels?.length
+              ? 'panneau1'
+              : scene.map
+                ? 'carte'
+                : scene.model
+                  ? 'maquette'
+                  : ''),
           notes: (beat.notes ?? []).map((note) => ({ text: note[lang], at: note.at ?? '' })),
           scene,
         };
@@ -176,6 +182,11 @@ const programs = channels.map(({ title, status, url, beats }, index) => ({
         ))
       }
     </ol>
+    {/* Le trait qui relie l'étape en cours à son cadre, sur le mur du couloir. */}
+    <svg class="trail" aria-hidden="true">
+      <line data-trail-line></line>
+      <circle data-trail-dot r="5"></circle>
+    </svg>
 
     {/* Les chaînes se choisissent sur l'écran 3D ; cette liste les rend accessibles au clavier. */}
     <div class="channels">
@@ -292,6 +303,7 @@ const programs = channels.map(({ title, status, url, beats }, index) => ({
     transition: opacity 0.6s ease;
   }
 
+  .scene[data-act='walk'] .shade,
   .scene[data-act='screen'] .shade,
   .scene[data-act='enter'] .shade {
     opacity: 0;
@@ -326,7 +338,6 @@ const programs = channels.map(({ title, status, url, beats }, index) => ({
   /* ---------- Textes posés sur la scène ---------- */
 
   .intro,
-  .path,
   .papers,
   .channels {
     position: absolute;
@@ -398,6 +409,69 @@ const programs = channels.map(({ title, status, url, beats }, index) => ({
       transform: scaleY(0);
       transform-origin: bottom;
     }
+  }
+
+  /* Parcours : l'étape en cours se pose du côté opposé à son cadre, reliée à lui par un trait.
+     Sa position est réglée par le script, qui suit le cadre à l'écran. */
+  :global(html.js) .scene:not([data-flat]) .path {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: min(27rem, calc(100% - 2.5rem));
+    padding: 1.3rem 1.4rem 1.2rem;
+    border-radius: 0.6rem;
+    background: rgb(11 13 18 / 88%);
+    backdrop-filter: blur(10px);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.4s ease;
+    will-change: transform;
+  }
+
+  :global(html.js) .scene[data-act='walk']:not([data-flat]) .path {
+    opacity: 1;
+  }
+
+  /* Une seule étape occupe le cartouche, qui prend exactement sa taille. */
+  :global(html.js) .scene:not([data-flat]) .path li:not([data-on]) {
+    display: none;
+  }
+
+  :global(html.js) .scene:not([data-flat]) .path li[data-on] {
+    animation: step-in 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+
+  @keyframes step-in {
+    from {
+      opacity: 0;
+      translate: 0 0.6rem;
+    }
+  }
+
+  .trail {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.4s ease;
+  }
+
+  .scene[data-act='walk'] .trail {
+    opacity: 1;
+  }
+
+  .trail line {
+    stroke: #fff;
+    stroke-width: 1.5;
+  }
+
+  .trail circle {
+    fill: #ffc266;
+    stroke: #fff;
+    stroke-width: 1.5;
   }
 
   /* Parcours et publications : une fiche à la fois. */
@@ -729,7 +803,6 @@ const programs = channels.map(({ title, status, url, beats }, index) => ({
 
   @media (min-width: 1024px) {
     .intro,
-    .path,
     .papers,
     .channels {
       inset: auto 4rem 3rem;
@@ -739,11 +812,11 @@ const programs = channels.map(({ title, status, url, beats }, index) => ({
       top: 2rem;
       left: 4rem;
     }
+
     .remote {
       top: 2rem;
       right: 8rem;
       left: auto;
-    }
     }
   }
 
@@ -761,8 +834,8 @@ const programs = channels.map(({ title, status, url, beats }, index) => ({
     padding: 4rem 1.25rem;
   }
 
-  :global(html:not(.js)) :is(canvas, .shade, .cue, .tip, .film),
-  .scene[data-flat] :is(canvas, .shade, .cue, .tip) {
+  :global(html:not(.js)) :is(canvas, .shade, .cue, .tip, .film, .trail),
+  .scene[data-flat] :is(canvas, .shade, .cue, .tip, .trail) {
     display: none;
   }
 
@@ -883,7 +956,10 @@ const programs = channels.map(({ title, status, url, beats }, index) => ({
         ...notes
           .filter((note) => !narrow() && note.at)
           .map((note) => {
-            const pin = Object.assign(document.createElement('p'), { className: 'pin', textContent: note.text });
+            const pin = Object.assign(document.createElement('p'), {
+              className: 'pin',
+              textContent: note.text,
+            });
             pin.dataset.at = note.at;
             const tick = document.createElementNS('http://www.w3.org/2000/svg', 'line');
             tick.classList.add('tick');
@@ -894,8 +970,53 @@ const programs = channels.map(({ title, status, url, beats }, index) => ({
     };
 
     /** Pose la phrase et les précisions à côté de leurs cibles, et tire les traits. */
+    /* ----- Couloir : l'étape en cours, posée face à son cadre ----- */
+
+    const path = root.querySelector<HTMLElement>('.path')!;
+    const trailLine = root.querySelector<SVGLineElement>('[data-trail-line]')!;
+    const trailDot = root.querySelector<SVGCircleElement>('[data-trail-dot]')!;
+    let milestone = -1;
+    const spot = { x: 0, y: 0, set: false };
+
+    const followFrame = () => {
+      if (milestone < 0 || !stage) {
+        spot.set = false;
+        return;
+      }
+      const width = root.clientWidth;
+      const height = window.innerHeight;
+      const wide = width >= 1024;
+      const margin = wide ? 64 : 20;
+      const size = path.getBoundingClientRect();
+      const frame = stage.locate(`cadre:${milestone}`);
+      // Le cadre est sur un mur ; le texte prend l'autre côté, à hauteur d'yeux.
+      const onRight = frame ? frame.x > width / 2 : milestone % 2 === 0;
+      const x = wide && !onRight ? width - margin - size.width : margin;
+      const y = wide ? (height - size.height) / 2 : height - size.height - margin;
+      const glide = spot.set ? 0.14 : 1;
+      spot.x += (x - spot.x) * glide;
+      spot.y += (y - spot.y) * glide;
+      spot.set = true;
+      path.style.transform = `translate(${spot.x.toFixed(1)}px, ${spot.y.toFixed(1)}px)`;
+      trailLine.style.display = trailDot.style.display = frame ? '' : 'none';
+      if (!frame) return;
+      trailLine.setAttribute(
+        'x1',
+        Math.min(spot.x + size.width, Math.max(spot.x, frame.x)).toFixed(1),
+      );
+      trailLine.setAttribute(
+        'y1',
+        Math.min(spot.y + size.height, Math.max(spot.y, frame.y)).toFixed(1),
+      );
+      trailLine.setAttribute('x2', frame.x.toFixed(1));
+      trailLine.setAttribute('y2', frame.y.toFixed(1));
+      trailDot.setAttribute('cx', frame.x.toFixed(1));
+      trailDot.setAttribute('cy', frame.y.toFixed(1));
+    };
+
     const layout = () => {
       follow = requestAnimationFrame(layout);
+      followFrame();
       if (current < 0 || !stage) return;
       const program = programs[current];
       const left = 1 - (performance.now() - started) / LINE_MS;
@@ -984,9 +1105,11 @@ const programs = channels.map(({ title, status, url, beats }, index) => ({
     root
       .querySelectorAll('[data-channel]')
       .forEach((button, index) => button.addEventListener('click', () => play(index)));
-    film.querySelectorAll<HTMLElement>('[data-step]').forEach((button) =>
-      button.addEventListener('click', () => showBeat(beat + Number(button.dataset.step))),
-    );
+    film
+      .querySelectorAll<HTMLElement>('[data-step]')
+      .forEach((button) =>
+        button.addEventListener('click', () => showBeat(beat + Number(button.dataset.step))),
+      );
     film.querySelector('[data-remote="grid"]')?.addEventListener('click', close);
     follow = requestAnimationFrame(layout);
 
@@ -1030,12 +1153,11 @@ const programs = channels.map(({ title, status, url, beats }, index) => ({
                 : 'books';
       root.dataset.act = act;
       if (act !== 'screen') close();
-      only(
-        milestones,
+      milestone =
         act === 'walk'
           ? Math.min(milestones.length - 1, Math.max(0, Math.floor((p - T.walk) / T.STEP)))
-          : -1,
-      );
+          : -1;
+      only(milestones, milestone);
       only(
         papers,
         p > T.books - 0.3 ? Math.min(papers.length - 1, Math.round((p - T.books) / T.BOOK)) : -1,

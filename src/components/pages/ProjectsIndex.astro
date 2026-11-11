@@ -1,8 +1,7 @@
 ---
 /**
- * Page Projets. Composition d'après la page « Work » du studio Fathom : fond sombre, une
- * grande image par projet, placée en décalé, le nom et une phrase posés à côté. Les images
- * se chevauchent d'un projet au suivant. Un clic ouvre la fiche (ProjectSheet).
+ * Page Projets : la liste des noms à gauche, un seul cadre d'image à droite. Le cadre montre
+ * le projet survolé ; un clic ouvre la fiche (ProjectSheet). Sur mobile, la liste seule.
  */
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import ProjectSheet from '../home/ProjectSheet.astro';
@@ -12,241 +11,210 @@ import { getProjects, statusLabels } from '../../lib/content';
 const lang = getLangFromUrl(Astro.url);
 const t = useTranslations(lang);
 const isFr = lang === 'fr';
-
 const projects = getProjects();
-const more = isFr ? 'Voir la fiche' : 'View details';
 ---
 
-<BaseLayout title={t('projects.pageTitle')} description={t('projects.pageLede')}>
-  <section class="page">
+<BaseLayout title={t('projects.pageTitle')} description={t('projects.pageLede')} footer={false}>
+  <section class="page" data-index>
     <div class="shell">
-      <h1>{t('projects.pageTitle')}</h1>
-      <ol>
-        {
-          projects.map((project) => (
-            <li id={project.slug} data-reveal>
-              {project.image && (
+      <div class="list">
+        <h1>{t('projects.pageTitle')}</h1>
+        <ul>
+          {
+            projects.map((project, index) => (
+              <li id={project.slug}>
                 <button
                   type="button"
-                  class="shot"
+                  data-item={project.slug}
                   data-sheet-open={project.slug}
-                  aria-label={project.title}
+                  aria-current={index === 0 ? 'true' : undefined}
                 >
-                  <img src={project.image} alt="" loading="lazy" data-parallax />
+                  <span class="name">
+                    {project.title}
+                    {project.status !== 'live' && (
+                      <small>{statusLabels[project.status][lang]}</small>
+                    )}
+                  </span>
+                  <span class="summary">
+                    <span>{isFr ? project.summaryFr : project.summaryEn}</span>
+                  </span>
                 </button>
-              )}
-              <div class="text">
-                <h2>
-                  {project.title}
-                  {project.status !== 'live' && <span>{statusLabels[project.status][lang]}</span>}
-                </h2>
-                <p>{isFr ? project.summaryFr : project.summaryEn}</p>
-                <button type="button" class="open" data-sheet-open={project.slug}>
-                  {more}
-                </button>
-              </div>
-            </li>
-          ))
+              </li>
+            ))
+          }
+        </ul>
+      </div>
+
+      <div class="frame" aria-hidden="true">
+        {
+          projects.map((project, index) =>
+            project.image ? (
+              <img
+                src={project.image}
+                alt=""
+                data-shot={project.slug}
+                data-on={index === 0 ? '' : undefined}
+              />
+            ) : null,
+          )
         }
-      </ol>
+      </div>
     </div>
   </section>
   <ProjectSheet projects={projects} />
 </BaseLayout>
 
 <style>
-  /* Comme l'accueil, la page reste sombre dans les deux thèmes : les images y ressortent. */
+  /* Comme l'accueil, la page reste sombre dans les deux thèmes. */
   .page {
-    padding-block: 3.5rem 7rem;
+    --nav: 4rem;
+
+    min-height: calc(100svh - var(--nav));
+    padding-block: 3rem 4rem;
     background: #0a0a0a;
     color: #fff;
   }
 
   h1 {
-    margin: 0;
-    font-size: clamp(3rem, 9vw, 8rem);
-    font-weight: 500;
-    line-height: 0.95;
-    letter-spacing: -0.055em;
-    color: #fff;
+    margin: 0 0 2.5rem;
+    font-size: 0.95rem;
+    font-weight: 400;
+    letter-spacing: 0;
+    color: rgb(255 255 255 / 55%);
   }
 
-  ol {
+  ul {
     margin: 0;
     padding: 0;
     list-style: none;
   }
 
-  li {
-    display: grid;
-    gap: 1.25rem;
-    margin-top: 4rem;
-    scroll-margin-top: 6rem;
-  }
-
-  .shot {
-    display: block;
-    padding: 0;
-    overflow: hidden;
-    cursor: pointer;
-  }
-
-  .shot img {
+  button {
     display: block;
     width: 100%;
-    height: auto;
-    /* Légèrement agrandie pour que la parallaxe ne découvre jamais le bord du cadre. */
-    scale: 1.07;
-    transition: scale 1.2s cubic-bezier(0.22, 1, 0.36, 1);
-  }
-
-  .shot:hover img {
-    scale: 1.11;
-  }
-
-  h2 {
-    margin: 0;
-    font-size: 1rem;
-    font-weight: 600;
-    color: #fff;
-  }
-
-  h2 span {
-    margin-left: 0.75rem;
-    font-weight: 400;
-    color: rgb(255 255 255 / 55%);
-  }
-
-  .text p {
-    margin: 0.6rem 0 0;
-    font-size: clamp(1.15rem, 1.7vw, 1.5rem);
-    line-height: 1.25;
-    letter-spacing: -0.02em;
-    color: rgb(255 255 255 / 78%);
-    text-wrap: pretty;
-  }
-
-  .open {
-    margin-top: 1rem;
-    padding: 0;
+    padding: 0.35rem 0;
     font: inherit;
-    font-size: 0.9rem;
-    color: #fff;
-    text-decoration: underline;
-    text-decoration-color: rgb(255 255 255 / 40%);
-    text-underline-offset: 5px;
+    color: inherit;
+    text-align: left;
     cursor: pointer;
-    transition: text-decoration-color 0.2s ease;
   }
 
-  .open:hover {
-    text-decoration-color: #fff;
+  .name {
+    display: block;
+    font-size: clamp(1.9rem, 4.2vw, 3.6rem);
+    font-weight: 500;
+    line-height: 1.05;
+    letter-spacing: -0.05em;
+    color: rgb(255 255 255 / 32%);
+    transition: color 0.35s ease;
   }
 
-  /* L'image se dévoile de bas en haut quand le projet entre à l'écran. */
-  @media (prefers-reduced-motion: no-preference) {
-    :global(.js) li .shot {
-      clip-path: inset(100% 0 0 0);
-      transition: clip-path 1.1s cubic-bezier(0.22, 1, 0.36, 1);
-    }
-
-    :global(.js) li[data-revealed] .shot {
-      clip-path: inset(0);
-    }
+  .name small {
+    margin-left: 0.9rem;
+    font-size: 0.85rem;
+    font-weight: 400;
+    letter-spacing: 0;
+    vertical-align: middle;
   }
 
-  /* Ordinateur : trois placements qui alternent, et des images qui se chevauchent. */
+  /* Le résumé se déplie sous le nom actif. */
+  .summary {
+    display: grid;
+    grid-template-rows: 0fr;
+    max-width: 30rem;
+    font-size: 0.98rem;
+    line-height: 1.45;
+    color: rgb(255 255 255 / 70%);
+    transition: grid-template-rows 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  .summary span {
+    overflow: hidden;
+  }
+
+  button[aria-current] .name {
+    color: #fff;
+  }
+
+  button[aria-current] .summary {
+    grid-template-rows: 1fr;
+    padding-block: 0.4rem 0.9rem;
+  }
+
+  .frame {
+    display: none;
+  }
+
   @media (min-width: 1024px) {
-    li {
-      grid-template-columns: repeat(12, minmax(0, 1fr));
-      gap: 0 2rem;
-      align-items: end;
-      margin-top: 7rem;
+    .shell {
+      display: grid;
+      grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+      gap: 4rem;
+      align-items: start;
     }
 
-    .shot,
-    .text {
-      grid-row: 1;
+    .frame {
+      position: sticky;
+      top: calc(var(--nav) + 3rem);
+      display: block;
+      aspect-ratio: 16 / 10;
+      margin-top: 3.5rem;
+      overflow: hidden;
+      background: #141414;
     }
 
-    li:nth-child(3n + 1) .shot {
-      grid-column: 3 / span 6;
+    .frame img {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      object-position: left top;
+      clip-path: inset(0 0 100% 0);
+      scale: 1.06;
+      transition:
+        clip-path 0.7s cubic-bezier(0.22, 1, 0.36, 1),
+        scale 1.2s cubic-bezier(0.22, 1, 0.36, 1);
     }
 
-    li:nth-child(3n + 1) .text {
-      grid-column: 9 / span 4;
-      padding-bottom: 1.5rem;
-    }
-
-    li:nth-child(3n + 2) {
-      position: relative;
+    /* L'image active se dévoile de haut en bas, par-dessus la précédente. */
+    .frame img[data-on] {
       z-index: 1;
-      margin-top: -4rem;
+      clip-path: inset(0);
+      scale: 1;
     }
+  }
 
-    li:nth-child(3n + 2) .shot {
-      grid-column: 1 / span 5;
-    }
-
-    li:nth-child(3n + 2) .text {
-      grid-column: 6 / span 4;
-      align-self: center;
-      padding-top: 6rem;
-    }
-
-    li:nth-child(3n) .shot {
-      grid-column: 5 / span 8;
-    }
-
-    li:nth-child(3n) .text {
-      grid-column: 1 / span 4;
-      align-self: start;
-      padding-top: 2rem;
-    }
-
-    li:nth-child(3n + 1):not(:first-child) {
-      position: relative;
-      z-index: 1;
-      margin-top: -3rem;
+  @media (prefers-reduced-motion: reduce) {
+    .frame img,
+    .summary {
+      transition: none;
     }
   }
 </style>
 
 <script>
-  // Parallaxe : chaque image glisse légèrement dans son cadre pendant le défilement.
-  let stop: (() => void) | null = null;
-
+  // Le cadre suit le nom survolé ou atteint au clavier.
   const init = () => {
-    stop?.();
-    stop = null;
-    const images = [...document.querySelectorAll<HTMLElement>('[data-parallax]')];
-    if (!images.length || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    const root = document.querySelector<HTMLElement>('[data-index]');
+    if (!root || root.dataset.bound) return;
+    root.dataset.bound = 'true';
+    const items = [...root.querySelectorAll<HTMLButtonElement>('[data-item]')];
+    const shots = [...root.querySelectorAll<HTMLImageElement>('[data-shot]')];
 
-    let ticking = false;
-    const update = () => {
-      ticking = false;
-      for (const image of images) {
-        const rect = image.parentElement!.getBoundingClientRect();
-        if (rect.bottom < 0 || rect.top > window.innerHeight) continue;
-        // -1 quand le cadre entre par le bas, +1 quand il sort par le haut.
-        const offset =
-          (window.innerHeight / 2 - (rect.top + rect.height / 2)) / (window.innerHeight / 2);
-        image.style.translate = `0 ${(offset * 3).toFixed(2)}%`;
-      }
+    const show = (slug: string) => {
+      items.forEach((item) => {
+        if (item.dataset.item === slug) item.setAttribute('aria-current', 'true');
+        else item.removeAttribute('aria-current');
+      });
+      shots.forEach((shot) => shot.toggleAttribute('data-on', shot.dataset.shot === slug));
     };
-    const onScroll = () => {
-      if (ticking) return;
-      ticking = true;
-      requestAnimationFrame(update);
-    };
-    window.addEventListener('scroll', onScroll, { passive: true });
-    update();
-    stop = () => window.removeEventListener('scroll', onScroll);
+    items.forEach((item) => {
+      const activate = () => show(item.dataset.item ?? '');
+      item.addEventListener('pointerenter', activate);
+      item.addEventListener('focus', activate);
+    });
   };
 
   document.addEventListener('astro:page-load', init);
-  document.addEventListener('astro:before-swap', () => {
-    stop?.();
-    stop = null;
-  });
 </script>

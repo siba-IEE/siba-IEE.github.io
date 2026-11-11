@@ -207,11 +207,6 @@
   text-wrap: pretty;
 }
 
-.rows .price {
-  color: var(--heading);
-  white-space: nowrap;
-}
-
 /* Figures des articles */
 .figure {
   margin: 3rem 0 0;
@@ -265,15 +260,4 @@
 .prose strong {
   font-weight: 600;
   color: var(--heading);
-}
-
-/* Tarifs : une troisième colonne étroite pour le prix. */
-@media (width >= 900px) {
-  .rows.services li {
-    grid-template-columns: minmax(0, 4fr) minmax(0, 7fr) 9rem;
-  }
-
-  .rows.services .price {
-    text-align: right;
-  }
 }

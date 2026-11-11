@@ -6,7 +6,6 @@
       "nameEn": "Literature review",
       "descFr": "État de l’art sourcé sur une question technique ou scientifique, avec cadrage du sujet, sélection des références et bibliographie exploitable.",
       "descEn": "Sourced state of the art on a technical or scientific question, with scoping, selection of references and a usable bibliography.",
-      "priceFrom": "1 000 €",
       "order": 1
     },
     {
@@ -15,7 +14,6 @@
       "nameEn": "Website",
       "descFr": "Site vitrine ou éditorial, bilingue si nécessaire, rapide, accessible et référencé.",
       "descEn": "Showcase or editorial website, bilingual if needed, fast, accessible and search-engine friendly.",
-      "priceFrom": "2 500 €",
       "order": 2
     },
     {
@@ -24,7 +22,6 @@
       "nameEn": "Dashboard",
       "descFr": "Tableau de bord connecté à vos données, avec les indicateurs utiles et leur suivi dans le temps.",
       "descEn": "Dashboard connected to your data, with the relevant indicators and their tracking over time.",
-      "priceFrom": "4 000 €",
       "order": 3
     },
     {
@@ -33,7 +30,6 @@
       "nameEn": "Business application",
       "descFr": "Application sur mesure, de bureau ou web, pour un besoin métier défini : calcul, gestion ou dimensionnement.",
       "descEn": "Custom desktop or web application for a defined business need: calculation, management or sizing.",
-      "priceFrom": "8 000 €",
       "order": 4
     },
     {
@@ -42,7 +38,6 @@
       "nameEn": "Forum & community",
       "descFr": "Forum Discourse installé et configuré : hébergement, thème, catégories, modération et connexion unique (SSO).",
       "descEn": "Discourse forum installed and configured: hosting, theme, categories, moderation and single sign-on (SSO).",
-      "priceFrom": "5 000 €",
       "order": 5
     },
     {
@@ -51,7 +46,6 @@
       "nameEn": "Learning platform",
       "descFr": "Plateforme de cours en ligne Open edX déployée avec Tutor, à votre charte graphique, avec contenus, intégrations et certificats.",
       "descEn": "Open edX online course platform deployed with Tutor, in your visual identity, with content, integrations and certificates.",
-      "priceFrom": "15 000 €",
       "order": 6
     },
     {
@@ -60,7 +54,6 @@
       "nameEn": "Data portal",
       "descFr": "Portail de données avec ingestion, qualification, API, cartographie et contrôle d’accès.",
       "descEn": "Data portal with ingestion, qualification, API, mapping and access control.",
-      "priceFrom": "30 000 €",
       "order": 7
     }
   ]

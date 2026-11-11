@@ -1,55 +1,260 @@
 ---
+/**
+ * Page Services. Composition d'après la page « Services » de Basement Studio : fond noir,
+ * le titre en très grand, une image, puis chaque service en colonne (un petit intitulé gris,
+ * sa description composée en grand). Aucun prix : chaque projet fait l'objet d'un devis.
+ */
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import { getLangFromUrl, localizePath } from '../../lib/i18n';
-import { getServices, serviceCategoryLabels, type ServiceCategory } from '../../lib/content';
+import { getServices } from '../../lib/content';
 
 const lang = getLangFromUrl(Astro.url);
 const isFr = lang === 'fr';
 const services = getServices();
 
-const order: ServiceCategory[] = ['research', 'dev', 'platforms'];
-const groups = order
-  .map((category) => ({
-    label: serviceCategoryLabels[category][lang],
-    items: services.filter((service) => service.category === category),
-  }))
-  .filter((group) => group.items.length > 0);
-
-const title = 'Services';
-const lede = isFr
-  ? 'Recherche, développement logiciel et plateformes de données. Les prix sont des prix de départ, hors frais tiers ; chaque projet fait l’objet d’un devis.'
-  : 'Research, software development and data platforms. Prices are starting prices, excluding third-party costs; each project gets its own quote.';
-const from = isFr ? 'à partir de' : 'from';
+const t = isFr
+  ? {
+      title: 'Services',
+      lede: 'Recherche, logiciels et plateformes de données pour l’énergie. Chaque projet fait l’objet d’un devis.',
+      alt: 'La Guinée vue par le satellite Terra, le 21 décembre 2023.',
+      credit: 'Guinée, image MODIS Terra (NASA)',
+      contact: 'Discuter d’un projet',
+    }
+  : {
+      title: 'Services',
+      lede: 'Research, software and data platforms for energy. Each project gets its own quote.',
+      alt: 'Guinea seen by the Terra satellite on 21 December 2023.',
+      credit: 'Guinea, MODIS Terra imagery (NASA)',
+      contact: 'Discuss a project',
+    };
 ---
 
-<BaseLayout title={title} description={lede}>
-  <section class="block first last">
+<BaseLayout title={t.title} description={t.lede}>
+  <section class="page">
     <div class="shell">
-      <h1 class="page-title">{title}</h1>
-      <p class="lead">{lede}</p>
+      <header>
+        <h1>{t.title}</h1>
+        <figure data-parallax-frame>
+          <img src="/images/film/guinee-modis.webp" alt={t.alt} width="2048" height="1536" />
+          <figcaption>{t.credit}</figcaption>
+        </figure>
+        <p>{t.lede}</p>
+      </header>
 
-      {
-        groups.map((group) => (
-          <>
-            <h2 class="label">{group.label}</h2>
-            <ul class="rows services">
-              {group.items.map((service) => (
-                <li data-reveal>
-                  <span class="what">{isFr ? service.nameFr : service.nameEn}</span>
-                  <span class="where">{isFr ? service.descFr : service.descEn}</span>
-                  <span class="price">
-                    {from} {service.priceFrom}
-                  </span>
-                </li>
-              ))}
-            </ul>
-          </>
-        ))
-      }
+      <ul>
+        {
+          services.map((service) => (
+            <li data-reveal>
+              <h2>{isFr ? service.nameFr : service.nameEn}</h2>
+              <p>{isFr ? service.descFr : service.descEn}</p>
+            </li>
+          ))
+        }
+      </ul>
 
-      <a href={localizePath('/contact', lang)} class="more"
-        >{isFr ? 'Discuter d’un projet' : 'Discuss a project'}</a
-      >
+      <a href={localizePath('/contact', lang)} class="cta">
+        {t.contact}
+        <svg viewBox="0 0 16 16" aria-hidden="true"
+          ><path d="M3 8h10M8.5 3.5 13 8l-4.5 4.5"></path></svg
+        >
+      </a>
     </div>
   </section>
 </BaseLayout>
+
+<style>
+  /* Comme l'accueil et le film, la page reste noire dans les deux thèmes. */
+  .page {
+    padding-block: 3rem 7rem;
+    background: #050505;
+    color: #fff;
+  }
+
+  header {
+    display: grid;
+    gap: 2rem;
+    margin-bottom: 5rem;
+  }
+
+  h1 {
+    margin: 0;
+    font-family: var(--font-display);
+    font-size: clamp(4.5rem, 17vw, 17rem);
+    font-weight: 400;
+    line-height: 0.82;
+    letter-spacing: -0.02em;
+    color: #fff;
+  }
+
+  figure {
+    margin: 0;
+    overflow: hidden;
+  }
+
+  figure img {
+    display: block;
+    width: 100%;
+    height: auto;
+    aspect-ratio: 4 / 3;
+    object-fit: cover;
+    filter: grayscale(1) contrast(1.25) brightness(0.9);
+    scale: 1.1;
+  }
+
+  figcaption {
+    padding-top: 0.6rem;
+    font-size: 0.75rem;
+    color: rgb(255 255 255 / 50%);
+  }
+
+  header p {
+    max-width: 24rem;
+    margin: 0;
+    font-size: 0.98rem;
+    line-height: 1.4;
+    color: rgb(255 255 255 / 75%);
+    text-wrap: pretty;
+  }
+
+  ul {
+    display: grid;
+    gap: 3.5rem 2.5rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  li {
+    padding-top: 0.9rem;
+    border-top: 1px solid rgb(255 255 255 / 22%);
+    transition: border-color 0.4s ease;
+  }
+
+  li:hover {
+    border-color: #fff;
+  }
+
+  h2 {
+    margin: 0 0 0.9rem;
+    font-size: 0.9rem;
+    font-weight: 400;
+    color: rgb(255 255 255 / 55%);
+    transition: color 0.4s ease;
+  }
+
+  li:hover h2 {
+    color: var(--color-accent-400);
+  }
+
+  li p {
+    margin: 0;
+    font-family: var(--font-display);
+    font-size: clamp(1.5rem, 2.5vw, 2.3rem);
+    line-height: 1.08;
+    letter-spacing: -0.01em;
+    text-wrap: pretty;
+  }
+
+  .cta {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.7rem;
+    margin-top: 5rem;
+    padding: 1rem 1.5rem;
+    border-radius: 2.5rem;
+    background: #fff;
+    color: #050505;
+    font-size: 1rem;
+    font-weight: 500;
+    transition: background 0.25s ease;
+  }
+
+  .cta:hover {
+    background: var(--color-accent-400);
+  }
+
+  .cta svg {
+    width: 0.9rem;
+    height: 0.9rem;
+    fill: none;
+    stroke: currentcolor;
+    stroke-width: 1.6;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    transition: translate 0.3s ease;
+  }
+
+  .cta:hover svg {
+    translate: 4px 0;
+  }
+
+  @media (min-width: 900px) {
+    /* Le titre à gauche, l'image au milieu, la phrase à droite, alignés en bas. */
+    header {
+      grid-template-columns: minmax(0, 6fr) minmax(0, 3fr) minmax(0, 3fr);
+      align-items: end;
+      gap: 2.5rem;
+      margin-bottom: 7rem;
+    }
+
+    header p {
+      padding-bottom: 1.6rem;
+    }
+
+    ul {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 5rem 4rem;
+    }
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    :global(.js) figure {
+      animation: unveil 1.3s cubic-bezier(0.22, 1, 0.36, 1) 0.2s both;
+    }
+  }
+
+  @keyframes unveil {
+    from {
+      clip-path: inset(100% 0 0 0);
+    }
+
+    to {
+      clip-path: inset(0);
+    }
+  }
+</style>
+
+<script>
+  // Parallaxe : l'image glisse un peu dans son cadre pendant le défilement.
+  let stop: (() => void) | null = null;
+
+  const init = () => {
+    stop?.();
+    stop = null;
+    const frame = document.querySelector<HTMLElement>('[data-parallax-frame]');
+    const image = frame?.querySelector('img');
+    if (!frame || !image || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+    let ticking = false;
+    const update = () => {
+      ticking = false;
+      const rect = frame.getBoundingClientRect();
+      const offset = (window.innerHeight / 2 - (rect.top + rect.height / 2)) / window.innerHeight;
+      image.style.translate = `0 ${(offset * -7).toFixed(2)}%`;
+    };
+    const onScroll = () => {
+      if (ticking) return;
+      ticking = true;
+      requestAnimationFrame(update);
+    };
+    window.addEventListener('scroll', onScroll, { passive: true });
+    update();
+    stop = () => window.removeEventListener('scroll', onScroll);
+  };
+
+  document.addEventListener('astro:page-load', init);
+  document.addEventListener('astro:before-swap', () => {
+    stop?.();
+    stop = null;
+  });
+</script>

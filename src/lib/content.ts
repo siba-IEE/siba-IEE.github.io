@@ -309,8 +309,6 @@ export interface Service {
   nameEn: string;
   descFr: string;
   descEn: string;
-  /** Tarif de départ, texte libre (ex. « 1 000 $ », « 30 000 € », « sur devis »). */
-  priceFrom: string;
   order: number;
 }
 

@@ -66,6 +66,11 @@ export interface Holo {
   center: THREE.Vector3;
   /** Remplace la scène en cours ; `null` éteint la projection. */
   show(scene: Scene | null): void;
+  /**
+   * Position dans le monde d'un élément nommé de la scène en cours : une localité, `carte`,
+   * `panneau1`, `panneau2` ou `maquette`. Renvoie faux si la scène ne le contient pas.
+   */
+  locate(name: string, out: THREE.Vector3): boolean;
   /** 0 éteint, 1 allumé : sert à assombrir la pièce autour. */
   readonly level: number;
   update(delta: number, camera: THREE.Camera): void;
@@ -411,6 +416,8 @@ export function createHolo(table: THREE.Vector3, anchors: Anchors, instant = fal
   let progress = 0;
   let animate: ((t: number) => void)[] = [];
   let facing: THREE.Object3D[] = [];
+  /** Éléments que le texte peut désigner : leur parent et leur position dans ce parent. */
+  let targets = new Map<string, { parent: THREE.Object3D; at: THREE.Vector3 }>();
 
   // Faisceau du projecteur 8 mm vers la table, et lueur de la maquette sur la pièce.
   const reach = new THREE.Vector3().subVectors(center, anchors.projector);
@@ -540,6 +547,11 @@ export function createHolo(table: THREE.Vector3, anchors: Anchors, instant = fal
     map.add(plate);
     root.add(map);
     animate.push(paint);
+    targets.set('carte', { parent: map, at: new THREE.Vector3(0, 0.04, 0) });
+    for (const town of land.towns) {
+      const point = flat.place(town.x, town.y);
+      targets.set(town.n, { parent: map, at: new THREE.Vector3(point.x, 0.03, point.z) });
+    }
 
     // Colonnes : une par localité.
     const towns = land.towns.filter(
@@ -635,7 +647,7 @@ export function createHolo(table: THREE.Vector3, anchors: Anchors, instant = fal
       const texture = new THREE.CanvasTexture(canvas);
       texture.colorSpace = THREE.SRGBColorSpace;
       texture.anisotropy = 8;
-      const size = hasMap || scene.model ? 1.05 : panels.length > 1 ? 1.15 : 1.5;
+      const size = hasMap || scene.model ? 0.95 : panels.length > 1 ? 1.05 : 1.25;
       const board = new THREE.Mesh(
         new THREE.PlaneGeometry(size, size * (PANEL.height / PANEL.width)),
         new THREE.MeshBasicMaterial({
@@ -648,11 +660,12 @@ export function createHolo(table: THREE.Vector3, anchors: Anchors, instant = fal
       const shift = panels.length > 1 ? (index - 0.5) * (size + 0.08) : 0;
       board.position.set(
         shift,
-        hasMap || scene.model ? 1.05 : 0.62,
+        hasMap || scene.model ? 0.82 : 0.5,
         hasMap || scene.model ? -0.42 : 0,
       );
       root.add(board);
       facing.push(board);
+      targets.set(`panneau${index + 1}`, { parent: board, at: new THREE.Vector3(0, 0, 0) });
       // Le second panneau commence à se tracer quand le premier est à mi-course.
       animate.push((t) => {
         paintPanel(ctx, panel, ease(clamp01(t * 1.5 - index * 0.5)));
@@ -675,9 +688,10 @@ export function createHolo(table: THREE.Vector3, anchors: Anchors, instant = fal
       plate.position.y = -0.008;
       model.add(plate);
       model.position.y = 0.3;
-      const scale = scene.model === 'kit' ? 1.5 : 1.25;
+      const scale = scene.model === 'kit' ? 1.2 : 1.1;
       animate.push((t) => model.scale.setScalar(Math.max(0.001, scale * ease(clamp01(t * 1.6)))));
       root.add(model);
+      targets.set('maquette', { parent: model, at: new THREE.Vector3(0, 0.1, 0) });
     }
 
     for (const tag of scene.tags ?? []) {
@@ -699,6 +713,13 @@ export function createHolo(table: THREE.Vector3, anchors: Anchors, instant = fal
     get level() {
       return level;
     },
+    locate(name, out) {
+      const target = targets.get(name);
+      if (!target || !current) return false;
+      target.parent.updateWorldMatrix(true, false);
+      out.copy(target.at).applyMatrix4(target.parent.matrixWorld);
+      return true;
+    },
     update(delta, camera) {
       // L'ancienne scène s'efface, puis la nouvelle se construit.
       if (pending !== undefined) {
@@ -710,6 +731,7 @@ export function createHolo(table: THREE.Vector3, anchors: Anchors, instant = fal
           }
           animate = [];
           facing = [];
+          targets = new Map();
           current = pending ? build(pending) : null;
           if (current) group.add(current);
           pending = undefined;

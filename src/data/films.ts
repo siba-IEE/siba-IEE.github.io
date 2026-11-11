@@ -13,10 +13,14 @@ import donnees from './hologrammes.json';
 export type Label = Record<Lang, string>;
 /** Choisit le texte dans la langue de la page. */
 type Pick = (fr: string, en: string) => string;
+/** Une précision ; `at` nomme l'élément de la scène sur lequel elle se pose. */
+export type Note = Label & { at?: string };
 
 export interface Beat {
   say: Label;
-  notes?: Label[];
+  /** Élément de la scène que la phrase désigne. Par défaut : le premier élément mis en avant. */
+  focus?: string;
+  notes?: Note[];
   scene: (t: Pick) => Scene;
 }
 
@@ -29,8 +33,9 @@ export interface Film {
   tint: string;
   beats: Beat[];
 }
-
 const l = (fr: string, en: string): Label => ({ fr, en });
+/** Précision posée sur un élément de la scène. */
+const pin = (at: string, fr: string, en: string): Note => ({ fr, en, at });
 const k = donnees.gn.kankan;
 const SOL = '#ffc266';
 const NASA = '#7fdcff';
@@ -60,95 +65,70 @@ export const films: Record<string, Film> = {
     beats: [
       {
         say: l(
-          'Le RNDE publie la donnée énergétique de la Guinée, territoire par territoire. Le solaire est le premier domaine ouvert.',
-          'RNDE publishes Guinea’s energy data, territory by territory. Solar is the first domain opened.',
+          'Vous devez décider où installer du solaire en Guinée. Par où commencer ?',
+          'You have to decide where to install solar in Guinea. Where do you start?',
         ),
+        focus: 'carte',
         notes: [
-          l('340 sous-préfectures', '340 sub-prefectures'),
           l(
-            'Du plus clair au plus foncé : de 4,7 à 5,9 kWh/m²/j',
-            'Lightest to darkest: 4.7 to 5.9 kWh/m²/day',
-          ),
-          l(
-            'Yomou 4,76 au sud, Siguiri 5,75 au nord',
-            'Yomou 4.76 in the south, Siguiri 5.75 in the north',
+            'Chaque tache de couleur : une des 340 sous-préfectures',
+            'Each patch of colour: one of the 340 sub-prefectures',
           ),
         ],
+        scene: () => ({ map: { key: 'gn', theme: 'ghi' }, cam: [0.5, 0.62, 2.1] }),
+      },
+      {
+        say: l(
+          'La carte vous montre où le soleil est le plus fort : plus la couleur est foncée, plus il y en a.',
+          'The map shows you where the sun is strongest: the darker the colour, the more there is.',
+        ),
+        focus: 'Siguiri',
+        notes: [
+          pin('Siguiri', 'Le plus ensoleillé : 5,75 kWh/m²/j', 'The sunniest: 5.75 kWh/m²/day'),
+          pin('Yomou', 'Le moins ensoleillé : 4,76', 'The least sunny: 4.76'),
+        ],
         scene: () => ({
-          map: {
-            key: 'gn',
-            theme: 'ghi',
-            labels: { Siguiri: 'Siguiri 5,75', Yomou: 'Yomou 4,76' },
-          },
-          cam: [0.35, 0.62, 2.1],
+          map: { key: 'gn', theme: 'ghi', labels: { Siguiri: 'Siguiri', Yomou: 'Yomou' } },
+          cam: [0.5, 0.62, 2.1],
         }),
       },
       {
         say: l(
-          'La même carte répond à une autre question : quelle confiance accorder à chaque valeur ?',
-          'The same map answers another question: how far can each value be trusted?',
+          'Mais pouvez-vous vous fier à ce chiffre ? Vous basculez la carte : elle montre maintenant où la valeur est solide.',
+          'But can you rely on that figure? You switch the map: it now shows where the value is solid.',
         ),
+        focus: 'carte',
         notes: [
           l('Bleu : haute confiance', 'Blue: high confidence'),
           l('Ocre : incertitude élevée', 'Ochre: high uncertainty'),
         ],
-        scene: () => ({ map: { key: 'gn', theme: 'confiance' }, cam: [-0.3, 0.7, 2.0] }),
+        scene: () => ({ map: { key: 'gn', theme: 'confiance' }, cam: [-0.5, 0.7, 2.0] }),
       },
       {
         say: l(
-          'Et à une troisième : de combien la valeur peut-elle s’écarter d’une mesure au sol ?',
-          'And a third one: how far can the value deviate from a ground measurement?',
+          'Vous ouvrez un territoire. Sa fiche répond à vos questions, une par une, et ne donne jamais un classement que la donnée ne permet pas.',
+          'You open a territory. Its sheet answers your questions, one by one, and never gives a ranking the data cannot support.',
         ),
-        notes: [
-          l('Clair : moins de 2 %', 'Light: under 2%'),
-          l('Moyen : 2 à 4 %', 'Medium: 2 to 4%'),
-          l('Foncé : 4 % et plus', 'Dark: 4% and above'),
-        ],
-        scene: () => ({ map: { key: 'gn', theme: 'ecart' }, cam: [0.1, 0.8, 1.9] }),
-      },
-      {
-        say: l(
-          'Chaque territoire a sa fiche, et chaque section de la fiche répond à une question.',
-          'Each territory has its sheet, and each section of the sheet answers a question.',
-        ),
-        notes: [
-          l(
-            '374 fiches : 340 sous-préfectures et 34 préfectures',
-            '374 sheets: 340 sub-prefectures and 34 prefectures',
-          ),
-        ],
+        focus: 'panneau1',
         scene: (t) => ({
           map: { key: 'gn', theme: 'ghi' },
           panels: [
             {
               kind: 'card',
-              title: t('Fiche territoriale', 'Territory sheet'),
+              title: t('La fiche d’un territoire', 'A territory’s sheet'),
               rows: [
                 [
-                  t('Ressource', 'Resource'),
-                  t('GHI et DNI annuels, 1991–2020', 'Annual GHI and DNI, 1991–2020'),
+                  t('Combien ?', 'How much?'),
+                  t('Le rayonnement, année et mois', 'Irradiance, by year and month'),
+                ],
+                [t('Fiable ?', 'Reliable?'), t('Le niveau de confiance', 'The confidence level')],
+                [
+                  t('Régulier ?', 'Steady?'),
+                  t('Les bonnes et les mauvaises années', 'Good and bad years'),
                 ],
                 [
-                  t('Fiabilité', 'Reliability'),
-                  t('Quelle confiance accorder aux valeurs ?', 'How far to trust the values?'),
-                ],
-                [
-                  t('Variabilité', 'Variability'),
-                  t('P50, P90, minimum, maximum', 'P50, P90, minimum, maximum'),
-                ],
-                [
-                  t('Saisons', 'Seasons'),
-                  t(
-                    'Sèche de novembre à mai, pluies de juin à octobre',
-                    'Dry November to May, rains June to October',
-                  ),
-                ],
-                [
-                  t('Profil', 'Profile'),
-                  t(
-                    '12 mois, avec leur bande d’incertitude',
-                    '12 months, with their uncertainty band',
-                  ),
+                  t('Par rapport au pays ?', 'Versus the country?'),
+                  t('« Parmi le tiers le plus ensoleillé »', '“Among the sunniest third”'),
                 ],
               ],
             },
@@ -158,54 +138,28 @@ export const films: Record<string, Film> = {
       },
       {
         say: l(
-          'Une fiche ne donne jamais de rang. Une trentaine de mailles satellite pour 340 territoires ne permet pas de classer : elle dit « parmi le tiers le plus ensoleillé ».',
-          'A sheet never gives a rank. Some thirty satellite cells for 340 territories cannot support a ranking: it says “among the sunniest third”.',
+          'Vous repartez avec le fichier, ou vous branchez directement votre outil de cartographie dessus. Sans compte, sans clé.',
+          'You leave with the file, or plug your mapping tool straight into it. No account, no key.',
         ),
-        scene: () => ({ map: { key: 'gn', theme: 'ghi', grid: true }, cam: [0, 1.05, 1.8] }),
-      },
-      {
-        say: l(
-          'Six jeux de données sont ouverts, sans compte ni clé, et le même jeu se récupère de cinq façons.',
-          'Six datasets are open, with no account or key, and the same dataset can be fetched in five ways.',
-        ),
-        notes: [
-          l('WMS : des cartes prêtes à afficher', 'WMS: maps ready to display'),
-          l('WFS : les objets géographiques', 'WFS: the geographic features'),
-          l('CSW : le catalogue, moissonnable', 'CSW: the catalogue, harvestable'),
-        ],
+        focus: 'panneau1',
         scene: (t) => ({
           panels: [
             {
               kind: 'card',
-              title: t('Six jeux ouverts', 'Six open datasets'),
+              title: t(
+                'Cinq façons de repartir avec la donnée',
+                'Five ways to leave with the data',
+              ),
               rows: [
-                [
-                  'CC BY 4.0',
-                  t('Irradiation par sous-préfecture', 'Irradiation by sub-prefecture'),
-                ],
-                ['CC BY 4.0', t('Niveau de confiance', 'Confidence level')],
-                [
-                  'CC BY 4.0',
-                  t('Irradiation aux 34 chefs-lieux', 'Irradiation at the 34 capitals'),
-                ],
-                ['CC BY 4.0', t('Séries horaires 2001–2025', 'Hourly series 2001–2025')],
-                ['CC BY-IGO', t('Limites des préfectures', 'Prefecture boundaries')],
-                ['CC BY-IGO', t('Limites des sous-préfectures', 'Sub-prefecture boundaries')],
-              ],
-            },
-            {
-              kind: 'card',
-              title: t('Cinq accès', 'Five routes'),
-              rows: [
-                [t('Fichier', 'File'), 'CSV, GeoJSON'],
-                ['API', 'JSON, DCAT'],
-                ['WMS', t('Cartes', 'Maps')],
-                ['WFS', t('Objets', 'Features')],
-                ['CSW', t('Catalogue', 'Catalogue')],
+                [t('Un fichier', 'A file'), 'CSV, GeoJSON'],
+                [t('Un programme', 'A program'), 'API'],
+                [t('Une carte', 'A map'), 'WMS'],
+                [t('Les contours', 'The outlines'), 'WFS'],
+                [t('Un autre portail', 'Another portal'), 'CSW'],
               ],
             },
           ],
-          cam: [0.25, 0.3, 2.5],
+          cam: [0.5, 0.25, 2.0],
         }),
       },
     ],
@@ -216,34 +170,89 @@ export const films: Record<string, Film> = {
     beats: [
       {
         say: l(
-          'Un dimensionnement solaire vaut ce que valent ses données. Le référentiel donne le rayonnement de 34 localités de Guinée.',
-          'A solar design is only as good as its data. The reference gives the irradiance of 34 localities in Guinea.',
+          'On vous demande de dimensionner une centrale solaire à Kankan. Première question : combien de soleil y reçoit-on ?',
+          'You are asked to size a solar plant at Kankan. First question: how much sun does it get?',
         ),
-        notes: [
-          l(
-            'Une colonne : le rayonnement moyen, 1991–2020',
-            'One column: mean irradiance, 1991–2020',
-          ),
-          l('Plus de 68 millions de valeurs', 'More than 68 million values'),
-        ],
+        focus: 'Kankan',
         scene: () => ({
-          map: {
-            key: 'gn',
-            columns: true,
-            labels: { Siguiri: 'Siguiri 5,75', Yomou: 'Yomou 4,76' },
-          },
-          cam: [0.45, 0.5, 2.2],
+          map: { key: 'gn', columns: true, mark: ['Kankan'], labels: { Kankan: 'Kankan' } },
+          cam: [0.9, 0.45, 2.0],
         }),
       },
       {
         say: l(
-          'Kindia et Mamou, à 85 km l’une de l’autre, reçoivent exactement les mêmes valeurs : elles tombent dans la même maille de 110 km du satellite.',
-          'Kindia and Mamou, 85 km apart, get exactly the same values: they fall in the same 110 km cell of the satellite product.',
+          'Vous ouvrez quatre sources. Elles ne sont pas d’accord. Laquelle mettez-vous dans votre étude ?',
+          'You open four sources. They disagree. Which one goes into your study?',
         ),
+        focus: 'panneau1',
         notes: [
           l(
-            'Le référentiel le dit, au lieu de le cacher',
-            'The reference says so, instead of hiding it',
+            'Courbe ambre : la mesure au sol, 5,39 kWh/m²/j',
+            'Amber curve: the ground measurement, 5.39 kWh/m²/day',
+          ),
+          l(
+            'Courbe rouge : SARAH-3, 5,99, soit 11 % de plus',
+            'Red curve: SARAH-3, 5.99, 11% more',
+          ),
+          l(
+            '11 % sur le soleil, c’est à peu près 11 % sur la production annoncée',
+            '11% on the sun is roughly 11% on the output you promise',
+          ),
+        ],
+        scene: (t) => ({
+          map: { key: 'gn', mark: ['Kankan'], labels: { Kankan: 'Kankan' } },
+          panels: disagreement(t),
+          cam: [0.5, 0.38, 2.4],
+        }),
+      },
+      {
+        say: l(
+          'Le référentiel tranche pour vous : chaque valeur porte un niveau de confiance. À Kankan, une station a mesuré pendant 730 jours : niveau A.',
+          'The reference settles it for you: every value carries a confidence level. At Kankan, a station measured for 730 days: level A.',
+        ),
+        focus: 'panneau1',
+        scene: (t) => ({
+          map: { key: 'gn', mark: ['Kankan'] },
+          panels: [
+            {
+              kind: 'card',
+              title: t(
+                'Ce que la valeur vous dit d’elle-même',
+                'What the value tells you about itself',
+              ),
+              rows: [
+                [
+                  'A',
+                  t(
+                    'Mesurée au sol : vous pouvez vous engager',
+                    'Measured on the ground: you can commit',
+                  ),
+                ],
+                [
+                  'B',
+                  t(
+                    'Satellite : bon pour comparer des sites',
+                    'Satellite: good for comparing sites',
+                  ),
+                ],
+                ['C', t('Estimation : à prendre avec réserve', 'Estimate: handle with care')],
+              ],
+            },
+          ],
+          cam: [0.5, 0.4, 2.4],
+        }),
+      },
+      {
+        say: l(
+          'Et ailleurs dans le pays ? Vous avez la valeur pour 34 villes, et le référentiel vous prévient de ses limites au lieu de les cacher.',
+          'And elsewhere in the country? You get the value for 34 towns, and the reference warns you of its limits instead of hiding them.',
+        ),
+        focus: 'Kindia',
+        notes: [
+          pin(
+            'Mamou',
+            'Même valeur que Kindia, à 85 km : même maille du satellite',
+            'Same value as Kindia, 85 km away: same satellite cell',
           ),
         ],
         scene: () => ({
@@ -259,108 +268,14 @@ export const films: Record<string, Film> = {
       },
       {
         say: l(
-          'Tout le pays repose sur un seul point de vérité au sol : la station de Kankan, 730 jours de mesure.',
-          'The whole country rests on a single ground-truth point: the Kankan station, 730 days of measurement.',
+          'Vous téléchargez, vous citez le DOI dans votre rapport, et n’importe qui peut vérifier d’où vient votre chiffre.',
+          'You download, you cite the DOI in your report, and anyone can check where your figure comes from.',
         ),
+        focus: 'carte',
         notes: [
-          l('Campagne ESMAP / WAPP, 2021–2023', 'ESMAP / WAPP campaign, 2021–2023'),
-          l('Seule série au niveau de confiance A', 'The only series at confidence level A'),
+          l('Licence CC BY 4.0, archivé sur Zenodo', 'CC BY 4.0 licence, archived on Zenodo'),
         ],
-        scene: () => ({
-          map: { key: 'gn', columns: true, mark: ['Kankan'], labels: { Kankan: 'Kankan' } },
-          cam: [0.9, 0.45, 2.0],
-        }),
-      },
-      {
-        say: l(
-          'Au même endroit, la même année, les sources ne disent pas la même chose.',
-          'In the same place, the same year, the sources do not say the same thing.',
-        ),
-        notes: [
-          l('Sol : 5,39 kWh/m²/j', 'Ground: 5.39 kWh/m²/day'),
-          l('NASA POWER : 5,52', 'NASA POWER: 5.52'),
-          l('ERA5-Land : 5,59', 'ERA5-Land: 5.59'),
-          l('SARAH-3 : 5,99, soit 11 % au-dessus du sol', 'SARAH-3: 5.99, 11% above the ground'),
-        ],
-        scene: (t) => ({
-          map: { key: 'gn', mark: ['Kankan'], labels: { Kankan: 'Kankan' } },
-          panels: disagreement(t),
-          cam: [0.3, 0.38, 2.4],
-        }),
-      },
-      {
-        say: l(
-          'Pendant l’harmattan, la poussière monte et le rayonnement direct mesuré au sol s’effondre. Le satellite le voit mal.',
-          'During the harmattan, dust rises and the direct irradiance measured on the ground collapses. The satellite sees it poorly.',
-        ),
-        notes: [
-          l(
-            'Poussières PM10 : 89 µg/m³ en mars, 14 en août',
-            'PM10 dust: 89 µg/m³ in March, 14 in August',
-          ),
-        ],
-        scene: (t) => ({
-          panels: [
-            {
-              kind: 'lines',
-              title: t('Kankan, 2022 : rayonnement direct', 'Kankan, 2022: direct irradiance'),
-              unit: 'kWh/m²/j',
-              series: [
-                { name: t('Sol', 'Ground'), color: SOL, values: k.dni_sol },
-                { name: 'CAMS', color: NASA, values: k.dni_cams },
-              ],
-            },
-            {
-              kind: 'bars',
-              title: t('Poussières à Kankan', 'Dust at Kankan'),
-              unit: 'PM10, µg/m³',
-              labels: months(t),
-              values: k.pm10,
-              mark: [1, 2],
-            },
-          ],
-          cam: [0.2, 0.28, 2.6],
-        }),
-      },
-      {
-        say: l(
-          'C’est pourquoi chaque valeur voyage avec un passeport, et un niveau de confiance qui dit d’où elle vient.',
-          'This is why every value travels with a passport, and a confidence level that tells where it comes from.',
-        ),
-        notes: [
-          l('A : mesure directe au sol', 'A: direct ground measurement'),
-          l(
-            'B : satellite ou réanalyse, non validé au sol',
-            'B: satellite or reanalysis, not validated on the ground',
-          ),
-          l('C : estimation tirée de la littérature', 'C: estimate drawn from the literature'),
-        ],
-        scene: (t) => ({
-          panels: [
-            {
-              kind: 'card',
-              title: t('Le passeport d’une valeur', 'The passport of a value'),
-              rows: [
-                ['source', 'NASA POWER'],
-                [t('méthode', 'method'), t('modèle satellitaire', 'satellite model')],
-                [t('confiance', 'confidence'), 'B'],
-                [t('validité', 'validity'), '1991–2020'],
-                [t('incertitude', 'uncertainty'), t('chiffrée', 'quantified')],
-              ],
-            },
-          ],
-          cam: [0.3, 0.25, 2.3],
-        }),
-      },
-      {
-        say: l(
-          '« Le terrain ne remplace pas le satellite, il le calibre. » Le tout est ouvert : licence CC BY 4.0, archivé sur Zenodo.',
-          '“The ground does not replace the satellite, it calibrates it.” Everything is open: CC BY 4.0 licence, archived on Zenodo.',
-        ),
-        scene: () => ({
-          map: { key: 'gn', columns: true, mark: ['Kankan'] },
-          cam: [-0.4, 0.55, 2.3],
-        }),
+        scene: () => ({ map: { key: 'gn', columns: true }, cam: [0.5, 0.55, 2.3] }),
       },
     ],
   },
@@ -370,36 +285,51 @@ export const films: Record<string, Film> = {
     beats: [
       {
         say: l(
-          'Le même référentiel existe pour la Côte d’Ivoire : 142 localités, les 31 régions et les 111 départements.',
-          'The same reference exists for Côte d’Ivoire: 142 localities, the 31 regions and the 111 departments.',
+          'Vous cherchez le meilleur site pour un projet solaire en Côte d’Ivoire. Il vous faut comparer.',
+          'You are looking for the best site for a solar project in Côte d’Ivoire. You need to compare.',
         ),
-        notes: [
-          l(
-            'Une colonne : le rayonnement moyen, 1991–2020',
-            'One column: mean irradiance, 1991–2020',
-          ),
-          l('De 4,52 au sud à 5,66 au nord', 'From 4.52 in the south to 5.66 in the north'),
-        ],
-        scene: () => ({ map: { key: 'ci', columns: true }, cam: [0.4, 0.55, 2.2] }),
+        focus: 'carte',
+        notes: [l('Une colonne : une des 142 localités', 'One column: one of the 142 localities')],
+        scene: () => ({ map: { key: 'ci', columns: true }, cam: [0.5, 0.55, 2.2] }),
       },
       {
         say: l(
-          'Il ne s’arrête pas au rayonnement : température, humidité, vent, pluie et particules, à partir de six sources.',
-          'It does not stop at irradiance: temperature, humidity, wind, rain and particles, from six sources.',
+          'D’un coup d’œil, vous voyez que le nord reçoit plus que le sud : les colonnes montent.',
+          'At a glance, you see the north gets more than the south: the columns rise.',
         ),
+        focus: 'carte',
+        notes: [
+          l(
+            'De 4,52 au sud à 5,66 kWh/m²/j au nord',
+            'From 4.52 in the south to 5.66 kWh/m²/day in the north',
+          ),
+        ],
+        scene: () => ({ map: { key: 'ci', columns: true }, cam: [-0.6, 0.35, 2.3] }),
+      },
+      {
+        say: l(
+          'Et vous savez à quoi vous en tenir : aucune station au sol n’est encore intégrée. Assez pour choisir un site, pas encore pour s’engager auprès d’une banque.',
+          'And you know where you stand: no ground station is integrated yet. Enough to choose a site, not yet to commit to a bank.',
+        ),
+        focus: 'panneau1',
         scene: (t) => ({
           map: { key: 'ci', columns: true },
           panels: [
             {
               kind: 'card',
-              title: t('Six sources', 'Six sources'),
+              title: t(
+                'Niveau de confiance de toutes les valeurs',
+                'Confidence level of every value',
+              ),
               rows: [
-                ['NASA POWER', t('Rayonnement, météo', 'Irradiance, weather')],
-                ['ERA5', t('Réanalyse', 'Reanalysis')],
-                ['CAMS', t('Rayonnement direct, particules', 'Direct irradiance, particles')],
-                ['SARAH-3', t('Rayonnement, Meteosat', 'Irradiance, Meteosat')],
-                ['GPM IMERG', t('Pluie', 'Rain')],
-                ['CHIRPS', t('Pluie', 'Rain')],
+                [
+                  'B',
+                  t(
+                    'Satellite : bon pour comparer des sites',
+                    'Satellite: good for comparing sites',
+                  ),
+                ],
+                ['A', t('Mesure au sol : pas encore ici', 'Ground measurement: not here yet')],
               ],
             },
           ],
@@ -408,21 +338,29 @@ export const films: Record<string, Film> = {
       },
       {
         say: l(
-          'Ici, aucune station au sol n’est encore intégrée. Toutes les séries restent donc au niveau B, et le référentiel le dit.',
-          'Here, no ground station is integrated yet. All series therefore stay at level B, and the reference says so.',
+          'Une étude ne s’arrête pas au soleil. Vous trouvez au même endroit la chaleur, le vent, la pluie et les poussières.',
+          'A study does not stop at the sun. In the same place you find heat, wind, rain and dust.',
         ),
-        notes: [
-          l('B : suffisant pour la préfaisabilité', 'B: enough for pre-feasibility'),
-          l('37,6 millions de valeurs, 1991–2025', '37.6 million values, 1991–2025'),
-        ],
-        scene: () => ({ map: { key: 'ci', columns: true }, cam: [-0.5, 0.8, 2.0] }),
-      },
-      {
-        say: l(
-          'Chaque lot est produit par Kuma Data Core et documenté par une décision publiée. Licence CC BY 4.0.',
-          'Each batch is produced by Kuma Data Core and documented by a published decision. CC BY 4.0 licence.',
-        ),
-        scene: () => ({ map: { key: 'ci', columns: true }, cam: [0.1, 0.45, 2.5] }),
+        focus: 'panneau1',
+        scene: (t) => ({
+          map: { key: 'ci', columns: true },
+          panels: [
+            {
+              kind: 'card',
+              title: t('Ce que vous y trouvez', 'What you find there'),
+              rows: [
+                [t('Soleil', 'Sun'), 'GHI, DNI, DHI'],
+                [t('Chaleur', 'Heat'), t('Température, humidité', 'Temperature, humidity')],
+                [t('Vent, pluie', 'Wind, rain'), '1991–2025'],
+                [
+                  t('Poussières', 'Dust'),
+                  t('Elles salissent les modules', 'They soil the modules'),
+                ],
+              ],
+            },
+          ],
+          cam: [0.6, 0.4, 2.4],
+        }),
       },
     ],
   },
@@ -432,139 +370,137 @@ export const films: Record<string, Film> = {
     beats: [
       {
         say: l(
-          'Le problème de départ : les produits satellitaires se contredisent, et rien ne dit lequel croire. Kuma Data Core est le moteur qui range ce désordre.',
-          'The starting problem: satellite products contradict each other, and nothing says which to believe. Kuma Data Core is the engine that puts this in order.',
+          'Vous avez cité un chiffre de rayonnement dans une étude. Six mois plus tard, on vous demande : d’où vient-il ?',
+          'You quoted an irradiance figure in a study. Six months later, you are asked: where does it come from?',
         ),
-        scene: (t) => ({ panels: disagreement(t), cam: [0.2, 0.25, 2.2] }),
-      },
-      {
-        say: l(
-          'Une valeur n’y est jamais enregistrée seule. Voici ce que l’API renvoie pour un jour à Conakry.',
-          'A value is never stored alone. This is what the API returns for one day in Conakry.',
-        ),
+        focus: 'panneau1',
         scene: (t) => ({
           panels: [
             {
               kind: 'card',
-              title: '/v1/series/gin_conakry_ghi_nasa_power',
+              title: t(
+                'Le chiffre, tel que le moteur vous le rend',
+                'The figure, as the engine returns it',
+              ),
               rows: [
-                ['instant_mesure', '2024-06-15'],
-                ['valeur', '5,83 kWh/m²/j'],
-                ['niveau_effectif', 'B'],
-                ['statut', t('brut', 'brut (raw)')],
-                ['methode_collecte', t('modèle satellitaire', 'satellite model')],
+                [t('valeur', 'value'), '5,83 kWh/m²/j'],
+                [t('lieu, jour', 'place, day'), 'Conakry, 2024-06-15'],
+                [t('source', 'source'), 'NASA POWER'],
+                [t('confiance', 'confidence'), 'B'],
+                [t('statut', 'status'), t('brut, pas encore validé', 'raw, not yet validated')],
               ],
             },
           ],
-          cam: [0.3, 0.25, 2.2],
+          cam: [0.5, 0.25, 2.0],
         }),
       },
       {
         say: l(
-          'Le niveau de confiance n’est pas saisi à la main : quatre règles le déduisent de la source et de la méthode.',
-          'The confidence level is not typed by hand: four rules derive it from the source and the method.',
+          'La réponse est dans le chiffre lui-même. Le moteur ne stocke jamais une valeur sans dire d’où elle vient et ce qu’elle vaut.',
+          'The answer is in the figure itself. The engine never stores a value without saying where it comes from and what it is worth.',
         ),
+        focus: 'panneau1',
+        scene: (t) => ({
+          panels: [
+            {
+              kind: 'card',
+              title: t(
+                'Comment le niveau de confiance est attribué',
+                'How the confidence level is assigned',
+              ),
+              rows: [
+                [
+                  'A',
+                  t(
+                    'mesure directe, source très fiable',
+                    'direct measurement, highly reliable source',
+                  ),
+                ],
+                ['B', t('satellite ou réanalyse', 'satellite or reanalysis')],
+                [
+                  'C',
+                  t('source peu fiable, ou avis d’expert', 'unreliable source, or expert opinion'),
+                ],
+              ],
+            },
+          ],
+          cam: [-0.5, 0.25, 2.0],
+        }),
+      },
+      {
+        say: l(
+          'Entre-temps, la valeur a été corrigée. Rien n’a été écrasé : celle que vous aviez citée est toujours là, datée.',
+          'Meanwhile, the value was corrected. Nothing was overwritten: the one you quoted is still there, dated.',
+        ),
+        focus: 'panneau1',
         notes: [
-          l(
-            'Une valeur calculée hérite du plus faible de ses entrants',
-            'A computed value inherits the lowest of its inputs',
+          pin(
+            'panneau2',
+            'Chaque modification laisse une trace : qui, quand, avant, après',
+            'Every change leaves a trace: who, when, before, after',
           ),
         ],
         scene: (t) => ({
           panels: [
             {
               kind: 'card',
-              title: t('Règles de confiance', 'Confidence rules'),
+              title: t(
+                'Deux versions de la même valeur (exemple)',
+                'Two versions of the same value (example)',
+              ),
               rows: [
-                ['→ C', t('source de fiabilité faible', 'low-reliability source')],
-                ['→ C', t('expertise humaine', 'human expertise')],
                 [
-                  '→ A',
-                  t(
-                    'mesure directe, source de haute fiabilité',
-                    'direct measurement, high-reliability source',
-                  ),
+                  t('version 1', 'version 1'),
+                  t('5,83 · valable jusqu’à la correction', '5.83 · valid until the correction'),
                 ],
-                ['→ B', t('tout le reste', 'everything else')],
-              ],
-            },
-          ],
-          cam: [-0.3, 0.25, 2.2],
-        }),
-      },
-      {
-        say: l(
-          'Rien n’est écrasé. Corriger une valeur ferme l’ancienne version et en ouvre une nouvelle au même instant ; la base refuse que deux versions se chevauchent.',
-          'Nothing is overwritten. Correcting a value closes the previous version and opens a new one at the same instant; the database refuses overlapping versions.',
-        ),
-        scene: (t) => ({
-          panels: [
-            {
-              kind: 'card',
-              title: t('Deux versions d’une valeur (exemple)', 'Two versions of a value (example)'),
-              rows: [
-                ['v1 · valide_du', '2026-05-11 12:30'],
-                ['v1 · valide_au', '2026-07-02 09:14'],
-                ['v2 · valide_du', '2026-07-02 09:14'],
-                ['v2 · valide_au', t('ouverte', 'open')],
-                ['EXCLUDE', t('chevauchement impossible', 'overlap impossible')],
+                [t('version 2', 'version 2'), t('5,79 · valable depuis', '5.79 · valid since')],
+                [
+                  t('règle', 'rule'),
+                  t('deux versions ne se chevauchent jamais', 'two versions never overlap'),
+                ],
               ],
             },
             {
               kind: 'card',
-              title: t('Journal d’audit (exemple)', 'Audit log (example)'),
+              title: t('Journal (exemple)', 'Log (example)'),
               rows: [
-                ['type_operation', 'U'],
-                ['champs_modifies', '{"valeur": [5.83, 5.79]}'],
-                ['auteur_applicatif', t('renseigné', 'recorded')],
-                ['horodatage', 'clock_timestamp()'],
+                [t('quoi', 'what'), t('valeur modifiée', 'value changed')],
+                [t('avant, après', 'before, after'), '5,83 → 5,79'],
+                [t('qui, quand', 'who, when'), t('enregistrés', 'recorded')],
               ],
             },
           ],
-          cam: [0.15, 0.25, 2.6],
+          cam: [0.5, 0.25, 2.6],
         }),
       },
       {
         say: l(
-          'Deux pièges que le moteur documente. Une unité de poussière mal convertie donnait 34 % de pertes par salissure au lieu de 2 %. Et le P90 est le 10ᵉ centile, pas le 90ᵉ.',
-          'Two pitfalls the engine documents. A wrongly converted dust unit gave 34% soiling losses instead of 2%. And P90 is the 10th percentile, not the 90th.',
+          'Il vous évite aussi les erreurs qui coûtent cher. Une unité mal convertie, et les pertes par salissure passent de 2 % à 34 %.',
+          'It also spares you costly mistakes. One wrongly converted unit, and soiling losses go from 2% to 34%.',
         ),
+        focus: 'panneau1',
+        notes: [pin('panneau1', 'Barre ambre : la valeur juste', 'Amber bar: the right value')],
         scene: (t) => ({
           panels: [
             {
               kind: 'bars',
-              title: t('Pertes par salissure', 'Soiling losses'),
+              title: t('Pertes par salissure calculées', 'Computed soiling losses'),
               unit: '%',
-              labels: [
-                t('g/m³ pris pour des µg/m³', 'g/m³ read as µg/m³'),
-                t('unité corrigée', 'unit fixed'),
-              ],
+              labels: [t('Unité fausse', 'Wrong unit'), t('Unité juste', 'Right unit')],
               values: [34, 2],
               mark: [1],
             },
           ],
-          cam: [0.3, 0.25, 2.2],
+          cam: [0.5, 0.25, 2.0],
         }),
       },
       {
         say: l(
-          'À partir de modèles publiés, il calcule ce dont l’ingénieur a besoin : rayonnement dans le plan des modules, productible corrigé de la chaleur, P50 et P90, salissure.',
-          'From published models, it computes what the engineer needs: plane-of-array irradiance, heat-corrected yield, P50 and P90, soiling.',
+          'C’est ce moteur qui produit les référentiels de Guinée, de Côte d’Ivoire et du Burkina Faso. Vous l’interrogez par une API ouverte, avec une clé gratuite.',
+          'This engine produces the references of Guinea, Côte d’Ivoire and Burkina Faso. You query it through an open API, with a free key.',
         ),
-        notes: [
-          l(
-            'Perez 1990, Ross 1980, Coello et Boyle 2019',
-            'Perez 1990, Ross 1980, Coello and Boyle 2019',
-          ),
-        ],
-        scene: () => ({ model: 'kit', cam: [0.6, 0.45, 1.7] }),
-      },
-      {
-        say: l(
-          'Une API publique sert le tout : clé gratuite, 5 000 requêtes par jour. Le code est sous licence AGPL.',
-          'A public API serves everything: free key, 5,000 requests a day. The code is under the AGPL licence.',
-        ),
-        scene: () => ({ map: { key: 'gn', columns: true }, cam: [-0.3, 0.6, 2.3] }),
+        focus: 'carte',
+        scene: () => ({ map: { key: 'gn', columns: true }, cam: [-0.5, 0.6, 2.3] }),
       },
     ],
   },
@@ -574,42 +510,68 @@ export const films: Record<string, Film> = {
     beats: [
       {
         say: l(
-          'En Afrique de l’Ouest, le satellite surestime le rayonnement : de 6,1 % en moyenne pour le global, de 24,6 % pour le direct, à cause des poussières de l’harmattan.',
-          'In West Africa, the satellite overestimates irradiance: by 6.1% on average for global, by 24.6% for direct, because of harmattan dust.',
+          'Votre site n’a pas de station de mesure. C’est le cas presque partout. Il vous reste le satellite.',
+          'Your site has no measurement station. That is the case almost everywhere. You are left with the satellite.',
         ),
-        notes: [l('31 stations de mesure au sol', '31 ground measurement stations')],
-        scene: (t) => ({
-          map: { key: 'ao', mark: ['Kankan'], labels: { Kankan: 'Kankan' } },
-          panels: [
-            {
-              kind: 'bars',
-              title: t('Surestimation du satellite', 'Satellite overestimation'),
-              unit: '%',
-              labels: [t('Global', 'Global'), t('Direct', 'Direct')],
-              values: [6.1, 24.6],
-            },
-          ],
-          cam: [0.2, 0.5, 2.7],
-        }),
-      },
-      {
-        say: l(
-          'Corriger là où il y a une station est simple. La question est : que faire là où il n’y en a pas ?',
-          'Correcting where there is a station is simple. The question is: what to do where there is none?',
-        ),
+        focus: 'carte',
+        notes: [
+          pin(
+            'Kankan',
+            'Une des 31 stations au sol de la région',
+            'One of the region’s 31 ground stations',
+          ),
+        ],
         scene: () => ({
           map: {
             key: 'ao',
             mark: ['Kankan', 'Tarambaly', 'Bissau', 'Kenema', 'Farafenni', 'Maradi'],
           },
-          cam: [0, 0.9, 2.4],
+          cam: [0.5, 0.75, 2.5],
         }),
       },
       {
         say: l(
-          'La réponse est la latitude, pas la distance. Farafenni et Maradi sont à 2 460 km l’une de l’autre, sur le même parallèle : la correction de l’une vaut pour l’autre à 2 % près.',
-          'The answer is latitude, not distance. Farafenni and Maradi are 2,460 km apart, on the same parallel: the correction of one holds for the other within 2%.',
+          'Or le satellite voit trop de soleil. Si vous le croyez sur parole, vous promettez une production que la centrale n’atteindra pas.',
+          'But the satellite sees too much sun. If you take its word, you promise an output the plant will not reach.',
         ),
+        focus: 'panneau1',
+        notes: [
+          pin(
+            'panneau1',
+            'Rayonnement direct : 24,6 % de trop, à cause des poussières',
+            'Direct irradiance: 24.6% too much, because of dust',
+          ),
+        ],
+        scene: (t) => ({
+          panels: [
+            {
+              kind: 'bars',
+              title: t('Ce que le satellite ajoute à tort', 'What the satellite wrongly adds'),
+              unit: '%',
+              labels: [
+                t('Rayonnement global', 'Global irradiance'),
+                t('Rayonnement direct', 'Direct irradiance'),
+              ],
+              values: [6.1, 24.6],
+              mark: [1],
+            },
+          ],
+          cam: [0.5, 0.25, 2.0],
+        }),
+      },
+      {
+        say: l(
+          'SolClim-3 corrige votre site avec les stations qui lui ressemblent : celles de même latitude, même à l’autre bout de la région.',
+          'SolClim-3 corrects your site with the stations that resemble it: those at the same latitude, even at the other end of the region.',
+        ),
+        focus: 'Maradi',
+        notes: [
+          pin(
+            'Farafenni',
+            'À 2 460 km de Maradi, même latitude : même correction, à 2 % près',
+            '2,460 km from Maradi, same latitude: same correction, within 2%',
+          ),
+        ],
         scene: () => ({
           map: {
             key: 'ao',
@@ -617,67 +579,54 @@ export const films: Record<string, Film> = {
             arcs: [['Farafenni', 'Maradi']],
             labels: { Farafenni: 'Farafenni', Maradi: 'Maradi' },
           },
-          cam: [0.1, 0.6, 2.6],
+          cam: [0.5, 0.6, 2.6],
         }),
       },
       {
         say: l(
-          'À l’inverse, Bissau et Kenema ne sont qu’à 660 km, mais séparées de 4° de latitude : l’écart reste de 9 à 10 %.',
-          'Conversely, Bissau and Kenema are only 660 km apart, but 4° of latitude away: the gap stays at 9 to 10%.',
+          'Vous obtenez une valeur corrigée, et surtout de combien elle peut encore se tromper. C’est ce chiffre-là qu’un financeur vous demandera.',
+          'You get a corrected value, and above all how far it can still be off. That is the figure a lender will ask you for.',
         ),
+        focus: 'panneau1',
         notes: [
-          l(
-            'Le biais baisse de 1,65 point par degré de latitude',
-            'The bias drops 1.65 points per degree of latitude',
+          pin(
+            'panneau1',
+            'Barres ambre : l’écart qui reste après correction',
+            'Amber bars: the gap left after correction',
           ),
         ],
-        scene: () => ({
-          map: {
-            key: 'ao',
-            mark: ['Bissau', 'Kenema'],
-            arcs: [['Bissau', 'Kenema']],
-            labels: { Bissau: 'Bissau', Kenema: 'Kenema' },
-          },
-          cam: [-0.5, 0.6, 2.3],
-        }),
-      },
-      {
-        say: l(
-          'C’est la méthode LAT3 : chaque point emprunte la correction de trois à dix stations de même latitude. Validée sur 930 transferts.',
-          'This is the LAT3 method: each point borrows the correction of three to ten stations at the same latitude. Validated on 930 transfers.',
-        ),
         scene: (t) => ({
           panels: [
             {
               kind: 'bars',
-              title: t(
-                'Écart au sol, avant et après calage',
-                'Gap to ground, before and after calibration',
-              ),
+              title: t('Écart à la mesure au sol', 'Gap to the ground measurement'),
               unit: '%',
               labels: [
-                t('Global brut', 'Global raw'),
-                t('Global calé', 'Global calibrated'),
-                t('Direct brut', 'Direct raw'),
-                t('Direct calé', 'Direct calibrated'),
+                t('Global, avant', 'Global, before'),
+                t('Global, après', 'Global, after'),
+                t('Direct, avant', 'Direct, before'),
+                t('Direct, après', 'Direct, after'),
               ],
               values: [6.2, 2.0, 24.6, 5.8],
               mark: [1, 3],
             },
           ],
-          cam: [0.3, 0.25, 2.2],
+          cam: [0.5, 0.25, 2.0],
         }),
       },
       {
         say: l(
-          'Résultat pour la Guinée : une ressource solaire calée pour les 340 sous-préfectures, avec son incertitude chiffrée.',
-          'Result for Guinea: a calibrated solar resource for the 340 sub-prefectures, with its quantified uncertainty.',
+          'Ce travail est déjà fait pour toute la Guinée : chaque sous-préfecture a sa valeur corrigée et son incertitude.',
+          'This work is already done for all of Guinea: each sub-prefecture has its corrected value and its uncertainty.',
         ),
+        focus: 'carte',
         notes: [
-          l('Résidu médian : 2,39 % pour le global', 'Median residual: 2.39% for global'),
-          l('79 896 260 enregistrements calés', '79,896,260 calibrated records'),
+          l(
+            'Plus la couleur est claire, plus la valeur est sûre',
+            'The lighter the colour, the safer the value',
+          ),
         ],
-        scene: () => ({ map: { key: 'gn', theme: 'ecart' }, cam: [0.3, 0.75, 2.0] }),
+        scene: () => ({ map: { key: 'gn', theme: 'ecart' }, cam: [0.5, 0.75, 2.0] }),
       },
     ],
   },
@@ -687,67 +636,52 @@ export const films: Record<string, Film> = {
     beats: [
       {
         say: l(
-          '« Un dimensionnement ne peut pas être plus fiable que les données qui le fondent. » Kuma Science construit et maintient des référentiels nationaux de données énergétiques en Afrique de l’Ouest.',
-          '“A design cannot be more reliable than the data it rests on.” Kuma Science builds and maintains national energy data references in West Africa.',
+          'Vous cherchez une donnée énergétique fiable pour l’Afrique de l’Ouest. Où aller ?',
+          'You are looking for reliable energy data for West Africa. Where do you go?',
         ),
-        scene: () => ({ map: { key: 'ao', mark: ['Kankan'] }, cam: [0.2, 0.7, 2.6] }),
+        focus: 'carte',
+        scene: () => ({ map: { key: 'ao', mark: ['Kankan'] }, cam: [0.5, 0.7, 2.6] }),
       },
       {
         say: l(
-          'Quatre plateformes tournent sur le même moteur, Kuma Data Core.',
-          'Four platforms run on the same engine, Kuma Data Core.',
+          'Un seul endroit, selon ce que vous venez faire.',
+          'One place, depending on what you came to do.',
         ),
+        focus: 'panneau1',
         scene: (t) => ({
           panels: [
             {
               kind: 'card',
-              title: t('Quatre plateformes', 'Four platforms'),
+              title: t('Vous voulez…', 'You want to…'),
               rows: [
-                ['RNDE', t('Données énergétiques de la Guinée', 'Energy data of Guinea')],
-                ['RDS', t('Référentiels solaires, sous DOI', 'Solar references, under DOI')],
-                [t('Catalogue', 'Catalogue'), 'ISO 19115, CSW, WMS, WFS'],
+                [t('voir une carte', 'see a map'), 'RNDE'],
                 [
-                  'SolClim-3',
-                  t(
-                    'Ressource calée et logiciel d’étude',
-                    'Calibrated resource and study software',
-                  ),
+                  t('télécharger des séries', 'download series'),
+                  t('Référentiels solaires', 'Solar references'),
                 ],
+                [t('brancher un outil', 'plug in a tool'), t('Catalogue, API', 'Catalogue, API')],
+                [t('une valeur corrigée', 'a corrected value'), 'SolClim-3'],
               ],
             },
           ],
-          cam: [0.3, 0.25, 2.2],
+          cam: [0.5, 0.25, 2.0],
         }),
       },
       {
         say: l(
-          'Le site donne aussi de quoi travailler : un explorateur cartographique, un atlas d’incertitude, et un atelier Python qui tourne dans le navigateur.',
-          'The site also gives tools to work with: a map explorer, an uncertainty atlas, and a Python workshop that runs in the browser.',
+          'Vous n’avez rien à installer : la carte et l’atelier de calcul tournent dans votre navigateur, et vos données ne quittent pas votre appareil.',
+          'You have nothing to install: the map and the calculation workshop run in your browser, and your data never leaves your device.',
         ),
-        notes: [
-          l(
-            'Dans l’atelier, les données ne quittent pas votre appareil',
-            'In the workshop, the data never leaves your device',
-          ),
-          l('2 728 séries servies par l’API', '2,728 series served by the API'),
-        ],
+        focus: 'carte',
         scene: () => ({ map: { key: 'gn', theme: 'ghi' }, cam: [0.5, 0.6, 2.1] }),
       },
       {
         say: l(
-          'Et des guides qui partent de cas réels. Kankan et Tarambaly, à 328 km, reçoivent presque la même énergie sur l’année, mais leurs journées ne se ressemblent pas : corrélation de 0,29.',
-          'And guides that start from real cases. Kankan and Tarambaly, 328 km apart, get almost the same energy over the year, but their days do not match: correlation of 0.29.',
+          'Et vous apprenez à vous méfier, sur des cas réels. Ces deux villes reçoivent la même énergie sur l’année, mais pas les mêmes jours : la correction de l’une abîme l’autre.',
+          'And you learn to be wary, on real cases. These two towns get the same energy over the year, but not on the same days: the correction of one harms the other.',
         ),
-        notes: [
-          l(
-            'Un facteur appris à Kankan ramène l’écart de 3,07 % à 0,45 %',
-            'A factor learned at Kankan cuts the gap from 3.07% to 0.45%',
-          ),
-          l(
-            'Le même facteur dégrade la série à Tarambaly',
-            'The same factor degrades the series at Tarambaly',
-          ),
-        ],
+        focus: 'Tarambaly',
+        notes: [pin('Kankan', 'À 328 km de Tarambaly', '328 km from Tarambaly')],
         scene: () => ({
           map: {
             key: 'ao',
@@ -755,7 +689,7 @@ export const films: Record<string, Film> = {
             arcs: [['Kankan', 'Tarambaly']],
             labels: { Kankan: 'Kankan', Tarambaly: 'Tarambaly' },
           },
-          cam: [-0.2, 0.7, 2.2],
+          cam: [-0.5, 0.7, 2.2],
         }),
       },
     ],
@@ -766,28 +700,29 @@ export const films: Record<string, Film> = {
     beats: [
       {
         say: l(
-          'Solar Bridge est le logiciel d’étude de SolClim-3. Son premier module dimensionne un mini-réseau : un village, un champ solaire, des batteries, un groupe électrogène.',
-          'Solar Bridge is the study software of SolClim-3. Its first module sizes a mini-grid: a village, a solar field, batteries, a generator.',
+          'Un village n’a pas le réseau. On vous demande combien de panneaux, de batteries, et quel groupe électrogène il lui faut.',
+          'A village is off the grid. You are asked how many panels, how many batteries, and which generator it needs.',
         ),
+        focus: 'maquette',
         scene: () => ({ model: 'village', cam: [0.5, 0.5, 1.8] }),
       },
       {
         say: l(
-          'L’étude suit huit étapes, du site aux résultats.',
-          'The study follows eight steps, from site to results.',
+          'Vous décrivez le site et ce que le village consomme. Le logiciel simule chaque heure de l’année.',
+          'You describe the site and what the village uses. The software simulates every hour of the year.',
         ),
+        focus: 'panneau1',
         scene: (t) => ({
           model: 'village',
           panels: [
             {
               kind: 'card',
-              title: t('Huit étapes', 'Eight steps'),
+              title: t('Ce que vous renseignez, dans l’ordre', 'What you fill in, in order'),
               rows: [
-                ['1 · 2', t('Site, ressource solaire', 'Site, solar resource')],
-                ['3', t('Charge du village', 'Village load')],
-                ['4 · 5', t('Champ photovoltaïque, stockage', 'Photovoltaic field, storage')],
-                ['6', t('Groupe électrogène', 'Generator')],
-                ['7 · 8', t('Simulation horaire, résultats', 'Hourly simulation, results')],
+                ['1', t('Le site et son soleil', 'The site and its sun')],
+                ['2', t('La consommation du village', 'The village’s consumption')],
+                ['3', t('Le champ solaire et les batteries', 'The solar field and the batteries')],
+                ['4', t('Le groupe électrogène', 'The generator')],
               ],
             },
           ],
@@ -796,42 +731,41 @@ export const films: Record<string, Film> = {
       },
       {
         say: l(
-          'Il ne propose pas une solution, il les essaie toutes : chaque combinaison de champ et de stockage qui tient l’objectif de fiabilité, classée par coût. La moins chère est retenue.',
-          'It does not propose one solution, it tries them all: every combination of field and storage that meets the reliability target, ranked by cost. The cheapest is kept.',
+          'Il ne vous donne pas une solution au hasard. Il essaie toutes les combinaisons, garde celles qui tiennent la fiabilité demandée, et vous montre la moins chère.',
+          'It does not give you a random solution. It tries every combination, keeps those that meet the required reliability, and shows you the cheapest.',
         ),
+        focus: 'panneau1',
         notes: [
-          l('Schéma de principe', 'Schematic'),
-          l('Cases pleines : l’objectif est tenu', 'Filled cells: the target is met'),
+          pin(
+            'panneau1',
+            'Case ambre : la moins chère qui tient (schéma)',
+            'Amber cell: the cheapest that holds (schematic)',
+          ),
         ],
         scene: (t) => ({
           model: 'village',
           panels: [
             {
               kind: 'matrix',
-              title: t('Nappe d’admissibilité', 'Admissibility surface'),
-              across: t('Champ photovoltaïque →', 'Photovoltaic field →'),
-              down: t('Stockage →', 'Storage →'),
+              title: t('Toutes les combinaisons essayées', 'Every combination tried'),
+              across: t('Plus de panneaux →', 'More panels →'),
+              down: t('Plus de batteries →', 'More batteries →'),
             },
           ],
-          cam: [0.3, 0.4, 2.2],
+          cam: [0.5, 0.4, 2.2],
         }),
       },
       {
         say: l(
-          'Chaque chiffre porte un badge : calé sur mesures au sol, ou brut. Hors du domaine qualifié, le logiciel refuse le calage plutôt que d’inventer une précision.',
-          'Every figure carries a badge: calibrated on ground measurements, or raw. Outside the qualified domain, the software refuses calibration rather than inventing precision.',
+          'Il vous évite l’erreur qui casse du matériel. Un matin froid, trois modules en série dépassent la tension que le régulateur supporte.',
+          'It spares you the mistake that breaks equipment. On a cold morning, three modules in series exceed the voltage the regulator can take.',
         ),
-        scene: () => ({ map: { key: 'gn', theme: 'confiance' }, cam: [0.2, 0.8, 2.0] }),
-      },
-      {
-        say: l(
-          'Le module bureau d’études vérifie les chaînes de modules aux températures extrêmes. Un matin de janvier à 10,6 °C à Kankan pousse une chaîne de trois modules à 154 V, au-dessus d’un régulateur de 150 V.',
-          'The engineering module checks module strings at temperature extremes. A January morning at 10.6 °C in Kankan pushes a three-module string to 154 V, above a 150 V regulator.',
-        ),
+        focus: 'panneau1',
         notes: [
-          l(
-            'La moyenne de 26 °C n’aurait rien signalé',
-            'The 26 °C mean would have flagged nothing',
+          pin(
+            'panneau1',
+            'Barre ambre : 154 V un matin à 10,6 °C, pour une limite à 150 V',
+            'Amber bar: 154 V on a 10.6 °C morning, for a 150 V limit',
           ),
         ],
         scene: (t) => ({
@@ -839,11 +773,11 @@ export const films: Record<string, Film> = {
           panels: [
             {
               kind: 'bars',
-              title: t('Tension d’une chaîne de trois modules', 'Voltage of a three-module string'),
+              title: t('Tension de trois modules en série', 'Voltage of three modules in series'),
               unit: 'V',
               labels: [
-                t('Limite du régulateur', 'Regulator limit'),
-                t('Matin à 10,6 °C', 'Morning at 10.6 °C'),
+                t('Ce que le régulateur supporte', 'What the regulator takes'),
+                t('Un matin froid à Kankan', 'A cold morning at Kankan'),
               ],
               values: [150, 154],
               mark: [1],
@@ -854,10 +788,21 @@ export const films: Record<string, Film> = {
       },
       {
         say: l(
-          'Aucune formule n’entre dans le code avant d’être écrite dans la méthode. Plus de 800 tests, et une vérification contre pvlib.',
-          'No formula enters the code before being written in the method. More than 800 tests, and a check against pvlib.',
+          'Et il ne vous ment pas sur la précision : chaque chiffre dit s’il repose sur des données corrigées ou brutes.',
+          'And it does not lie to you about precision: every figure says whether it rests on corrected or raw data.',
         ),
-        scene: () => ({ model: 'village', cam: [-0.5, 0.55, 1.9] }),
+        focus: 'carte',
+        notes: [
+          l(
+            'Bleu : données corrigées sur mesures au sol',
+            'Blue: data corrected on ground measurements',
+          ),
+          l(
+            'Ocre : données brutes, le logiciel le signale',
+            'Ochre: raw data, the software flags it',
+          ),
+        ],
+        scene: () => ({ map: { key: 'gn', theme: 'confiance' }, cam: [0.5, 0.8, 2.0] }),
       },
     ],
   },
@@ -867,19 +812,24 @@ export const films: Record<string, Film> = {
     beats: [
       {
         say: l(
-          'Kuma Solaire aide un foyer à savoir de quoi il a besoin avant de parler à un installateur. Prenons ce salon.',
-          'Kuma Solaire helps a household know what it needs before talking to an installer. Take this living room.',
+          'Un vendeur vous propose une installation solaire pour votre maison. Comment savoir si elle est trop petite, ou bien trop chère pour rien ?',
+          'A seller offers you a solar installation for your home. How do you know if it is too small, or overpriced for nothing?',
         ),
         notes: [
-          l('Hors ligne, sans compte, gratuite', 'Offline, no account, free'),
+          l(
+            'Application gratuite, sans compte, sans connexion',
+            'Free app, no account, no connection',
+          ),
           l('En cours de développement', 'In development'),
         ],
         scene: (t) => ({
           tags: [
-            { at: 'tv', text: t('Téléviseur · 60 W', 'Television · 60 W') },
             {
               at: 'table',
-              text: t('Qu’est-ce que ce salon consomme ?', 'What does this living room use?'),
+              text: t(
+                'Que faut-il pour alimenter ce salon ?',
+                'What does it take to power this room?',
+              ),
             },
           ],
           cam: [0.5, 0.32, 2.6],
@@ -887,66 +837,76 @@ export const films: Record<string, Film> = {
       },
       {
         say: l(
-          'On liste ses appareils et leurs heures d’usage, de jour et de nuit. Exemple : un foyer de Kankan, six heures de coupure par jour.',
-          'You list your appliances and their hours of use, by day and by night. Example: a household in Kankan, six hours of power cuts a day.',
+          'Vous dites où vous êtes, ce que vous branchez, et combien d’heures par jour.',
+          'You say where you are, what you plug in, and for how many hours a day.',
         ),
-        notes: [
-          l('4 096 Wh par jour', '4,096 Wh a day'),
-          l('Pointe de 1 220 W', 'Peak of 1,220 W'),
-        ],
+        focus: 'panneau1',
         scene: (t) => ({
           panels: [
             {
               kind: 'card',
-              title: t('Les appareils du foyer', 'The household’s appliances'),
+              title: t('Trois questions', 'Three questions'),
               rows: [
-                ['90 W', t('Réfrigérateur', 'Fridge')],
-                ['6 × 9 W', t('Ampoules LED', 'LED bulbs')],
-                ['60 W', t('Téléviseur', 'Television')],
-                ['2 × 45 W', t('Ventilateurs', 'Fans')],
-                ['1 000 W', t('Fer à repasser', 'Iron')],
+                [
+                  t('Où ?', 'Where?'),
+                  t('Votre préfecture, ou votre position', 'Your prefecture, or your position'),
+                ],
+                [
+                  t('Quoi ?', 'What?'),
+                  t('Vos appareils, le jour et la nuit', 'Your appliances, by day and by night'),
+                ],
+                [
+                  t('Pourquoi ?', 'Why?'),
+                  t('Sans réseau, ou pour les coupures', 'Off-grid, or for power cuts'),
+                ],
               ],
             },
           ],
-          cam: [0.3, 0.25, 2.2],
+          cam: [0.5, 0.25, 2.0],
         }),
       },
       {
         say: l(
-          'Le calcul se fait sur le pire mois de l’année. Si le système suffit ce mois-là, il suffit toute l’année.',
-          'The calculation is done on the worst month of the year. If the system is enough that month, it is enough all year.',
+          'L’application calcule pour le mois le moins ensoleillé. Si votre installation tient ce mois-là, elle tient toute l’année.',
+          'The app calculates for the least sunny month. If your installation holds that month, it holds all year.',
         ),
-        notes: [l('À Kankan : août', 'At Kankan: August')],
+        focus: 'panneau1',
+        notes: [
+          pin(
+            'panneau1',
+            'Barre ambre : août, le pire mois à Kankan',
+            'Amber bar: August, the worst month at Kankan',
+          ),
+        ],
         scene: (t) => ({
           panels: [
             {
               kind: 'bars',
-              title: t('Rayonnement mensuel à Kankan', 'Monthly irradiance at Kankan'),
+              title: t('Le soleil, mois par mois, à Kankan', 'The sun, month by month, at Kankan'),
               unit: 'kWh/m²/j',
               labels: months(t),
               values: k.normale,
               mark: [7],
             },
           ],
-          cam: [0.3, 0.25, 2.2],
+          cam: [0.5, 0.25, 2.0],
         }),
       },
       {
         say: l(
-          'Résultat pour ce foyer : 350 à 390 Wc de panneaux, une batterie de 2 190 Wh au lithium ou 3 500 Wh au plomb, un onduleur de 1 525 VA.',
-          'Result for this household: 350 to 390 Wp of panels, a 2,190 Wh lithium or 3,500 Wh lead battery, a 1,525 VA inverter.',
+          'Vous savez ce qu’il vous faut : panneaux, batterie, onduleur, câbles. Une fourchette honnête, pas un chiffre magique.',
+          'You know what you need: panels, battery, inverter, cables. An honest range, not a magic number.',
         ),
-        notes: [
-          l('Une fourchette, pas un chiffre : ± 4,5 %', 'A range, not a figure: ± 4.5%'),
-          l('Un ordre de grandeur, pas un devis', 'An order of magnitude, not a quote'),
-        ],
+        focus: 'maquette',
+        notes: [l('Un ordre de grandeur, pas un devis', 'An order of magnitude, not a quote')],
         scene: () => ({ model: 'kit', cam: [0.6, 0.45, 1.6] }),
       },
       {
         say: l(
-          'Le rapport porte un QR code qui contient les besoins saisis, pas les résultats. Le vendeur le scanne, la page officielle refait le calcul avec le même moteur : un rapport gonflé ne passe pas.',
-          'The report carries a QR code holding the needs entered, not the results. The seller scans it, the official page redoes the calculation with the same engine: an inflated report does not pass.',
+          'Et le vendeur ne peut pas tricher. Le rapport porte un QR code : il le scanne, et le calcul est refait devant vous à partir de vos besoins.',
+          'And the seller cannot cheat. The report carries a QR code: they scan it, and the calculation is redone in front of you from your needs.',
         ),
+        focus: 'panneau1',
         scene: (t) => ({
           model: 'kit',
           panels: [
@@ -954,17 +914,18 @@ export const films: Record<string, Film> = {
               kind: 'card',
               title: t('Ce que contient le QR code', 'What the QR code holds'),
               rows: [
-                [t('lieu', 'place'), 'Kankan'],
-                [t('appareils', 'appliances'), t('la liste saisie', 'the list entered')],
-                [t('scénario', 'scenario'), t('secours, 6 h de coupure', 'backup, 6 h of cuts')],
                 [
-                  t('résultats', 'results'),
-                  t('aucun : ils sont recalculés', 'none: they are recomputed'),
+                  t('vos besoins', 'your needs'),
+                  t('oui : lieu, appareils, situation', 'yes: place, appliances, situation'),
+                ],
+                [
+                  t('les résultats', 'the results'),
+                  t('non : ils sont recalculés', 'no: they are recomputed'),
                 ],
               ],
             },
           ],
-          cam: [0.4, 0.4, 2.1],
+          cam: [0.5, 0.4, 2.1],
         }),
       },
     ],

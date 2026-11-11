@@ -61,6 +61,8 @@ export interface Stage {
   tune: (index: number) => void;
   /** Projette une scène du film au-dessus de la table basse ; `null` éteint le projecteur. */
   project: (scene: Scene | null) => void;
+  /** Position à l'écran, en pixels du canvas, d'un élément nommé de la scène projetée. */
+  locate: (name: string) => { x: number; y: number } | null;
   destroy: () => void;
 }
 
@@ -237,6 +239,7 @@ export function mountStage(
   /** Point de vue demandé par la scène en cours : azimut, élévation, distance. */
   const orbit = { azimuth: 0.4, elevation: 0.4, distance: 2.3 };
   const orbitGoal = { ...orbit };
+  const spot = vec(0, 0, 0);
 
   /* ----- Trajet : le couloir en ligne droite, puis une courbe autour du fauteuil ----- */
 
@@ -552,20 +555,36 @@ export function mountStage(
     orbit.elevation += (orbitGoal.elevation - orbit.elevation) * glide;
     orbit.distance += (orbitGoal.distance - orbit.distance) * glide;
     if (zoom > 0.001) {
-      const reach = orbit.distance * (portrait ? 1.9 : 1.15);
-      const flat = Math.cos(orbit.elevation) * reach;
+      const reach = orbit.distance * (portrait ? 1.5 : 1.15);
+      // Écran étroit : la caméra monte, pour passer au-dessus des meubles du premier plan.
+      const lift = orbit.elevation + (portrait ? 0.3 : 0);
+      const flat = Math.cos(lift) * reach;
       view(
         holo.center.x + Math.sin(orbit.azimuth) * flat,
-        holo.center.y + Math.sin(orbit.elevation) * reach,
+        holo.center.y + Math.sin(lift) * reach,
         holo.center.z + Math.cos(orbit.azimuth) * flat,
         holo.center.x,
-        holo.center.y - (portrait ? 0.25 : 0),
+        holo.center.y,
         holo.center.z,
         portrait ? 50 : 36,
         zoom * zoom * (3 - 2 * zoom),
       );
     }
     stack.group.visible = holo.level < 0.5;
+    // Pendant un film, l'image est décalée pour laisser sa place au texte : à gauche sur
+    // grand écran, en haut sur petit.
+    const shift = zoom * zoom * (3 - 2 * zoom);
+    const { clientWidth: fullWidth, clientHeight: fullHeight } = canvas;
+    if (shift > 0.001)
+      camera.setViewOffset(
+        fullWidth,
+        fullHeight,
+        portrait ? 0 : -fullWidth * 0.16 * shift,
+        portrait ? -fullHeight * 0.17 * shift : 0,
+        fullWidth,
+        fullHeight,
+      );
+    else camera.clearViewOffset();
 
     camera.fov = fov;
     camera.updateProjectionMatrix();
@@ -589,6 +608,15 @@ export function mountStage(
       zoomTarget = index >= 0 ? 1 : 0;
       tv.setProgram(index);
     },
+    locate: (name) => {
+      if (!holo.locate(name, spot)) return null;
+      spot.project(camera);
+      if (spot.z > 1) return null;
+      return {
+        x: ((spot.x + 1) / 2) * canvas.clientWidth,
+        y: ((1 - spot.y) / 2) * canvas.clientHeight,
+      };
+    },
     project: (next) => {
       holo.show(next);
       if (!next?.cam) return;
@@ -596,7 +624,8 @@ export function mountStage(
       const [azimuth, elevation, distance] = next.cam;
       orbitGoal.azimuth = Math.sign(azimuth || 1) * Math.max(0.45, Math.abs(azimuth));
       orbitGoal.elevation = elevation;
-      orbitGoal.distance = distance;
+      // Une maquette vue de trop près déborde de l'image.
+      orbitGoal.distance = next.model ? Math.max(distance, 2.1) : distance;
     },
     destroy: () => {
       disposed = true;

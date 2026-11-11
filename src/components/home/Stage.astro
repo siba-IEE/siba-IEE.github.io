@@ -61,11 +61,19 @@ const channels = getProjects()
       url: project.url,
       tint: film.tint,
       glyph: { path: glyph.path, width: glyph.width, height: glyph.height },
-      beats: film.beats.map((beat) => ({
-        line: beat.say[lang],
-        notes: (beat.notes ?? []).map((note) => note[lang]),
-        scene: beat.scene((fr, en) => (isFr ? fr : en)),
-      })),
+      beats: film.beats.map((beat) => {
+        const scene = beat.scene((fr, en) => (isFr ? fr : en));
+        return {
+          say: beat.say[lang],
+          // La phrase désigne l'élément nommé, sinon le premier que la scène met en avant.
+          focus:
+            beat.focus ??
+            scene.map?.mark?.[0] ??
+            (scene.panels?.length ? 'panneau1' : scene.map ? 'carte' : scene.model ? 'maquette' : ''),
+          notes: (beat.notes ?? []).map((note) => ({ text: note[lang], at: note.at ?? '' })),
+          scene,
+        };
+      }),
     };
   });
 
@@ -102,7 +110,8 @@ const t = isFr
       next: 'Chaîne suivante',
       open: 'Ouvrir le projet',
       read: 'Lire',
-      step: 'Étape',
+      back: 'Étape précédente',
+      forward: 'Étape suivante',
     }
   : {
       role: profile.roleEn,
@@ -115,7 +124,8 @@ const t = isFr
       next: 'Next channel',
       open: 'Open the project',
       read: 'Read',
-      step: 'Step',
+      back: 'Previous step',
+      forward: 'Next step',
     };
 
 const config = {
@@ -126,15 +136,21 @@ const config = {
   channels: channels.map(({ title, tint, glyph }) => ({ title, tint, glyph })),
   hint: t.pick,
 };
-/** Les scènes 3D de chaque film, une par étape. */
-const scenes = channels.map((channel) => channel.beats.map((beat) => beat.scene));
+/** Les films, tels que le script de la page les joue. */
+const programs = channels.map(({ title, status, url, beats }, index) => ({
+  title,
+  status,
+  url: url ?? '',
+  number: `${t.channel} ${pad(index + 1)}`,
+  beats,
+}));
 ---
 
 <section
   class="scene"
   data-scene
   data-config={JSON.stringify(config)}
-  data-films={JSON.stringify(scenes)}
+  data-films={JSON.stringify(programs)}
   data-state="loading"
   style={`--units:${(T.end + 1.4).toFixed(2)}`}
 >
@@ -194,52 +210,40 @@ const scenes = channels.map((channel) => channel.beats.map((beat) => beat.scene)
       }
     </ol>
 
+    {/* Le film : la maquette est en 3D ; ici, seulement le texte qui la désigne. */}
     <div class="film" data-film>
-      {
-        channels.map((channel, index) => (
-          <article data-program={index} data-url={channel.url ?? undefined} hidden>
-            <header>
-              <span class="number">
-                {t.channel} {pad(index + 1)}
-              </span>
-              <h3>{channel.title}</h3>
-              {channel.status && <span class="status">{channel.status}</span>}
-            </header>
+      <p class="playing">
+        <span data-film-number></span>
+        <b data-film-title></b>
+        <i data-film-status></i>
+      </p>
 
-            <div class="asides">
-              {channel.beats.map((beat) => (
-                <ul class="notes" data-empty={beat.notes.length === 0 || undefined}>
-                  {beat.notes.map((note, index) => (
-                    <li style={`--d:${(2.2 + index * 0.9).toFixed(1)}s`}>{note}</li>
-                  ))}
-                </ul>
-              ))}
-            </div>
+      <svg class="leads" aria-hidden="true">
+        <line data-lead></line>
+        <circle data-dot r="5"></circle>
+      </svg>
 
-            <ol class="lines">
-              {channel.beats.map((beat) => (
-                <li>{beat.line}</li>
-              ))}
-            </ol>
-            <ol class="beats">
-              {channel.beats.map((_, index) => (
-                <li>
-                  <button type="button" aria-label={`${t.step} ${index + 1}`} />
-                </li>
-              ))}
-            </ol>
-          </article>
-        ))
-      }
+      {/* La phrase en cours, posée à côté de l'élément dont elle parle. */}
+      <div class="say" data-say aria-live="polite">
+        <i class="clock" data-clock></i>
+        <p data-sentence></p>
+        <ul data-extras></ul>
+        <div class="steps">
+          <button type="button" data-step="-1" aria-label={t.back}>
+            <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M10 3 5 8l5 5"></path></svg>
+          </button>
+          <span data-count></span>
+          <button type="button" data-step="1" aria-label={t.forward}>
+            <svg viewBox="0 0 16 16" aria-hidden="true"><path d="m6 3 5 5-5 5"></path></svg>
+          </button>
+        </div>
+      </div>
+
+      {/* Les précisions, épinglées sur les éléments qu'elles concernent. */}
+      <div data-pins></div>
 
       <div class="remote">
-        <button type="button" data-remote="previous" aria-label={t.previous}>
-          <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M10 3 5 8l5 5"></path></svg>
-        </button>
         <button type="button" data-remote="grid">{t.change}</button>
-        <button type="button" data-remote="next" aria-label={t.next}>
-          <svg viewBox="0 0 16 16" aria-hidden="true"><path d="m6 3 5 5-5 5"></path></svg>
-        </button>
         <a data-remote="open" target="_blank" rel="noopener">{t.open}</a>
       </div>
     </div>
@@ -515,7 +519,7 @@ const scenes = channels.map((channel) => channel.beats.map((beat) => beat.scene)
     list-style: none;
   }
 
-  /* ---------- Film d'une réalisation ---------- */
+  /* ---------- Film d'une réalisation : le texte suit la maquette ---------- */
 
   .film {
     position: absolute;
@@ -534,215 +538,156 @@ const scenes = channels.map((channel) => channel.beats.map((beat) => beat.scene)
     transition-delay: 0s;
   }
 
-  .film article {
+  .playing {
     position: absolute;
-    inset: 0;
+    top: 1.25rem;
+    left: 1.25rem;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0.2rem 0.8rem;
+    margin: 0;
   }
 
-  .film article[hidden] {
-    display: none;
-  }
-
-  /* Voile du bas : les explications restent lisibles devant le décor. */
-  .film article::after {
-    content: '';
-    position: absolute;
-    inset: auto 0 0;
-    z-index: 1;
-    height: 15rem;
-    background: linear-gradient(rgb(11 13 18 / 0%), #0b0d12 55%);
-    pointer-events: none;
-  }
-
-  .film header {
-    position: absolute;
-    inset: 1.25rem 1.25rem auto;
-    z-index: 2;
-    display: grid;
-    justify-items: start;
-    gap: 0.35rem;
-    animation: enter 0.8s cubic-bezier(0.22, 1, 0.36, 1) both;
-  }
-
-  @keyframes enter {
-    from {
-      opacity: 0;
-      translate: 0 0.8rem;
-    }
-  }
-
-  .number {
+  .playing span {
     font-family: var(--font-mono);
     font-size: 0.72rem;
     color: var(--glow);
   }
 
-  h3 {
-    margin: 0;
+  .playing b {
     font-family: var(--font-display);
-    font-size: clamp(2rem, 5vw, 4.5rem);
+    font-size: clamp(1.5rem, 2.6vw, 2.2rem);
     font-weight: 400;
-    line-height: 0.95;
-    color: #fff;
+    line-height: 1;
   }
 
-  .status {
+  .playing i {
     font-size: 0.75rem;
+    font-style: normal;
     color: rgb(255 255 255 / 70%);
   }
 
-  /* Notes de l'étape en cours, posées à côté de la projection. */
-  .asides {
+  /* Le trait qui relie la phrase à ce qu'elle désigne. */
+  .leads {
     position: absolute;
-    inset: 6rem 1.25rem auto;
-    z-index: 2;
-    display: grid;
-  }
-
-  .asides .notes {
-    grid-area: 1 / 1;
-    display: none;
-    max-width: 19rem;
-    padding: 0.9rem 1rem;
-    border-radius: 0.5rem;
-    background: rgb(11 13 18 / 72%);
-    backdrop-filter: blur(8px);
-  }
-
-  .asides .notes[data-on]:not([data-empty]) {
-    display: grid;
-  }
-
-  .lines {
-    position: absolute;
-    inset: auto 1.25rem 4.6rem;
-    z-index: 2;
-    display: grid;
-    margin: 0;
-    padding: 0;
-    list-style: none;
-  }
-
-  .lines li {
-    grid-area: 1 / 1;
-    align-self: end;
-    max-width: 46rem;
-    font-size: clamp(0.98rem, 1.55vw, 1.35rem);
-    line-height: 1.3;
-    text-shadow: 0 1px 1rem #0b0d12;
-    text-wrap: pretty;
-    opacity: 0;
-    translate: 0 0.6rem;
-    transition:
-      opacity 0.5s ease,
-      translate 0.7s cubic-bezier(0.22, 1, 0.36, 1);
-  }
-
-  .lines li[data-on] {
-    opacity: 1;
-    translate: 0;
-  }
-
-  /* Une barre par explication, qui se remplit pendant qu'elle est à l'écran. */
-  .beats {
-    position: absolute;
-    inset: auto 1.25rem 3.3rem;
-    z-index: 2;
-    display: flex;
-    gap: 4px;
-    margin: 0;
-    padding: 0;
-    list-style: none;
-  }
-
-  .beats li {
-    flex: 1;
-  }
-
-  /* Chaque barre est un bouton : on revient à une étape en la touchant. */
-  .beats button {
-    pointer-events: auto;
-    display: block;
+    inset: 0;
     width: 100%;
-    height: 1.4rem;
-    background:
-      linear-gradient(var(--glow), var(--glow)) 0 50% / calc(var(--played, 0) * 100%) 2px no-repeat,
-      linear-gradient(rgb(255 255 255 / 24%), rgb(255 255 255 / 24%)) 0 50% / 100% 2px no-repeat;
-    cursor: pointer;
+    height: 100%;
+    overflow: visible;
   }
 
-  .beats button:hover {
-    background-size:
-      calc(var(--played, 0) * 100%) 4px,
-      100% 4px;
+  .leads line {
+    stroke: #fff;
+    stroke-width: 1.5;
   }
 
-  /* Notes : les termes du plan, définis un à un à côté de lui. */
-  .notes {
-    display: grid;
-    gap: 0.7rem;
-    align-self: start;
+  .leads circle {
+    fill: var(--warm);
+    stroke: #fff;
+    stroke-width: 1.5;
+  }
+
+  .leads :global(.tick) {
+    stroke: var(--glow);
+    stroke-width: 1;
+  }
+
+  .say {
+    --warm: #ffc266;
+
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: min(27rem, calc(100% - 2.5rem));
+    padding: 1.3rem 1.4rem 1rem;
+    border-radius: 0.6rem;
+    background: rgb(11 13 18 / 88%);
+    backdrop-filter: blur(10px);
+    pointer-events: auto;
+    will-change: transform;
+  }
+
+  .film {
+    --warm: #ffc266;
+  }
+
+  /* Temps restant avant l'étape suivante : un filet au sommet de la phrase. */
+  .clock {
+    position: absolute;
+    inset: 0 0 auto;
+    height: 2px;
+    border-radius: 2px;
+    background: var(--glow);
+    transform: scaleX(var(--left, 1));
+    transform-origin: left;
+  }
+
+  .say p {
     margin: 0;
+    font-size: clamp(1.1rem, 1.7vw, 1.6rem);
+    line-height: 1.28;
+    text-wrap: pretty;
+  }
+
+  .say ul {
+    display: grid;
+    gap: 0.45rem;
+    margin: 0.8rem 0 0;
     padding: 0;
     list-style: none;
     font-size: 0.86rem;
     line-height: 1.35;
+    color: rgb(255 255 255 / 78%);
   }
 
-  .notes li {
-    padding-left: 0.8rem;
+  .say ul:empty {
+    display: none;
+  }
+
+  .say li {
+    padding-left: 0.7rem;
     border-left: 1.5px solid var(--glow);
-    animation: note 0.7s cubic-bezier(0.22, 1, 0.36, 1) var(--d) both;
   }
 
-  @keyframes note {
-    from {
-      opacity: 0;
-      translate: 0 0.6rem;
-    }
-  }
-
-  .remote {
-    position: absolute;
-    z-index: 3;
-    pointer-events: auto;
-    inset: auto 1.25rem 1.1rem;
+  .steps {
     display: flex;
     align-items: center;
-    gap: 0.4rem;
-    font-size: 0.78rem;
+    gap: 0.5rem;
+    margin-top: 0.8rem;
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    color: rgb(255 255 255 / 70%);
   }
 
+  .steps button,
   .remote button,
   .remote a {
     display: grid;
     place-items: center;
-    height: 2.2rem;
-    padding-inline: 0.9rem;
+    height: 2rem;
+    min-width: 2rem;
+    padding-inline: 0.8rem;
     border-radius: 2rem;
     background: rgb(255 255 255 / 12%);
     color: #fff;
+    font-size: 0.76rem;
     white-space: nowrap;
     cursor: pointer;
     transition: background 0.2s ease;
   }
 
+  .steps button {
+    padding: 0;
+  }
+
+  .steps button:hover,
   .remote button:hover,
   .remote a:hover {
-    background: rgb(255 255 255 / 26%);
+    background: rgb(255 255 255 / 28%);
   }
 
-  .remote [data-remote='grid'] {
-    background: #fff;
-    color: var(--ink);
-    font-weight: 500;
-  }
-
-  .remote a {
-    margin-left: auto;
-  }
-
-  .remote svg {
+  .steps svg {
     width: 0.8rem;
     height: 0.8rem;
     fill: none;
@@ -750,6 +695,36 @@ const scenes = channels.map((channel) => channel.beats.map((beat) => beat.scene)
     stroke-width: 1.8;
     stroke-linecap: round;
     stroke-linejoin: round;
+  }
+
+  /* Précision épinglée sur un élément de la maquette. */
+  .film :global(.pin) {
+    position: absolute;
+    top: 0;
+    left: 0;
+    max-width: 15rem;
+    padding: 0.4rem 0.65rem;
+    border: 1px solid var(--glow);
+    border-radius: 0.35rem;
+    background: rgb(11 13 18 / 88%);
+    font-size: 0.8rem;
+    line-height: 1.3;
+    will-change: transform;
+  }
+
+  .remote {
+    position: absolute;
+    top: 3.9rem;
+    left: 1.25rem;
+    display: flex;
+    gap: 0.4rem;
+    pointer-events: auto;
+  }
+
+  .remote [data-remote='grid'] {
+    background: #fff;
+    color: var(--ink);
+    font-weight: 500;
   }
 
   @media (min-width: 1024px) {
@@ -760,30 +735,15 @@ const scenes = channels.map((channel) => channel.beats.map((beat) => beat.scene)
       inset: auto 4rem 3rem;
     }
 
-    .film header {
-      inset: 2.25rem 4rem auto;
+    .playing {
+      top: 2rem;
+      left: 4rem;
     }
-
-    .asides {
-      inset: 9rem 4rem auto auto;
-    }
-
-    .asides .notes {
-      gap: 1rem;
-      max-width: 21rem;
-      font-size: 1rem;
-    }
-
-    .lines {
-      inset: auto 4rem 6.2rem;
-    }
-
-    .beats {
-      inset: auto 4rem 4.4rem;
-    }
-
     .remote {
-      inset: auto 4rem 2rem;
+      top: 2rem;
+      right: 8rem;
+      left: auto;
+    }
     }
   }
 
@@ -844,7 +804,7 @@ const scenes = channels.map((channel) => channel.beats.map((beat) => beat.scene)
 
   let stage: Stage | null = null;
   let onScroll: (() => void) | null = null;
-  let timer = 0;
+  let follow = 0;
   let opening = 0;
 
   const stop = () => {
@@ -852,7 +812,7 @@ const scenes = channels.map((channel) => channel.beats.map((beat) => beat.scene)
     stage = null;
     if (onScroll) window.removeEventListener('scroll', onScroll);
     onScroll = null;
-    window.clearInterval(timer);
+    cancelAnimationFrame(follow);
     window.clearTimeout(opening);
   };
 
@@ -865,65 +825,146 @@ const scenes = channels.map((channel) => channel.beats.map((beat) => beat.scene)
     const config = JSON.parse(root.dataset.config ?? '{}') as Omit<StageOptions, 'onPick'>;
     const milestones = [...root.querySelectorAll<HTMLElement>('[data-milestone]')];
     const papers = [...root.querySelectorAll<HTMLElement>('[data-paper]')];
-    const film = root.querySelector<HTMLElement>('[data-film]')!;
-    const programs = [...film.querySelectorAll<HTMLElement>('[data-program]')];
-    const scenes = JSON.parse(root.dataset.films ?? '[]') as Scene[][];
-    const open = film.querySelector<HTMLAnchorElement>('[data-remote="open"]')!;
-    let current = -1;
-
     const only = (items: Element[], index: number) =>
       items.forEach((item, i) => item.toggleAttribute('data-on', i === index));
 
-    /* ----- Film : les explications passent une à une, le plan change avec elles ----- */
+    /* ----- Film : une phrase à la fois, posée à côté de ce qu'elle désigne ----- */
 
-    const run = (program: HTMLElement) => {
-      const lines = [...program.querySelectorAll('.lines li')];
-      const beats = [...program.querySelectorAll<HTMLElement>('.beats button')];
-      const notes = [...program.querySelectorAll('.asides .notes')];
-      const film = scenes[programs.indexOf(program)];
-      let started = performance.now();
-      let shown = -1;
-      window.clearInterval(timer);
-      const step = () => {
-        const elapsed = performance.now() - started;
-        const line = Math.min(lines.length - 1, Math.floor(elapsed / LINE_MS));
-        if (line !== shown) {
-          // Nouvelle étape : la maquette projetée dans le salon change avec la phrase.
-          stage?.project(film[line]);
-          only(lines, line);
-          only(notes, line);
-          shown = line;
-        }
-        beats.forEach((beat, i) =>
-          beat.style.setProperty(
-            '--played',
-            Math.min(1, Math.max(0, elapsed / LINE_MS - i)).toFixed(3),
-          ),
-        );
-      };
-      // Toucher une barre ramène le film au début de cette étape.
-      beats.forEach((beat, i) => {
-        beat.onclick = () => {
-          started = performance.now() - i * LINE_MS;
-          step();
-        };
+    interface Beat {
+      say: string;
+      focus: string;
+      notes: { text: string; at: string }[];
+      scene: Scene;
+    }
+    interface Program {
+      title: string;
+      status: string;
+      url: string;
+      number: string;
+      beats: Beat[];
+    }
+    const film = root.querySelector<HTMLElement>('[data-film]')!;
+    const programs = JSON.parse(root.dataset.films ?? '[]') as Program[];
+    const part = <T extends Element>(name: string) => film.querySelector<T>(`[data-${name}]`)!;
+    const box = part<HTMLElement>('say');
+    const sentence = part<HTMLElement>('sentence');
+    const extras = part<HTMLElement>('extras');
+    const count = part<HTMLElement>('count');
+    const clock = part<HTMLElement>('clock');
+    const pins = part<HTMLElement>('pins');
+    const leads = film.querySelector<SVGSVGElement>('.leads')!;
+    const lead = part<SVGLineElement>('lead');
+    const dot = part<SVGCircleElement>('dot');
+    const open = film.querySelector<HTMLAnchorElement>('[data-remote="open"]')!;
+    let current = -1;
+    let beat = 0;
+    let started = 0;
+    /** Position lissée de la phrase, pour qu'elle ne tremble pas quand la caméra tourne. */
+    const place = { x: 0, y: 0, set: false };
+    /** Écran étroit : pas la place d'épingler des précisions sur la maquette. */
+    const narrow = () => film.clientWidth < 1024;
+
+    const showBeat = (index: number) => {
+      const program = programs[current];
+      beat = (index + program.beats.length) % program.beats.length;
+      const { say, notes, scene } = program.beats[beat];
+      started = performance.now();
+      stage?.project(scene);
+      sentence.textContent = say;
+      count.textContent = `${beat + 1} / ${program.beats.length}`;
+      // Les précisions rattachées à un élément s'épinglent dessus ; les autres suivent la phrase.
+      extras.replaceChildren(
+        ...notes
+          .filter((note) => narrow() || !note.at)
+          .map((note) => Object.assign(document.createElement('li'), { textContent: note.text })),
+      );
+      leads.querySelectorAll('.tick').forEach((tick) => tick.remove());
+      pins.replaceChildren(
+        ...notes
+          .filter((note) => !narrow() && note.at)
+          .map((note) => {
+            const pin = Object.assign(document.createElement('p'), { className: 'pin', textContent: note.text });
+            pin.dataset.at = note.at;
+            const tick = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+            tick.classList.add('tick');
+            leads.append(tick);
+            return pin;
+          }),
+      );
+    };
+
+    /** Pose la phrase et les précisions à côté de leurs cibles, et tire les traits. */
+    const layout = () => {
+      follow = requestAnimationFrame(layout);
+      if (current < 0 || !stage) return;
+      const program = programs[current];
+      const left = 1 - (performance.now() - started) / LINE_MS;
+      clock.style.setProperty('--left', Math.max(0, left).toFixed(3));
+      if (left <= 0) showBeat(beat + 1);
+
+      const width = film.clientWidth;
+      const height = film.clientHeight;
+      const wide = width >= 1024;
+      const margin = wide ? 64 : 20;
+      const size = box.getBoundingClientRect();
+      const point = stage.locate(program.beats[beat].focus);
+      lead.style.display = dot.style.display = point ? '' : 'none';
+
+      // La phrase a sa place réservée : à gauche sur grand écran, en haut sur petit. La scène 3D
+      // est décalée d'autant (voir stage.ts), si bien que le texte ne couvre jamais la maquette.
+      const x = margin;
+      const y = wide ? (height - size.height) / 2 : 104;
+      const ease = place.set ? 0.12 : 1;
+      place.x += (x - place.x) * ease;
+      place.y += (y - place.y) * ease;
+      place.set = true;
+      box.style.transform = `translate(${place.x.toFixed(1)}px, ${place.y.toFixed(1)}px)`;
+
+      if (point) {
+        // Le trait part du bord de la phrase le plus proche de la cible.
+        const fromX = Math.min(place.x + size.width, Math.max(place.x, point.x));
+        const fromY = Math.min(place.y + size.height, Math.max(place.y, point.y));
+        lead.setAttribute('x1', fromX.toFixed(1));
+        lead.setAttribute('y1', fromY.toFixed(1));
+        lead.setAttribute('x2', point.x.toFixed(1));
+        lead.setAttribute('y2', point.y.toFixed(1));
+        dot.setAttribute('cx', point.x.toFixed(1));
+        dot.setAttribute('cy', point.y.toFixed(1));
+      }
+
+      const ticks = leads.querySelectorAll<SVGLineElement>('.tick');
+      [...pins.children].forEach((pin, index) => {
+        const target = stage?.locate((pin as HTMLElement).dataset.at ?? '');
+        const tick = ticks[index];
+        (pin as HTMLElement).style.display = tick.style.display = target ? '' : 'none';
+        if (!target) return;
+        const pinBox = pin.getBoundingClientRect();
+        // Au-dessus de sa cible, décalée d'un cran pour que deux précisions voisines ne se couvrent pas.
+        const px = Math.min(width - margin - pinBox.width, Math.max(margin, target.x + 24));
+        const py = Math.max(margin, target.y - 70 - index * (pinBox.height + 10));
+        (pin as HTMLElement).style.transform = `translate(${px.toFixed(1)}px, ${py.toFixed(1)}px)`;
+        tick.setAttribute('x1', target.x.toFixed(1));
+        tick.setAttribute('y1', target.y.toFixed(1));
+        tick.setAttribute('x2', (px + 10).toFixed(1));
+        tick.setAttribute('y2', (py + pinBox.height).toFixed(1));
       });
-      step();
-      timer = window.setInterval(step, 100);
     };
 
     const play = (index: number) => {
       const already = film.hasAttribute('data-open');
       current = (index + programs.length) % programs.length;
+      const program = programs[current];
       root.toggleAttribute('data-playing', true);
       stage?.tune(current);
       const show = () => {
-        programs.forEach((program, i) => (program.hidden = i !== current));
-        const href = programs[current].dataset.url;
-        open.hidden = !href;
-        if (href) open.href = href;
+        part('film-number').textContent = program.number;
+        part('film-title').textContent = program.title;
+        part('film-status').textContent = program.status;
+        open.hidden = !program.url;
+        if (program.url) open.href = program.url;
         film.toggleAttribute('data-open', true);
-        run(programs[current]);
+        place.set = false;
+        showBeat(0);
       };
       window.clearTimeout(opening);
       if (already || !stage) show();
@@ -933,7 +974,6 @@ const scenes = channels.map((channel) => channel.beats.map((beat) => beat.scene)
     const close = () => {
       if (current < 0) return;
       current = -1;
-      window.clearInterval(timer);
       window.clearTimeout(opening);
       film.removeAttribute('data-open');
       root.removeAttribute('data-playing');
@@ -944,11 +984,11 @@ const scenes = channels.map((channel) => channel.beats.map((beat) => beat.scene)
     root
       .querySelectorAll('[data-channel]')
       .forEach((button, index) => button.addEventListener('click', () => play(index)));
-    film
-      .querySelector('[data-remote="previous"]')
-      ?.addEventListener('click', () => play(current - 1));
-    film.querySelector('[data-remote="next"]')?.addEventListener('click', () => play(current + 1));
+    film.querySelectorAll<HTMLElement>('[data-step]').forEach((button) =>
+      button.addEventListener('click', () => showBeat(beat + Number(button.dataset.step))),
+    );
     film.querySelector('[data-remote="grid"]')?.addEventListener('click', close);
+    follow = requestAnimationFrame(layout);
 
     /* ----- Scène 3D ----- */
 

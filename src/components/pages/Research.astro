@@ -101,6 +101,11 @@ const labels = isFr
                 {labels.paper}
               </a>
             )}
+            {work.url && work.preview && (
+              <a href={work.url} target="_blank" rel="noopener" class="figure shot" data-reveal>
+                <img src={work.preview} alt="" loading="lazy" />
+              </a>
+            )}
 
             {main && (
               <figure class="figure" data-reveal>

@@ -280,6 +280,8 @@ export interface Research {
   questionsEn: string[];
   /** Lien vers l'article / le DOI si publié. Optionnel. */
   url?: string;
+  /** Capture de la page de dépôt (chemin sous /public). Optionnel. */
+  preview?: string;
 }
 
 const researchModules = import.meta.glob<{ default: Research }>('../content/recherche/*.json', {

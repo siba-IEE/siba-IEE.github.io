@@ -88,9 +88,9 @@
   display: block;
   width: 100%;
   height: auto;
-  aspect-ratio: 16 / 10;
+  aspect-ratio: 16 / 9;
   object-fit: cover;
-  object-position: top;
+  object-position: left top;
   transition: transform 0.9s cubic-bezier(0.22, 1, 0.36, 1);
 }
 

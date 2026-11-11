@@ -90,5 +90,6 @@
     "The calibration budget assumes independent errors: it covers neither an error common to all sensors, nor drift, nor soiling.",
     "DNI calls for two- to three-year campaigns, and the unverified shadowband-radiometer stations for particular caution."
   ],
-  "url": "https://doi.org/10.5281/zenodo.23381054"
+  "url": "https://doi.org/10.5281/zenodo.23381054",
+  "preview": "/images/recherche/cams-zenodo.webp"
 }

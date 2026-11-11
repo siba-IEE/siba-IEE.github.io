@@ -100,20 +100,6 @@ const onsite = GHI_RESIDUALS.find((r) => r.kind === 'onsite')!;
 
 const t = isFr
   ? {
-      sheet: 'Afrique de l’Ouest, réseau ESMAP/WAPP',
-      h1a: 'Données solaires corrigées',
-      h1b: 'pour les sites',
-      h1c: 'sans station de mesure',
-      kicker: 'Siba Kalivogui, ingénieur en efficacité énergétique, fondateur de Kuma Science',
-      lede: 'Je produis des référentiels de données énergétiques pour la Guinée et j’étudie la correction des estimations satellitaires du rayonnement solaire sur les sites qui n’ont pas de mesure au sol. La carte présente les résultats de la prépublication d’octobre 2026.',
-      cue: 'Voir les résultats',
-      opening: 'Ouverture',
-      production: 'Systèmes en production',
-      sunTitle: 'Soleil à cet instant',
-      sunNote:
-        'Hauteur du soleil et rayonnement global par ciel clair (modèle de Haurwitz), calculés dans le navigateur.',
-      night: 'nuit',
-      clear: 'par ciel clair',
       rail: 'Étapes',
       mapLabel:
         'Carte de l’Afrique de l’Ouest avec les 31 stations de mesure du rayonnement solaire du réseau ESMAP/WAPP.',
@@ -163,20 +149,6 @@ const t = isFr
       ],
     }
   : {
-      sheet: 'West Africa, ESMAP/WAPP network',
-      h1a: 'Corrected solar data',
-      h1b: 'for sites with',
-      h1c: 'no measurement station',
-      kicker: 'Siba Kalivogui, energy-efficiency engineer, founder of Kuma Science',
-      lede: 'I produce reference energy datasets for Guinea and study how to correct satellite estimates of solar radiation at sites that have no ground measurement. The map shows the results of the October 2026 preprint.',
-      cue: 'See the results',
-      opening: 'Opening',
-      production: 'Systems in production',
-      sunTitle: 'Sun at this moment',
-      sunNote:
-        'Solar elevation and clear-sky global irradiance (Haurwitz model), computed in the browser.',
-      night: 'night',
-      clear: 'clear sky',
       rail: 'Steps',
       mapLabel:
         'Map of West Africa with the 31 solar-radiation measurement stations of the ESMAP/WAPP network.',
@@ -233,8 +205,6 @@ const config = JSON.stringify({
   line: BIAS_LINE,
   locale: isFr ? 'fr-FR' : 'en-US',
   pctSuffix: isFr ? '\u202f%' : '%',
-  night: t.night,
-  clear: t.clear,
 });
 ---
 
@@ -936,7 +906,6 @@ const config = JSON.stringify({
     height: 60vh;
   }
 
-  :global(html:not(.js)) .title,
   :global(html:not(.js)) .cartouche,
   :global(html:not(.js)) .panel {
     position: static;
@@ -955,22 +924,6 @@ const config = JSON.stringify({
       gap: 3rem;
       padding-top: 1.6rem;
     }
-
-    .panel-hero {
-      grid-template-columns: minmax(0, 6fr) auto minmax(0, 4fr);
-    }
-  }
-
-  .tag {
-    margin: 0;
-    color: var(--ink-2);
-  }
-
-  .tag b {
-    display: inline-block;
-    min-width: 1.5rem;
-    font-weight: 500;
-    color: var(--spot);
   }
 
   h2 {
@@ -984,7 +937,6 @@ const config = JSON.stringify({
     text-wrap: balance;
   }
 
-  .lede,
   .body {
     margin: 0;
     font-size: 0.93rem;
@@ -993,18 +945,9 @@ const config = JSON.stringify({
     text-wrap: pretty;
   }
 
-  .lede {
-    margin-top: 0.6rem;
-  }
-
   @media (min-width: 1024px) {
     h2 {
       font-size: clamp(1.9rem, 2.9vw, 3.2rem);
-    }
-
-    .lede {
-      max-width: 44rem;
-      font-size: clamp(1rem, 1.25vw, 1.2rem);
     }
 
     .body {
@@ -1013,49 +956,6 @@ const config = JSON.stringify({
     }
   }
 
-  .panel-hero .col-b {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 0.6rem 1.25rem;
-  }
-
-  @media (min-width: 1024px) {
-    .panel-hero .col-b {
-      flex-direction: column;
-      align-items: flex-start;
-      padding-top: 1.4rem;
-    }
-  }
-
-  .cue {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.6rem;
-    padding: 0.7rem 1rem;
-    background: var(--ink);
-    color: var(--paper);
-    font-size: 0.9rem;
-    font-weight: 500;
-    text-decoration: none;
-    transition: background 0.2s ease;
-  }
-
-  .cue:hover {
-    background: var(--spot);
-  }
-
-  .cue svg {
-    width: 0.9rem;
-    height: 0.9rem;
-    fill: none;
-    stroke: currentcolor;
-    stroke-width: 1.6;
-    stroke-linecap: round;
-    stroke-linejoin: round;
-  }
-
-  .quiet,
   .links a {
     color: var(--ink);
     font-size: 0.9rem;
@@ -1064,7 +964,6 @@ const config = JSON.stringify({
     text-underline-offset: 5px;
   }
 
-  .quiet:hover,
   .links a:hover {
     text-decoration-color: var(--spot);
   }
@@ -1074,42 +973,6 @@ const config = JSON.stringify({
     flex-wrap: wrap;
     gap: 0.4rem 1.5rem;
     margin: 0.8rem 0 0;
-  }
-
-  /* Soleil à cet instant */
-  .sun {
-    display: none;
-  }
-
-  @media (min-width: 1024px) {
-    :global(.js) .sun {
-      display: block;
-    }
-  }
-
-  .sun dl {
-    margin: 0.5rem 0 0;
-    font-family: var(--font-mono);
-    font-size: 0.76rem;
-    color: var(--ink-2);
-  }
-
-  .sun dl > div {
-    display: grid;
-    grid-template-columns: 5rem 3rem 2.6rem 1fr;
-    gap: 0.6rem;
-    padding-block: 0.3rem;
-    border-top: 1px solid var(--rule);
-  }
-
-  .sun dt {
-    color: var(--ink);
-  }
-
-  .sun dd {
-    margin: 0;
-    font-variant-numeric: tabular-nums;
-    white-space: nowrap;
   }
 
   .note {
@@ -1338,21 +1201,6 @@ const config = JSON.stringify({
     :global(.js) .panel.is-active .bar {
       transform: none;
     }
-
-    :global(.js) .title span {
-      animation: rise 0.9s cubic-bezier(0.22, 1, 0.36, 1) both;
-    }
-
-    :global(.js) .title span + span {
-      animation-delay: 120ms;
-    }
-  }
-
-  @keyframes rise {
-    from {
-      opacity: 0;
-      transform: translateY(1.2rem);
-    }
   }
 </style>
 
@@ -1369,8 +1217,6 @@ const config = JSON.stringify({
     };
     locale: string;
     pctSuffix: string;
-    night: string;
-    clear: string;
   }
 
   let teardown: (() => void) | null = null;

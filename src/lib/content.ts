@@ -42,8 +42,6 @@ export interface ProjectRaw {
   summaryEn: string;
   stack: string[];
   tags: string[];
-  /** Chiffres clés affichés sur l'accueil. Optionnel. */
-  facts?: { value: string; labelFr: string; labelEn: string }[];
   /** Adresses publiques (site, API, DOI, dépôt). Optionnel. */
   links?: { label: string; url: string }[];
   /** Visuel de carte (chemin sous /public, ex. "/images/projets/rds.jpg"). Optionnel. */

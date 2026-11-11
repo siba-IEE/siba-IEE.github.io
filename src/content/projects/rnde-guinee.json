@@ -9,23 +9,6 @@
   "repo": null,
   "summaryFr": "Référentiel national de données énergétiques de la Guinée, à l’échelle des 340 sous-préfectures, avec un catalogue de données aux normes ISO 19115, CSW et DCAT.",
   "summaryEn": "Guinea’s National Energy Data Reference, at the scale of the 340 sub-prefectures, with a data catalogue compliant with ISO 19115, CSW and DCAT.",
-  "facts": [
-    {
-      "value": "340",
-      "labelFr": "sous-préfectures cartographiées",
-      "labelEn": "sub-prefectures mapped"
-    },
-    {
-      "value": "374",
-      "labelFr": "fiches territoriales",
-      "labelEn": "territorial profiles"
-    },
-    {
-      "value": "6",
-      "labelFr": "jeux de données ouverts",
-      "labelEn": "open datasets"
-    }
-  ],
   "links": [
     {
       "label": "rnde.kumascience.com",
@@ -36,8 +19,19 @@
       "url": "https://catalogue.kumascience.com"
     }
   ],
-  "stack": ["PostgreSQL", "PostGIS", "GeoServer", "GeoNetwork", "Python"],
-  "tags": ["Plateforme", "Données", "Énergie"],
+  "stack": [
+    "PostgreSQL",
+    "PostGIS",
+    "GeoServer",
+    "GeoNetwork",
+    "Python"
+  ],
+  "tags": [
+    "Plateforme",
+    "Données",
+    "Énergie"
+  ],
   "bodyFr": "Le Référentiel national de données énergétiques rassemble la donnée énergétique de la Guinée à l’échelle de ses 340 sous-préfectures. Il comprend 374 fiches territoriales, six jeux de données ouverts, une API et des services cartographiques WMS et WFS.\n\nLe catalogue de données suit les normes ISO 19115, CSW et DCAT. Chaque jeu y est décrit et peut être moissonné par d’autres portails. Le mot « national » désigne la couverture du territoire et non un statut officiel conféré par l’État.",
-  "bodyEn": "The National Energy Data Reference gathers Guinea’s energy data at the scale of its 340 sub-prefectures. It includes 374 territorial profiles, six open datasets, an API and WMS and WFS map services.\n\nThe data catalogue follows ISO 19115, CSW and DCAT. Each dataset is described there and can be harvested by other portals. The word “national” refers to territorial coverage and not to an official status granted by the State."
+  "bodyEn": "The National Energy Data Reference gathers Guinea’s energy data at the scale of its 340 sub-prefectures. It includes 374 territorial profiles, six open datasets, an API and WMS and WFS map services.\n\nThe data catalogue follows ISO 19115, CSW and DCAT. Each dataset is described there and can be harvested by other portals. The word “national” refers to territorial coverage and not to an official status granted by the State.",
+  "image": "/images/projets/rnde-guinee.webp"
 }

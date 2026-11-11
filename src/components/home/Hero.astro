@@ -1,0 +1,292 @@
+---
+/**
+ * Ouverture de l'accueil : la Terre vue depuis l'orbite, Afrique de l'Ouest sous l'horizon.
+ * Le globe est dessiné en WebGL (src/scripts/globe.ts) avec les images Blue Marble et
+ * Black Marble de la NASA ; la limite jour/nuit est celle de l'instant. Sans WebGL ou sans
+ * JavaScript, une image fixe de la région prend sa place.
+ */
+import { SITE } from '../../lib/site';
+import { getLangFromUrl } from '../../lib/i18n';
+import { getProfile } from '../../lib/content';
+import { STATIONS } from '../../data/calage';
+
+const lang = getLangFromUrl(Astro.url);
+const isFr = lang === 'fr';
+const profile = getProfile();
+
+const cities = [
+  { name: 'Conakry', lat: 9.51, lon: -13.71, tz: 'Africa/Conakry', side: 'left' },
+  { name: 'Montréal', lat: 45.5, lon: -73.57, tz: 'America/Toronto', side: 'right' },
+];
+
+const t = isFr
+  ? {
+      role: profile.roleFr,
+      lede: 'Données solaires et énergétiques de référence pour la Guinée et l’Afrique de l’Ouest.',
+      alt: 'L’Afrique de l’Ouest vue de l’espace.',
+      day: '{time} à {city}, soleil à {elev}° au-dessus de l’horizon',
+      night: '{time} à {city}, il fait nuit',
+      drag: 'Le globe tourne à la souris ou au doigt.',
+      credit: 'Images NASA Blue Marble et Black Marble. Points : stations ESMAP/WAPP.',
+    }
+  : {
+      role: profile.roleEn,
+      lede: 'Reference solar and energy data for Guinea and West Africa.',
+      alt: 'West Africa seen from space.',
+      day: '{time} in {city}, sun {elev}° above the horizon',
+      night: '{time} in {city}, it is night',
+      drag: 'Drag the globe to turn it.',
+      credit: 'NASA Blue Marble and Black Marble imagery. Dots: ESMAP/WAPP stations.',
+    };
+---
+
+<section class="hero">
+  <div
+    class="globe"
+    data-globe
+    data-day="/images/terre/jour.webp"
+    data-night="/images/terre/nuit.webp"
+    data-locale={isFr ? 'fr-FR' : 'en-US'}
+    data-text-day={t.day}
+    data-text-night={t.night}
+  >
+    <img
+      class="fallback"
+      src="/images/terre/afrique-ouest.webp"
+      alt={t.alt}
+      width="2200"
+      height="1200"
+    />
+    <canvas aria-hidden="true"></canvas>
+    <svg class="markers" aria-hidden="true">
+      {
+        STATIONS.map((station) => (
+          <g data-lat={station.lat} data-lon={station.lon}>
+            <circle r="2.2" />
+          </g>
+        ))
+      }
+      {
+        cities.map((city) => (
+          <g class:list={['city', city.side]} data-lat={city.lat} data-lon={city.lon}>
+            <circle r="4" />
+            <text>{city.name}</text>
+          </g>
+        ))
+      }
+    </svg>
+  </div>
+
+  <div class="copy">
+    <h1>{SITE.name}</h1>
+    <p class="role">{t.role}</p>
+    <p class="lede">{t.lede}</p>
+  </div>
+
+  <div class="foot">
+    <p
+      class="now"
+      data-now
+      data-lat={cities[0].lat}
+      data-lon={cities[0].lon}
+      data-tz={cities[0].tz}
+      data-city={cities[0].name}
+    >
+    </p>
+    <p>{t.drag} {t.credit}</p>
+  </div>
+</section>
+
+<style>
+  /* L'ouverture est une photographie : elle reste sombre dans les deux thèmes. */
+  .hero {
+    --nav: 4rem;
+
+    position: relative;
+    height: calc(100svh - var(--nav));
+    min-height: 34rem;
+    overflow: hidden;
+    background: #0a0a0a;
+    color: #fff;
+  }
+
+  .globe,
+  .globe canvas,
+  .globe .fallback,
+  .markers {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+  }
+
+  .globe canvas {
+    cursor: grab;
+    opacity: 0;
+    touch-action: pan-y;
+    transition: opacity 1.2s ease;
+  }
+
+  .globe canvas:active {
+    cursor: grabbing;
+  }
+
+  .globe .fallback {
+    object-fit: cover;
+    opacity: 0.55;
+    transition: opacity 0.8s ease;
+  }
+
+  /* Dès que les textures sont chargées, le globe remplace l'image fixe. */
+  .globe[data-ready] canvas {
+    opacity: 1;
+  }
+
+  .globe[data-ready] .fallback {
+    opacity: 0;
+  }
+
+  .markers {
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 1.2s ease 0.6s;
+  }
+
+  .globe[data-ready] .markers {
+    opacity: 1;
+  }
+
+  .markers g {
+    transition: opacity 0.4s ease;
+  }
+
+  .markers circle {
+    fill: #fff;
+  }
+
+  .markers .city circle {
+    fill: none;
+    stroke: #fff;
+    stroke-width: 1.5;
+  }
+
+  .markers text {
+    fill: #fff;
+    font-size: 12px;
+    font-weight: 500;
+    transform: translate(10px, 4px);
+  }
+
+  .markers .left text {
+    text-anchor: end;
+    transform: translate(-10px, 4px);
+  }
+
+  .copy,
+  .foot {
+    position: absolute;
+    inset-inline: 1.25rem;
+    pointer-events: none;
+  }
+
+  @media (min-width: 1024px) {
+    .copy,
+    .foot {
+      inset-inline: 4rem;
+    }
+  }
+
+  .copy {
+    top: clamp(1.5rem, 5.5vh, 3.5rem);
+  }
+
+  h1 {
+    margin: 0;
+    font-size: clamp(2.6rem, 8.5vw, 8rem);
+    font-weight: 500;
+    line-height: 0.95;
+    letter-spacing: -0.055em;
+    color: #fff;
+  }
+
+  .role,
+  .lede {
+    max-width: 38rem;
+    margin: 0;
+    font-size: clamp(0.95rem, 1.25vw, 1.15rem);
+    line-height: 1.4;
+  }
+
+  .role {
+    margin-top: 1rem;
+    color: #fff;
+  }
+
+  .lede {
+    color: rgb(255 255 255 / 62%);
+  }
+
+  .foot {
+    bottom: 1.25rem;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: 0.25rem 2rem;
+    font-size: 0.78rem;
+    color: rgb(255 255 255 / 70%);
+    text-shadow: 0 0 12px rgb(0 0 0 / 80%);
+  }
+
+  .foot p {
+    margin: 0;
+  }
+
+  .now {
+    color: #fff;
+  }
+</style>
+
+<script>
+  import { mountGlobe, solarElevation } from '../../scripts/globe';
+
+  let unmount: (() => void) | null = null;
+
+  const init = () => {
+    unmount?.();
+    unmount = null;
+    const root = document.querySelector<HTMLElement>('[data-globe]');
+    if (!root) return;
+    const stopGlobe = mountGlobe(root);
+
+    // Légende : l'heure et la hauteur du soleil à Conakry, à l'instant.
+    const now = document.querySelector<HTMLElement>('[data-now]');
+    const write = () => {
+      if (!now) return;
+      const date = new Date();
+      const elevation = solarElevation(Number(now.dataset.lat), Number(now.dataset.lon), date);
+      const time = new Intl.DateTimeFormat(root.dataset.locale, {
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: false,
+        timeZone: now.dataset.tz,
+      }).format(date);
+      now.textContent = ((elevation > 0 ? root.dataset.textDay : root.dataset.textNight) ?? '')
+        .replace('{time}', time)
+        .replace('{city}', now.dataset.city ?? '')
+        .replace('{elev}', String(Math.round(elevation)));
+    };
+    write();
+    const timer = window.setInterval(write, 30000);
+
+    unmount = () => {
+      stopGlobe?.();
+      window.clearInterval(timer);
+    };
+  };
+
+  document.addEventListener('astro:page-load', init);
+  document.addEventListener('astro:before-swap', () => {
+    unmount?.();
+    unmount = null;
+  });
+</script>

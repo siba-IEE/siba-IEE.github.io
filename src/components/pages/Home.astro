@@ -1,5 +1,6 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
+import Hero from '../home/Hero.astro';
 import Story from '../home/Story.astro';
 import { SITE, orcidUrl } from '../../lib/site';
 import { getLangFromUrl, localizePath } from '../../lib/i18n';
@@ -37,39 +38,12 @@ const typeLabels: Record<string, { fr: string; en: string }> = {
 };
 const typeLabel = (type: string) => typeLabels[type]?.[lang] ?? type.replace(/[-_]/g, ' ');
 
-// Seuls les services que j'héberge sont sondés depuis le navigateur du visiteur.
-const pingable = (url: string) => new URL(url).hostname.endsWith('kumascience.com');
-
-// La phrase d'ouverture, coupée à la main : une ligne sur deux est en retrait.
-const statement = isFr
-  ? [
-      [{ text: 'Siba Kalivogui', strong: true }],
-      [{ text: 'est ingénieur en' }],
-      [{ text: 'efficacité énergétique.' }],
-      [{ text: 'Il produit les données' }],
-      [{ text: 'solaires et énergétiques' }],
-      [{ text: 'de la Guinée chez ' }, { text: 'Kuma Science', strong: true }],
-    ]
-  : [
-      [{ text: 'Siba Kalivogui', strong: true }],
-      [{ text: 'is an energy-efficiency' }],
-      [{ text: 'engineer. He produces' }],
-      [{ text: 'the solar and energy' }],
-      [{ text: 'data of Guinea' }],
-      [{ text: 'at ' }, { text: 'Kuma Science', strong: true }],
-    ];
-
 const t = isFr
   ? {
-      sunDay: '{city}, {time}. Soleil à {elev}° de hauteur, {ghi} W/m² par ciel clair.',
-      sunNight: '{city}, {time}. Nuit.',
-      toMap: 'Résultats de la prépublication',
-      works: 'En production',
+      works: 'Réalisations en production',
       allProjects: 'Tous les projets',
-      pingOk: 'a répondu en',
       about: 'Parcours',
       aboutMore: 'Formation et compétences',
-      photoAlt: `${SITE.name} à son poste de travail`,
       pubs: 'Publications',
       orcid: 'Profil ORCID',
       wip: 'En cours',
@@ -79,15 +53,10 @@ const t = isFr
       services: 'Prestations et tarifs',
     }
   : {
-      sunDay: '{city}, {time}. Sun {elev}° above the horizon, {ghi} W/m² under clear sky.',
-      sunNight: '{city}, {time}. Night.',
-      toMap: 'Results of the preprint',
-      works: 'In production',
+      works: 'Work in production',
       allProjects: 'All projects',
-      pingOk: 'responded in',
       about: 'Background',
       aboutMore: 'Education and skills',
-      photoAlt: `${SITE.name} at work`,
       pubs: 'Publications',
       orcid: 'ORCID profile',
       wip: 'In progress',
@@ -112,96 +81,36 @@ const upcoming = [
 ---
 
 <BaseLayout description={tagline.slice(0, 158)}>
-  {
-    /* Ouverture : une phrase et un disque. Le disque est le soleil de Conakry, à sa hauteur réelle. */
-  }
-  <section
-    class="hero"
-    data-hero
-    data-locale={isFr ? 'fr-FR' : 'en-US'}
-    data-day={t.sunDay}
-    data-night={t.sunNight}
-  >
-    <div class="sun" data-sun aria-hidden="true"><i></i></div>
-    <h1 class="statement">
-      {
-        statement.map((line, i) => (
-          <span class:list={['line', i % 2 === 1 && 'in']} style={`--i:${i}`}>
-            <span>
-              {line.map((part) => (part.strong ? <strong>{part.text}</strong> : part.text))}
-            </span>
-          </span>
-        ))
-      }
-    </h1>
-    <div class="hero-foot">
-      <p class="readout">
-        <span data-city="Conakry" data-lat="9.51" data-lon="-13.71" data-tz="Africa/Conakry"></span>
-        <span data-city="Montréal" data-lat="45.5" data-lon="-73.57" data-tz="America/Toronto"
-        ></span>
-      </p>
-      <a class="down" href="#etape-1">
-        <svg viewBox="0 0 16 16" aria-hidden="true"
-          ><path d="M8 2v11M3.5 8.5 8 13l4.5-4.5"></path></svg
-        >
-        {t.toMap}
-      </a>
-    </div>
-  </section>
+  <Hero />
 
   <Story />
 
-  {/* En production : les noms, en très grand. Le détail suit le nom survolé ou touché. */}
-  <section id="production" class="works scroll-mt-16" data-works>
+  {/* Réalisations : la capture d'écran de chaque système en ligne */}
+  <section id="production" class="block scroll-mt-16">
     <div class="shell">
       <h2 class="label" data-reveal>{t.works}</h2>
-      <p class="names" data-reveal>
+      <ul class="works">
         {
-          live.map((project, i) => (
-            <>
-              <button type="button" data-work={i} aria-pressed={i === 0 ? 'true' : 'false'}>
-                {project.title}
-              </button>
-              {i < live.length - 1 ? ', ' : '.'}
-            </>
+          live.map((project) => (
+            <li data-reveal>
+              <a
+                href={project.url ?? `${localizePath('/projets', lang)}#${project.slug}`}
+                target="_blank"
+                rel="noopener"
+              >
+                {project.image && (
+                  <span class="shot">
+                    <img src={project.image} alt="" width="1200" height="750" loading="lazy" />
+                  </span>
+                )}
+                <span class="name">{project.title}</span>
+                <span class="desc">{isFr ? project.summaryFr : project.summaryEn}</span>
+                <span class="host">{project.links?.[0]?.label}</span>
+              </a>
+            </li>
           ))
         }
-      </p>
-
-      <div class="details">
-        {
-          live.map((project, i) => (
-            <article class="detail" data-detail={i} hidden={i !== 0}>
-              <p class="summary">{isFr ? project.summaryFr : project.summaryEn}</p>
-              <dl>
-                {(project.facts ?? []).map((fact) => (
-                  <div>
-                    <dd>{fact.value}</dd>
-                    <dt>{isFr ? fact.labelFr : fact.labelEn}</dt>
-                  </div>
-                ))}
-              </dl>
-              <ul>
-                {(project.links ?? []).map((link) => (
-                  <li>
-                    <a
-                      href={link.url}
-                      target="_blank"
-                      rel="noopener"
-                      data-ping={pingable(link.url) ? link.url : undefined}
-                    >
-                      <span class="draw">{link.label}</span>
-                    </a>
-                    {pingable(link.url) && (
-                      <span class="ping" data-ping-out data-label={t.pingOk} />
-                    )}
-                  </li>
-                ))}
-              </ul>
-            </article>
-          ))
-        }
-      </div>
+      </ul>
       <a href={localizePath('/projets', lang)} class="more">{t.allProjects}</a>
     </div>
   </section>
@@ -211,7 +120,7 @@ const upcoming = [
     <div class="shell">
       <h2 class="label" data-reveal>{t.about}</h2>
       <div class="bio" data-reveal>
-        <img src="/images/ph.jpeg" alt={t.photoAlt} width="920" height="2048" loading="lazy" />
+        <img src="/images/portrait.jpg" alt={SITE.name} width="1080" height="1049" loading="lazy" />
         <p>{bio}</p>
       </div>
       <ul class="rows after-bio">
@@ -308,193 +217,8 @@ const upcoming = [
 </BaseLayout>
 
 <style>
-  /* ---------- Ouverture ---------- */
-
-  .hero {
-    --nav: 4rem;
-    --sx: 62%;
-    --sy: 46%;
-    --px: 0;
-    --py: 0;
-    --scroll: 0;
-
-    position: relative;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    min-height: calc(100svh - var(--nav));
-    padding: 3rem 1.25rem 6.5rem;
-    overflow: hidden;
-
-    /* Comme la carte, l'ouverture garde son fond clair dans les deux thèmes :
-       le texte noir doit pouvoir passer sur le disque jaune. */
-    --heading: #0a0a0a;
-    --text-muted: #5a5a5a;
-
-    background: #ededed;
-  }
-
-  @media (min-width: 1024px) {
-    .hero {
-      padding: 4rem 6vw 6rem;
-    }
-  }
-
-  .sun {
-    position: absolute;
-    top: var(--sy);
-    left: var(--sx);
-    width: min(62vw, 72svh);
-    aspect-ratio: 1;
-    translate: -50% -50%;
-    transform: translate3d(
-        calc(var(--px) * 28px),
-        calc(var(--py) * 28px + var(--scroll) * 22svh),
-        0
-      )
-      scale(calc(1 - var(--scroll) * 0.3));
-    transition:
-      top 1.6s cubic-bezier(0.22, 1, 0.36, 1),
-      left 1.6s cubic-bezier(0.22, 1, 0.36, 1),
-      transform 0.5s cubic-bezier(0.22, 1, 0.36, 1);
-    will-change: transform;
-  }
-
-  .sun i {
-    display: block;
-    width: 100%;
-    height: 100%;
-    border-radius: 50%;
-    background: var(--color-accent-400);
-  }
-
-  /* La nuit, il ne reste que le contour du disque. */
-  .hero[data-night] .sun i {
-    background: none;
-    box-shadow: inset 0 0 0 1.5px var(--heading);
-  }
-
-  .statement {
-    position: relative;
-    margin: 0;
-    font-size: clamp(2.05rem, 8.4vw, 3.4rem);
-    font-weight: 400;
-    line-height: 1.04;
-    letter-spacing: -0.045em;
-    color: var(--heading);
-    /* L'animation commune des titres est remplacée ici par une montée ligne à ligne. */
-    animation: none !important;
-  }
-
-  @media (min-width: 1024px) {
-    .statement {
-      font-size: clamp(3.2rem, 5.7vw, 6.4rem);
-    }
-  }
-
-  .line {
-    display: block;
-    overflow: hidden;
-    padding-bottom: 0.08em;
-  }
-
-  .line.in {
-    padding-left: 0.62em;
-  }
-
-  .line > span {
-    display: block;
-  }
-
-  .statement strong {
-    font-weight: 600;
-  }
-
-  @media (prefers-reduced-motion: no-preference) {
-    :global(.js) .line > span {
-      animation: line-up 1s cubic-bezier(0.22, 1, 0.36, 1) both;
-      animation-delay: calc(var(--i) * 80ms + 100ms);
-    }
-
-    :global(.js) .sun i {
-      animation: sun-in 1.3s cubic-bezier(0.22, 1, 0.36, 1) both;
-    }
-  }
-
-  @keyframes line-up {
-    from {
-      transform: translateY(110%);
-    }
-  }
-
-  @keyframes sun-in {
-    from {
-      transform: scale(0);
-    }
-  }
-
-  .hero-foot {
-    position: absolute;
-    inset: auto 1.25rem 1.25rem;
-    display: flex;
-    flex-wrap: wrap;
-    align-items: flex-end;
-    justify-content: space-between;
-    gap: 0.75rem 2rem;
-    font-size: 0.85rem;
-    color: var(--text-muted);
-  }
-
-  @media (min-width: 1024px) {
-    .hero-foot {
-      inset: auto 6vw 1.75rem;
-    }
-  }
-
-  .readout {
-    margin: 0;
-    font-family: var(--font-mono);
-    font-size: 0.72rem;
-    line-height: 1.6;
-  }
-
-  .readout span {
-    display: block;
-    min-height: 1.6em;
-  }
-
-  .down {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
-    color: var(--heading);
-  }
-
-  .down svg {
-    width: 0.9rem;
-    height: 0.9rem;
-    fill: none;
-    stroke: currentcolor;
-    stroke-width: 1.5;
-    stroke-linecap: round;
-    stroke-linejoin: round;
-  }
-
-  @media (prefers-reduced-motion: no-preference) {
-    .down svg {
-      animation: nudge 2s ease-in-out infinite;
-    }
-  }
-
-  @keyframes nudge {
-    50% {
-      transform: translateY(3px);
-    }
-  }
-
   /* ---------- Sections ---------- */
 
-  .works,
   .block,
   .contact {
     padding-block: 5rem 0;
@@ -506,7 +230,6 @@ const upcoming = [
   }
 
   @media (min-width: 1024px) {
-    .works,
     .block,
     .contact {
       padding-block: 9rem 0;
@@ -539,140 +262,77 @@ const upcoming = [
     text-decoration-color: var(--heading);
   }
 
-  /* Noms des systèmes */
-  .names {
-    margin: 0;
-    font-size: clamp(2.3rem, 8.2vw, 7rem);
-    font-weight: 500;
-    line-height: 1;
-    letter-spacing: -0.05em;
-    color: color-mix(in srgb, var(--heading) 26%, transparent);
-  }
-
-  .names button {
-    padding: 0;
-    font: inherit;
-    letter-spacing: inherit;
-    text-align: left;
-    color: color-mix(in srgb, var(--heading) 26%, transparent);
-    cursor: pointer;
-    transition: color 0.3s ease;
-  }
-
-  .names button:hover,
-  .names button[aria-pressed='true'] {
-    color: var(--heading);
-  }
-
-  .details {
-    margin-top: 3rem;
-    padding-top: 1.5rem;
-    border-top: 1.5px solid var(--heading);
-  }
-
-  .detail {
+  /* Réalisations : grille à largeurs alternées, pour que les captures ne s'alignent pas en damier. */
+  .works {
     display: grid;
-    gap: 1.5rem 3rem;
-  }
-
-  .detail[hidden] {
-    display: none;
-  }
-
-  @media (min-width: 1024px) {
-    .detail {
-      grid-template-columns: minmax(0, 5fr) minmax(0, 4fr) minmax(0, 3fr);
-      min-height: 9rem;
-    }
-  }
-
-  @media (prefers-reduced-motion: no-preference) {
-    .detail > * {
-      animation: detail-in 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
-    }
-
-    .detail > :nth-child(2) {
-      animation-delay: 60ms;
-    }
-
-    .detail > :nth-child(3) {
-      animation-delay: 120ms;
-    }
-  }
-
-  @keyframes detail-in {
-    from {
-      opacity: 0;
-      transform: translateY(0.8rem);
-    }
-  }
-
-  .summary {
-    margin: 0;
-    font-size: clamp(1.1rem, 1.6vw, 1.45rem);
-    line-height: 1.3;
-    letter-spacing: -0.02em;
-    color: var(--heading);
-    text-wrap: pretty;
-  }
-
-  .detail dl {
-    display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    align-content: start;
-    gap: 1rem;
-    margin: 0;
-  }
-
-  .detail dd {
-    margin: 0;
-    font-size: 1.5rem;
-    font-weight: 500;
-    line-height: 1;
-    letter-spacing: -0.04em;
-    color: var(--heading);
-  }
-
-  .detail dt {
-    margin-top: 0.4rem;
-    font-size: 0.78rem;
-    line-height: 1.3;
-    color: var(--text-muted);
-  }
-
-  .detail ul {
+    gap: 3rem 1.5rem;
     margin: 0;
     padding: 0;
     list-style: none;
-    font-family: var(--font-mono);
-    font-size: 0.78rem;
-    line-height: 1.9;
   }
 
-  .detail ul a {
-    color: var(--heading);
-    overflow-wrap: anywhere;
+  @media (min-width: 900px) {
+    .works {
+      grid-template-columns: repeat(12, minmax(0, 1fr));
+      gap: 5rem 2rem;
+    }
+
+    .works li {
+      grid-column: span 7;
+    }
+
+    .works li:nth-child(4n + 2),
+    .works li:nth-child(4n + 3) {
+      grid-column: span 5;
+    }
   }
 
-  .ping {
-    display: none;
-    align-items: center;
-    gap: 0.4rem;
-    font-size: 0.68rem;
-    line-height: 1.4;
+  .works a {
+    display: grid;
+    gap: 0.3rem;
     color: var(--text-muted);
   }
 
-  .ping[data-state='ok'] {
-    display: flex;
+  .shot {
+    display: block;
+    margin-bottom: 0.9rem;
+    overflow: hidden;
+    border: 1px solid var(--border);
+    background: var(--panel);
   }
 
-  .ping::before {
-    content: '';
-    width: 0.4rem;
-    height: 0.4rem;
-    border-radius: 50%;
-    background: #1faa59;
+  .shot img {
+    display: block;
+    width: 100%;
+    height: auto;
+    aspect-ratio: 16 / 10;
+    object-fit: cover;
+    object-position: top;
+    transition: transform 0.9s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  .works a:hover .shot img {
+    transform: scale(1.04);
+  }
+
+  .works .name {
+    font-size: 1.35rem;
+    font-weight: 500;
+    letter-spacing: -0.03em;
+    color: var(--heading);
+  }
+
+  .works .desc {
+    max-width: 34rem;
+    font-size: 0.95rem;
+    line-height: 1.45;
+    text-wrap: pretty;
+  }
+
+  .works .host {
+    font-family: var(--font-mono);
+    font-size: 0.74rem;
+    overflow-wrap: anywhere;
   }
 
   /* Parcours */
@@ -691,12 +351,9 @@ const upcoming = [
 
   .bio img {
     float: right;
-    width: clamp(6.5rem, 15vw, 13rem);
+    width: clamp(8rem, 24vw, 21rem);
     height: auto;
-    aspect-ratio: 4 / 5;
-    margin: 0.3rem 0 1rem 1.5rem;
-    object-fit: cover;
-    object-position: 50% 72%;
+    margin: 0.3rem 0 1rem 2rem;
     filter: grayscale(1) contrast(1.08);
     transition: filter 0.5s ease;
   }
@@ -805,174 +462,3 @@ const upcoming = [
     text-wrap: pretty;
   }
 </style>
-
-<script>
-  /* ---------- Le soleil de l'ouverture ---------- */
-
-  let stopHero: (() => void) | null = null;
-
-  const solar = (lat: number, lon: number, date: Date) => {
-    const start = Date.UTC(date.getUTCFullYear(), 0, 0);
-    const day = Math.floor((date.getTime() - start) / 86400000);
-    const hours = date.getUTCHours() + date.getUTCMinutes() / 60;
-    const g = ((2 * Math.PI) / 365) * (day - 1 + (hours - 12) / 24);
-    const eqTime =
-      229.18 *
-      (0.000075 +
-        0.001868 * Math.cos(g) -
-        0.032077 * Math.sin(g) -
-        0.014615 * Math.cos(2 * g) -
-        0.040849 * Math.sin(2 * g));
-    const decl =
-      0.006918 -
-      0.399912 * Math.cos(g) +
-      0.070257 * Math.sin(g) -
-      0.006758 * Math.cos(2 * g) +
-      0.000907 * Math.sin(2 * g) -
-      0.002697 * Math.cos(3 * g) +
-      0.00148 * Math.sin(3 * g);
-    let hourAngle = (hours * 60 + eqTime + 4 * lon) / 4 - 180;
-    if (hourAngle < -180) hourAngle += 360;
-    const phi = (lat * Math.PI) / 180;
-    const cosZ =
-      Math.sin(phi) * Math.sin(decl) +
-      Math.cos(phi) * Math.cos(decl) * Math.cos((hourAngle * Math.PI) / 180);
-    const elevation = (Math.asin(Math.max(-1, Math.min(1, cosZ))) * 180) / Math.PI;
-    // Rayonnement global par ciel clair, modèle de Haurwitz (1945).
-    const ghi = cosZ > 0.02 ? 1098 * cosZ * Math.exp(-0.057 / cosZ) : 0;
-    return { elevation, hourAngle, ghi };
-  };
-
-  const initHero = () => {
-    stopHero?.();
-    stopHero = null;
-    const hero = document.querySelector<HTMLElement>('[data-hero]');
-    if (!hero) return;
-    const cities = [...hero.querySelectorAll<HTMLElement>('[data-city]')];
-    const locale = hero.dataset.locale ?? 'fr-FR';
-
-    const update = () => {
-      const now = new Date();
-      cities.forEach((el, index) => {
-        const { elevation, hourAngle, ghi } = solar(
-          Number(el.dataset.lat),
-          Number(el.dataset.lon),
-          now,
-        );
-        const time = new Intl.DateTimeFormat(locale, {
-          hour: '2-digit',
-          minute: '2-digit',
-          hour12: false,
-          timeZone: el.dataset.tz,
-        }).format(now);
-        const day = elevation > 0;
-        el.textContent = ((day ? hero.dataset.day : hero.dataset.night) ?? '')
-          .replace('{city}', el.dataset.city ?? '')
-          .replace('{time}', time)
-          .replace('{elev}', String(Math.round(elevation)))
-          .replace('{ghi}', String(Math.round(ghi / 10) * 10));
-        // Le disque suit le soleil de la première ville : le matin à gauche, le soir à droite,
-        // d'autant plus haut que le soleil est haut.
-        if (index === 0) {
-          const x = 50 + Math.max(-1, Math.min(1, hourAngle / 90)) * 30;
-          const y = day ? 62 - (elevation / 90) * 34 : 78;
-          hero.style.setProperty('--sx', `${x.toFixed(1)}%`);
-          hero.style.setProperty('--sy', `${y.toFixed(1)}%`);
-          hero.toggleAttribute('data-night', !day);
-        }
-      });
-    };
-    update();
-    const timer = window.setInterval(update, 30000);
-
-    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    const onMove = (event: PointerEvent) => {
-      const rect = hero.getBoundingClientRect();
-      hero.style.setProperty('--px', ((event.clientX - rect.left) / rect.width - 0.5).toFixed(3));
-      hero.style.setProperty('--py', ((event.clientY - rect.top) / rect.height - 0.5).toFixed(3));
-    };
-    let ticking = false;
-    const onScroll = () => {
-      if (ticking) return;
-      ticking = true;
-      requestAnimationFrame(() => {
-        ticking = false;
-        const progress = Math.max(0, Math.min(1, window.scrollY / hero.offsetHeight));
-        hero.style.setProperty('--scroll', progress.toFixed(3));
-      });
-    };
-    if (!reduced) {
-      hero.addEventListener('pointermove', onMove);
-      window.addEventListener('scroll', onScroll, { passive: true });
-    }
-    stopHero = () => {
-      window.clearInterval(timer);
-      hero.removeEventListener('pointermove', onMove);
-      window.removeEventListener('scroll', onScroll);
-    };
-  };
-
-  /* ---------- Systèmes en production ---------- */
-
-  const initWorks = () => {
-    const section = document.querySelector<HTMLElement>('[data-works]');
-    if (!section || section.dataset.ready) return;
-    section.dataset.ready = 'true';
-    const buttons = [...section.querySelectorAll<HTMLButtonElement>('[data-work]')];
-    const details = [...section.querySelectorAll<HTMLElement>('[data-detail]')];
-
-    const probe = async (link: HTMLAnchorElement) => {
-      if (link.dataset.pinged) return;
-      link.dataset.pinged = 'true';
-      const out = link.parentElement?.querySelector<HTMLElement>('[data-ping-out]');
-      if (!out) return;
-      const controller = new AbortController();
-      const timer = window.setTimeout(() => controller.abort(), 8000);
-      const started = performance.now();
-      try {
-        await fetch(link.dataset.ping!, {
-          mode: 'no-cors',
-          cache: 'no-store',
-          signal: controller.signal,
-        });
-        out.textContent = `${out.dataset.label} ${Math.round(performance.now() - started)} ms`;
-        out.dataset.state = 'ok';
-      } catch {
-        /* service injoignable depuis ce réseau : on n'affiche rien. */
-      } finally {
-        window.clearTimeout(timer);
-      }
-    };
-
-    const show = (index: string) => {
-      buttons.forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.work === index)));
-      details.forEach((d) => {
-        d.hidden = d.dataset.detail !== index;
-        // Un service n'est sondé que lorsque sa fiche s'affiche.
-        if (!d.hidden) d.querySelectorAll<HTMLAnchorElement>('[data-ping]').forEach(probe);
-      });
-    };
-    buttons.forEach((b) => {
-      const select = () => show(b.dataset.work ?? '0');
-      b.addEventListener('pointerenter', select);
-      b.addEventListener('focus', select);
-      b.addEventListener('click', select);
-    });
-
-    const observer = new IntersectionObserver((entries) => {
-      if (!entries.some((entry) => entry.isIntersecting)) return;
-      observer.disconnect();
-      show('0');
-    });
-    observer.observe(section);
-  };
-
-  document.addEventListener('astro:page-load', () => {
-    initHero();
-    initWorks();
-  });
-  document.addEventListener('astro:before-swap', () => {
-    stopHero?.();
-    stopHero = null;
-  });
-</script>

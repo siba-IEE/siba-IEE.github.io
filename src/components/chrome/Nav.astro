@@ -22,7 +22,8 @@ const switchHref = alternatePath(Astro.url.pathname, other);
 const items: { key: UiKey; href: string }[] = [
   { key: 'nav.about', href: localizePath('/a-propos', lang) },
   { key: 'nav.research', href: localizePath('/travaux', lang) },
-  { key: 'nav.projects', href: localizePath('/projets', lang) },
+  // Les projets vivent sur le globe de l'accueil, à sa dernière vue.
+  { key: 'nav.projects', href: `${localizePath('/', lang)}#projets` },
   { key: 'nav.services', href: localizePath('/services', lang) },
   { key: 'nav.contact', href: localizePath('/contact', lang) },
 ];

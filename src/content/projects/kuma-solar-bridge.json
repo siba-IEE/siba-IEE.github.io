@@ -13,5 +13,10 @@
   "tags": ["Outil", "Solaire", "Desktop"],
   "image": "/images/kuma-solar-bridge.jpeg",
   "bodyFr": "Solar Bridge est destiné aux bureaux d’études photovoltaïques d’Afrique de l’Ouest. Il lit les fichiers CSV produits par des dataloggers de marques différentes et les convertit vers un format commun. C’est le premier outil qui utilise l’API de Kuma Data Core.",
-  "bodyEn": "Solar Bridge is intended for photovoltaic design offices in West Africa. It reads the CSV files produced by dataloggers of different makes and converts them into a common format. It is the first tool that uses the Kuma Data Core API."
+  "bodyEn": "Solar Bridge is intended for photovoltaic design offices in West Africa. It reads the CSV files produced by dataloggers of different makes and converts them into a common format. It is the first tool that uses the Kuma Data Core API.",
+  "geo": {
+    "lat": 11.5,
+    "lon": -4.5,
+    "span": 26
+  }
 }

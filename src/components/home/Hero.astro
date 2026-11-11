@@ -8,14 +8,14 @@
  */
 import { SITE } from '../../lib/site';
 import { getLangFromUrl, localizePath } from '../../lib/i18n';
-import { getProfile, getProjects } from '../../lib/content';
+import { getProfile, getProjects, statusLabels } from '../../lib/content';
 import { STATIONS } from '../../data/stations';
 import ProjectSheet from './ProjectSheet.astro';
 
 const lang = getLangFromUrl(Astro.url);
 const isFr = lang === 'fr';
 const profile = getProfile();
-const projects = getProjects().filter((project) => project.status === 'live' && project.geo);
+const projects = getProjects().filter((project) => project.geo);
 
 const cities = [
   { name: 'Conakry', lat: 9.51, lon: -13.71 },
@@ -46,7 +46,6 @@ const ui = isFr
       open: 'Learn more',
       steps: ['Opening', 'Stations', 'Bias', 'Guinea', 'Projects'],
     };
-const allProjects = isFr ? 'Tous les projets' : 'All projects';
 const more = isFr ? 'Méthode et résultats' : 'Method and results';
 const alt = isFr ? 'L’Afrique de l’Ouest vue de l’espace.' : 'West Africa seen from space.';
 const credit = isFr
@@ -137,13 +136,11 @@ const credit = isFr
                 data-geo={JSON.stringify(project.geo)}
               >
                 {project.title}
+                {project.status !== 'live' && <small>{statusLabels[project.status][lang]}</small>}
               </button>
             </li>
           ))
         }
-        <li class="all">
-          <a href={localizePath('/projets', lang)}>{allProjects}</a>
-        </li>
       </ul>
       {
         projects.map((project) => (
@@ -426,7 +423,7 @@ const credit = isFr
     display: block;
     padding: 0.1em 0;
     font: inherit;
-    font-size: clamp(1.5rem, 3.6vw, 3.4rem);
+    font-size: clamp(1.35rem, 3vw, 2.8rem);
     font-weight: 500;
     line-height: 1.02;
     letter-spacing: -0.045em;
@@ -445,13 +442,12 @@ const credit = isFr
     transform: translateX(0.35em);
   }
 
-  .projects .all a {
-    display: inline-block;
-    margin-top: 1rem;
-    font-size: 0.9rem;
-    color: #fff;
-    text-decoration: underline;
-    text-underline-offset: 5px;
+  .projects li small {
+    margin-left: 0.8rem;
+    font-size: 0.8rem;
+    font-weight: 400;
+    letter-spacing: 0;
+    vertical-align: middle;
   }
 
   .card {
@@ -822,6 +818,7 @@ const credit = isFr
   let globe: Globe | null = null;
   let onScroll: (() => void) | null = null;
   let selected: string | null = null;
+  let onHash: (() => void) | null = null;
   let timer = 0;
 
   const stop = () => {
@@ -831,6 +828,8 @@ const credit = isFr
     onScroll = null;
     selected = null;
     window.clearInterval(timer);
+    if (onHash) window.removeEventListener('hashchange', onHash);
+    onHash = null;
   };
 
   const init = () => {
@@ -842,18 +841,27 @@ const credit = isFr
 
     // Rail : chaque graduation mène à sa vue.
     const rail = [...journey.querySelectorAll<HTMLButtonElement>('[data-goto]')];
+    const goTo = (view: number, behavior: ScrollBehavior) => {
+      // La scène se fige sous la barre de navigation : on vise ce point, pas le haut de la section.
+      const stage = journey.querySelector<HTMLElement>('.stage');
+      const offset = stage ? parseFloat(getComputedStyle(stage).top) || 0 : 0;
+      const top = journey.getBoundingClientRect().top + window.scrollY - offset;
+      window.scrollTo({ top: top + (view * journey.offsetHeight) / VIEW_COUNT, behavior });
+    };
     rail.forEach((button) =>
-      button.addEventListener('click', () => {
-        // La scène se fige sous la barre de navigation : on vise ce point, pas le haut de la section.
-        const stage = journey.querySelector<HTMLElement>('.stage');
-        const offset = stage ? parseFloat(getComputedStyle(stage).top) || 0 : 0;
-        const top = journey.getBoundingClientRect().top + window.scrollY - offset;
-        window.scrollTo({
-          top: top + (Number(button.dataset.goto) * journey.offsetHeight) / VIEW_COUNT,
-          behavior: 'smooth',
-        });
-      }),
+      button.addEventListener('click', () => goTo(Number(button.dataset.goto), 'smooth')),
     );
+
+    // Le lien « Projets » du menu (#projets) mène à la dernière vue.
+    onHash = () => {
+      if (location.hash === '#projets') goTo(VIEW_COUNT - 1, 'smooth');
+    };
+    window.addEventListener('hashchange', onHash);
+    // Déjà sur l'accueil avec l'ancre en place, le lien ne change pas l'adresse : on écoute le clic.
+    document
+      .querySelectorAll<HTMLAnchorElement>('a[href$="#projets"]')
+      .forEach((link) => link.addEventListener('click', () => goTo(VIEW_COUNT - 1, 'smooth')));
+    if (location.hash === '#projets') requestAnimationFrame(() => goTo(VIEW_COUNT - 1, 'instant'));
 
     // Une hauteur d'écran de défilement fait passer d'une vue à la suivante.
     onScroll = () => {

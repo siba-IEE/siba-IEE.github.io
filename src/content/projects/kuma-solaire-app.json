@@ -13,5 +13,10 @@
   "tags": ["Outil", "Mobile", "Solaire"],
   "image": "/images/kuma-solaire-app.png",
   "bodyFr": "Kuma Solaire est une application mobile de dimensionnement solaire pour le terrain. Le moteur de calcul est isolé de l’interface par une règle d’imports stricte et dispose d’une page de vérification. L’application est conçue pour fonctionner avec une connexion intermittente.",
-  "bodyEn": "Kuma Solaire is a mobile solar-sizing app for fieldwork. The calculation engine is isolated from the interface by a strict import rule and has a verification page. The app is designed to work with an intermittent connection."
+  "bodyEn": "Kuma Solaire is a mobile solar-sizing app for fieldwork. The calculation engine is isolated from the interface by a strict import rule and has a verification page. The app is designed to work with an intermittent connection.",
+  "geo": {
+    "lat": 9.2,
+    "lon": -9.5,
+    "span": 20
+  }
 }

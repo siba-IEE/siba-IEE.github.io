@@ -1,81 +1,55 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
-import PageHeader from '../chrome/PageHeader.astro';
-import { getLangFromUrl, useTranslations, localizePath } from '../../lib/i18n';
+import { getLangFromUrl, localizePath } from '../../lib/i18n';
 import { getServices, serviceCategoryLabels, type ServiceCategory } from '../../lib/content';
 
 const lang = getLangFromUrl(Astro.url);
-const t = useTranslations(lang);
 const isFr = lang === 'fr';
 const services = getServices();
 
 const order: ServiceCategory[] = ['research', 'dev', 'platforms'];
 const groups = order
-  .map((cat) => ({
-    cat,
-    label: serviceCategoryLabels[cat][lang],
-    items: services.filter((s) => s.category === cat),
+  .map((category) => ({
+    label: serviceCategoryLabels[category][lang],
+    items: services.filter((service) => service.category === category),
   }))
-  .filter((g) => g.items.length > 0);
+  .filter((group) => group.items.length > 0);
 
-const pageTitle = 'Services';
-const pageLede = isFr
-  ? 'Prestations de recherche, de développement logiciel et de plateformes de données. Les prix indiqués sont des prix de départ, et chaque projet fait l’objet d’un devis.'
-  : 'Research, software development and data-platform services. The prices shown are starting prices, and each project gets its own quote.';
+const title = 'Services';
+const lede = isFr
+  ? 'Recherche, développement logiciel et plateformes de données. Les prix sont des prix de départ, hors frais tiers ; chaque projet fait l’objet d’un devis.'
+  : 'Research, software development and data platforms. Prices are starting prices, excluding third-party costs; each project gets its own quote.';
+const from = isFr ? 'à partir de' : 'from';
 ---
 
-<BaseLayout title={pageTitle} description={pageLede}>
-  <PageHeader title={pageTitle} lede={pageLede} />
+<BaseLayout title={title} description={lede}>
+  <section class="block first last">
+    <div class="shell">
+      <h1 class="page-title">{title}</h1>
+      <p class="lead">{lede}</p>
 
-  <section class="shell py-14 sm:py-20">
-    <div class="space-y-16 sm:space-y-20">
       {
-        groups.map((g, gi) => (
-          <div>
-            <div class="flex items-center gap-4 border-b border-border pb-3">
-              <h2 class="text-2xl font-medium tracking-tight text-heading">{g.label}</h2>
-            </div>
-
-            <ul class="mt-2">
-              {g.items.map((s) => (
-                <li class="grid gap-x-8 gap-y-3 border-b border-border py-6 sm:grid-cols-[1fr_auto] sm:items-baseline">
-                  <div class="max-w-2xl">
-                    <h3 class="font-display text-lg font-medium tracking-tight text-heading sm:text-xl">
-                      {isFr ? s.nameFr : s.nameEn}
-                    </h3>
-                    <p class="mt-1.5 text-sm leading-relaxed text-text-muted text-pretty">
-                      {isFr ? s.descFr : s.descEn}
-                    </p>
-                  </div>
-                  <div class="sm:pl-8 sm:text-right">
-                    <span class="block text-[0.65rem] font-medium text-text-subtle">
-                      {isFr ? 'À partir de' : 'From'}
-                    </span>
-                    <span class="text-base whitespace-nowrap text-heading">{s.priceFrom}</span>
-                  </div>
+        groups.map((group) => (
+          <>
+            <h2 class="label">{group.label}</h2>
+            <ul class="rows services">
+              {group.items.map((service) => (
+                <li data-reveal>
+                  <span class="what">{isFr ? service.nameFr : service.nameEn}</span>
+                  <span class="where">{isFr ? service.descFr : service.descEn}</span>
+                  <span class="price">
+                    {from} {service.priceFrom}
+                  </span>
                 </li>
               ))}
             </ul>
-          </div>
+          </>
         ))
       }
-    </div>
 
-    {/* Note + appel à discuter */}
-    <div class="mt-14 border-t border-border pt-8">
-      <p class="max-w-2xl text-sm leading-relaxed text-text-muted text-pretty">
-        {
-          isFr
-            ? 'Prix de départ indicatifs, hors frais tiers (hébergement, licences, données). Le périmètre et le devis détaillé sont établis après un premier échange sur le besoin.'
-            : 'Indicative starting prices, excluding third-party costs (hosting, licences, data). Scope and detailed quote are set after a first discussion of the need.'
-        }
-      </p>
-      <a
-        href={localizePath('/contact', lang)}
-        class="mt-6 inline-flex items-center gap-2 rounded-sm bg-brand-700 px-6 py-3 text-sm font-semibold text-white transition-transform hover:-translate-y-0.5"
+      <a href={localizePath('/contact', lang)} class="more"
+        >{isFr ? 'Discuter d’un projet' : 'Discuss a project'}</a
       >
-        {isFr ? 'Discuter d’un projet' : 'Discuss a project'}
-      </a>
     </div>
   </section>
 </BaseLayout>

@@ -1,42 +1,36 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
-import PageHeader from '../chrome/PageHeader.astro';
 import { SITE, socialLinks } from '../../lib/site';
 import { getLangFromUrl, useTranslations } from '../../lib/i18n';
 
-const lang = getLangFromUrl(Astro.url);
-const t = useTranslations(lang);
+const t = useTranslations(getLangFromUrl(Astro.url));
 ---
 
 <BaseLayout title={t('contact.pageTitle')} description={t('contact.pageLede')}>
-  <PageHeader title={t('contact.pageTitle')} lede={t('contact.pageLede')} />
+  <section class="block first last">
+    <div class="shell">
+      <h1 class="page-title">{t('contact.pageTitle')}</h1>
+      <a href={`mailto:${SITE.email}`} class="mail">{SITE.email}</a>
+      <p class="lead" style="margin-top: 2.5rem">{t('contact.pageLede')}</p>
 
-  <section class="shell py-12 sm:py-14">
-    <a
-      href={`mailto:${SITE.email}`}
-      class="inline-flex items-center gap-2 rounded-sm bg-brand-700 px-6 py-3 text-sm font-semibold text-white transition-transform hover:-translate-y-0.5"
-    >
-      {t('contact.email')}
-    </a>
-    <p class="mt-3 font-mono text-sm text-text-muted">{SITE.email}</p>
-
-    <ul class="mt-10 flex flex-wrap gap-2.5">
-      {
-        socialLinks
-          .filter((link) => link.key !== 'email')
-          .map((link) => (
-            <li>
-              <a
-                href={link.href}
-                target="_blank"
-                rel="me noopener"
-                class="inline-flex items-center gap-2 rounded-sm border border-border px-4 py-2 text-sm font-medium transition-colors hover:bg-surface-2"
-              >
-                {link.label}
-              </a>
-            </li>
-          ))
-      }
-    </ul>
+      <ul class="rows wip" style="margin-top: 5rem">
+        {
+          socialLinks
+            .filter((link) => link.key !== 'email')
+            .map((link) => (
+              <li data-reveal>
+                <span class="what">
+                  <a href={link.href} target="_blank" rel="me noopener" class="group">
+                    <span class="draw">{link.label}</span>
+                  </a>
+                </span>
+                <span class="where">
+                  {link.href.replace(/^https?:\/\//, '').replace(/\/$/, '')}
+                </span>
+              </li>
+            ))
+        }
+      </ul>
+    </div>
   </section>
 </BaseLayout>

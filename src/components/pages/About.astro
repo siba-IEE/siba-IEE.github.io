@@ -1,7 +1,6 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
-import PageHeader from '../chrome/PageHeader.astro';
-import { SITE, orcidUrl, socialLinks } from '../../lib/site';
+import { SITE, socialLinks } from '../../lib/site';
 import { getLangFromUrl, useTranslations } from '../../lib/i18n';
 import { getProfile, getExperience, getSkills, getEducation } from '../../lib/content';
 
@@ -10,216 +9,89 @@ const t = useTranslations(lang);
 const isFr = lang === 'fr';
 
 const profile = getProfile();
-const role = (isFr ? profile.roleFr : profile.roleEn) || SITE.role[lang];
 const bio = (isFr ? profile.bioFr : profile.bioEn) || SITE.bio[lang];
-const experience = getExperience();
-const education = getEducation();
-const skills = getSkills();
 
 const since = isFr ? 'Depuis' : 'Since';
-const dateRange = (start: string, end: string, current: boolean) =>
+const dates = (start: string, end: string, current = false) =>
   current ? `${since} ${start}` : end ? `${start}–${end}` : start;
-
-// Normalisation en une même forme pour une frise commune.
-const parcours = experience.map((e) => ({
-  dates: dateRange(e.start, e.end, e.current),
-  current: e.current,
-  title: isFr ? e.roleFr : e.roleEn,
-  org: e.org,
-  location: isFr ? e.locationFr : e.locationEn,
-  note: isFr ? e.descFr : e.descEn,
-}));
-const formation = education.map((e) => ({
-  dates: dateRange(e.start, e.end, false),
-  current: false,
-  title: isFr ? e.titleFr : e.titleEn,
-  org: e.school,
-  location: isFr ? e.locationFr : e.locationEn,
-  note: isFr ? e.noteFr : e.noteEn,
-}));
-
-const timelines = [
-  { n: '01', label: t('about.experience'), items: parcours },
-  { n: '02', label: t('about.education'), items: formation },
-].filter((s) => s.items.length > 0);
-
-const reperes = [
-  {
-    k: isFr ? 'Rôle' : 'Role',
-    v: isFr ? 'Ingénieur en efficacité énergétique' : 'Energy-efficiency engineer',
-  },
-  { k: isFr ? 'Lieux' : 'Based in', v: isFr ? 'Montréal et Conakry' : 'Montréal and Conakry' },
-  { k: isFr ? 'Actuellement' : 'Currently', v: 'Kuma Science' },
-];
 ---
 
 <BaseLayout title={t('about.pageTitle')} description={bio.slice(0, 155)} ogType="profile">
-  <PageHeader title={t('about.pageTitle')} lede={role} />
-
-  <section class="shell py-14 sm:py-20">
-    {/* Intro : portrait + bio à gauche, repères en marge */}
-    <div class="grid gap-x-12 gap-y-10 lg:grid-cols-12 lg:items-start">
-      <div class="lg:col-span-8">
-        <div class="flex flex-col gap-6 sm:flex-row sm:items-start">
-          {
-            profile.photo ? (
-              <img
-                src={profile.photo}
-                alt={SITE.name}
-                width="128"
-                height="128"
-                class="size-28 shrink-0 rounded-sm object-cover object-top sm:size-32"
-              />
-            ) : (
-              <span
-                class="grid size-28 shrink-0 place-items-center rounded-sm bg-brand-800 font-display text-4xl font-medium text-heading sm:size-32"
-                aria-hidden="true"
-              >
-                S
-              </span>
-            )
-          }
-          <div>
-            <p class="text-lg leading-relaxed text-text text-pretty">{bio}</p>
-          </div>
-        </div>
+  <section class="block first last">
+    <div class="shell">
+      <h1 class="page-title">{t('about.pageTitle')}</h1>
+      <div class="bio" data-reveal>
+        <img src="/images/portrait.jpg" alt={SITE.name} width="1080" height="1049" />
+        <p>{bio}</p>
       </div>
 
-      <aside class="lg:col-span-4 lg:col-start-9 lg:pt-1">
-        <p class="text-sm text-text-subtle">
-          {isFr ? 'Repères' : 'At a glance'}
-        </p>
-        <dl class="mt-4 border-t border-border">
-          {
-            reperes.map((r) => (
-              <div class="flex items-baseline justify-between gap-4 border-b border-border py-3">
-                <dt class="text-sm text-text-subtle">{r.k}</dt>
-                <dd class="text-right text-sm font-medium text-text">{r.v}</dd>
-              </div>
-            ))
-          }
-        </dl>
-      </aside>
-    </div>
-
-    {/* Frises : Parcours & Formation */}
-    {
-      timelines.map((sec) => (
-        <div class="mt-16 sm:mt-20">
-          <div class="flex items-center gap-4 border-b border-border pb-3">
-            <h2 class="text-2xl font-medium tracking-tight text-heading">{sec.label}</h2>
-          </div>
-
-          <ol class="mt-8">
-            {sec.items.map((item, i) => {
-              const isLast = i === sec.items.length - 1;
-              return (
-                <li
-                  class="grid grid-cols-[auto_1fr] gap-x-5"
-                  data-reveal
-                  style={`--reveal-delay:${i * 60}ms`}
-                >
-                  <div class="flex flex-col items-center">
-                    <span class="relative mt-1.5 flex size-3 shrink-0">
-                      {item.current && (
-                        <span class="absolute inline-flex size-full animate-ping rounded-full bg-accent-400 opacity-75" />
-                      )}
-                      <span
-                        class:list={[
-                          'relative inline-flex size-3 rounded-full ring-4 ring-surface',
-                          item.current ? 'bg-accent-500' : 'bg-brand-300',
-                        ]}
-                      />
-                    </span>
-                    {!isLast && <span class="mt-2 w-px grow bg-border" aria-hidden="true" />}
-                  </div>
-
-                  <div class:list={['min-w-0 max-w-3xl', isLast ? 'pb-1' : 'pb-9']}>
-                    <p class="font-mono text-xs text-text-subtle">{item.dates}</p>
-                    <h3 class="mt-1 font-display text-lg font-medium tracking-tight text-heading text-pretty">
-                      {item.title}
-                      {item.org && <span class="font-normal text-text-muted">, {item.org}</span>}
-                    </h3>
-                    {item.location && <p class="text-sm text-text-subtle">{item.location}</p>}
-                    {item.note && (
-                      <p class="mt-1.5 text-sm leading-relaxed text-text-muted text-pretty">
-                        {item.note}
-                      </p>
-                    )}
-                  </div>
-                </li>
-              );
-            })}
-          </ol>
-        </div>
-      ))
-    }
-
-    {/* Compétences en cartes */}
-    {
-      skills.length > 0 && (
-        <div class="mt-16 sm:mt-20">
-          <div class="flex items-center gap-4 border-b border-border pb-3">
-            <h2 class="text-2xl font-medium tracking-tight text-heading">{t('about.skills')}</h2>
-          </div>
-
-          <div class="mt-8 grid gap-x-12 gap-y-8 sm:grid-cols-2">
-            {skills.map((group, i) => (
-              <div
-                class="border-t border-border pt-5"
-                data-reveal
-                style={`--reveal-delay:${i * 70}ms`}
-              >
-                <h3 class="font-display text-base font-medium tracking-tight text-heading">
-                  {isFr ? group.categoryFr : group.categoryEn}
-                </h3>
-                <ul class="mt-3 flex flex-wrap gap-x-2 gap-y-1.5">
-                  {(isFr ? group.itemsFr : group.itemsEn).map((item) => (
-                    <li class="rounded bg-surface-2 px-2 py-0.5 text-xs text-text-muted">{item}</li>
-                  ))}
-                </ul>
-              </div>
-            ))}
-          </div>
-        </div>
-      )
-    }
-
-    {/* Ailleurs */}
-    <div class="mt-16 sm:mt-20">
-      <div class="flex items-center gap-4 border-b border-border pb-3">
-        <h2 class="text-2xl font-medium tracking-tight text-heading">
-          {t('about.elsewhere')}
-        </h2>
-      </div>
-
-      <ul class="mt-6 flex flex-wrap gap-2.5">
+      <h2 class="label">{t('about.experience')}</h2>
+      <ul class="rows">
         {
-          socialLinks.map((link) => (
-            <li>
-              <a
-                href={link.href}
-                target={link.key === 'email' ? undefined : '_blank'}
-                rel={link.key === 'email' ? undefined : 'me noopener'}
-                class="inline-flex items-center gap-2 rounded-sm border border-border px-4 py-2 text-sm font-medium transition-colors hover:bg-surface-2"
-              >
-                {link.label}
-              </a>
+          getExperience().map((item) => (
+            <li data-reveal>
+              <span class="when">{dates(item.start, item.end, item.current)}</span>
+              <span class="what">
+                {isFr ? item.roleFr : item.roleEn}
+                <small>{isFr ? item.descFr : item.descEn}</small>
+              </span>
+              <span class="where">
+                {item.org}, {isFr ? item.locationFr : item.locationEn}
+              </span>
             </li>
           ))
         }
       </ul>
-      <p class="mt-4 text-sm text-text-subtle">
-        ORCID{' '}
-        <a
-          href={orcidUrl}
-          target="_blank"
-          rel="me noopener"
-          class="font-mono hover:text-text hover:underline"
-        >
-          {SITE.orcid}
-        </a>
-      </p>
+
+      <h2 class="label">{t('about.education')}</h2>
+      <ul class="rows">
+        {
+          getEducation().map((item) => (
+            <li data-reveal>
+              <span class="when">{dates(item.start, item.end)}</span>
+              <span class="what">{isFr ? item.titleFr : item.titleEn}</span>
+              <span class="where">
+                {[item.school, isFr ? item.locationFr : item.locationEn].filter(Boolean).join(', ')}
+              </span>
+            </li>
+          ))
+        }
+      </ul>
+
+      <h2 class="label">{t('about.skills')}</h2>
+      <ul class="rows wip">
+        {
+          getSkills().map((group) => (
+            <li data-reveal>
+              <span class="what">{isFr ? group.categoryFr : group.categoryEn}</span>
+              <span class="where">{(isFr ? group.itemsFr : group.itemsEn).join(', ')}</span>
+            </li>
+          ))
+        }
+      </ul>
+
+      <h2 class="label">{t('about.elsewhere')}</h2>
+      <ul class="rows wip">
+        {
+          socialLinks.map((link) => (
+            <li data-reveal>
+              <span class="what">
+                <a
+                  href={link.href}
+                  target={link.key === 'email' ? undefined : '_blank'}
+                  rel="me noopener"
+                  class="group"
+                >
+                  <span class="draw">{link.label}</span>
+                </a>
+              </span>
+              <span class="where">
+                {link.href.replace(/^(https?:\/\/|mailto:)/, '').replace(/\/$/, '')}
+              </span>
+            </li>
+          ))
+        }
+      </ul>
     </div>
   </section>
 </BaseLayout>

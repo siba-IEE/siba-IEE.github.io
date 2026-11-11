@@ -1,214 +1,50 @@
 ---
-import { marked } from 'marked';
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import { getLangFromUrl, useTranslations } from '../../lib/i18n';
-import { getProjects, statusLabels, type ProjectKind } from '../../lib/content';
+import { getProjects, statusLabels } from '../../lib/content';
 
 const lang = getLangFromUrl(Astro.url);
 const t = useTranslations(lang);
 const isFr = lang === 'fr';
+
 const projects = getProjects();
-
-// Domaines (regroupement par nature) et leur intro.
-const domainOrder: ProjectKind[] = ['data', 'platform', 'tool'];
-const domainMeta: Record<
-  ProjectKind,
-  { fr: string; en: string; introFr: string; introEn: string }
-> = {
-  data: {
-    fr: 'Données & recherche',
-    en: 'Data & research',
-    introFr: 'Référentiels de données solaires et énergétiques, et moteur qui les produit.',
-    introEn: 'Solar and energy reference datasets, and the engine that produces them.',
-  },
-  platform: {
-    fr: 'Plateformes',
-    en: 'Platforms',
-    introFr: 'Portails qui donnent accès aux données, aux méthodes et aux outils.',
-    introEn: 'Portals that give access to the data, methods and tools.',
-  },
-  tool: {
-    fr: 'Outils & logiciels',
-    en: 'Tools & software',
-    introFr:
-      'Logiciels de dimensionnement et de traitement pour les bureaux d’études et le terrain.',
-    introEn: 'Sizing and processing software for design offices and fieldwork.',
-  },
-};
-
-const domains = domainOrder
-  .map((kind) => ({ kind, meta: domainMeta[kind], items: projects.filter((p) => p.kind === kind) }))
-  .filter((d) => d.items.length > 0);
+const groups = [
+  { status: 'live' as const, items: projects.filter((p) => p.status === 'live') },
+  { status: 'wip' as const, items: projects.filter((p) => p.status !== 'live') },
+].filter((group) => group.items.length > 0);
 ---
 
 <BaseLayout title={t('projects.pageTitle')} description={t('projects.pageLede')}>
-  {/* En-tête encre : titre + accroche + liens vers les domaines */}
-  <section class="relative overflow-hidden border-b border-border bg-surface">
-    <div class="shell relative grid gap-10 py-16 sm:py-20 lg:grid-cols-[1fr_1fr] lg:gap-16">
-      <div>
-        <h1
-          class="font-display text-4xl font-medium tracking-tight text-balance text-heading sm:text-5xl"
-        >
-          {t('projects.pageTitle')}
-        </h1>
-        <p class="mt-5 max-w-md text-lg text-text-muted text-pretty">{t('projects.pageLede')}</p>
-      </div>
-      <div class="lg:pt-3">
-        <div class="mt-4 grid gap-3 sm:grid-cols-2">
-          {
-            domains.map((d) => (
-              <a
-                href={`#${d.kind}`}
-                class="rounded-sm bg-panel px-4 py-2.5 text-sm font-medium ring-1 ring-border transition-colors hover:bg-accent-400 hover:text-black"
-              >
-                {isFr ? d.meta.fr : d.meta.en}
-              </a>
-            ))
-          }
-        </div>
-      </div>
+  <section class="block first last">
+    <div class="shell">
+      <h1 class="page-title">{t('projects.pageTitle')}</h1>
+      {
+        groups.map((group) => (
+          <>
+            <h2 class="label">{statusLabels[group.status][lang]}</h2>
+            <ul class="works">
+              {group.items.map((project) => (
+                <li id={project.slug} class="scroll-mt-24" data-reveal>
+                  <div class="work">
+                    {project.image && (
+                      <span class="shot">
+                        <img src={project.image} alt="" width="1200" height="750" loading="lazy" />
+                      </span>
+                    )}
+                    <span class="name">{project.title}</span>
+                    <span class="desc">{isFr ? project.summaryFr : project.summaryEn}</span>
+                    {(project.links ?? []).map((link) => (
+                      <a href={link.url} target="_blank" rel="noopener" class="host group">
+                        <span class="draw">{link.label}</span>
+                      </a>
+                    ))}
+                  </div>
+                </li>
+              ))}
+            </ul>
+          </>
+        ))
+      }
     </div>
   </section>
-
-  {/* Domaines en sections à fonds alternés, chacun détaillé en accordéons */}
-  {
-    domains.map((d, di) => (
-      <section id={d.kind} class:list={['scroll-mt-20', di % 2 === 0 ? 'bg-surface-2' : '']}>
-        <div class="shell border-t border-border py-16 sm:py-24">
-          <div class="max-w-3xl">
-            <h2 class="font-display text-4xl font-medium tracking-tight text-balance sm:text-5xl">
-              {isFr ? d.meta.fr : d.meta.en}
-            </h2>
-            <p class="mt-5 text-lg leading-relaxed text-text text-pretty">
-              {isFr ? d.meta.introFr : d.meta.introEn}
-            </p>
-          </div>
-
-          <div class="mt-10">
-            {d.items.map((project) => {
-              const body = isFr ? project.bodyFr : project.bodyEn;
-              const bodyHtml = body ? (marked.parse(body) as string) : '';
-              return (
-                <details
-                  id={project.slug}
-                  class="acc group scroll-mt-24 border-t border-border py-7"
-                >
-                  <summary class="flex cursor-pointer list-none items-center justify-between gap-6">
-                    <div class="flex flex-wrap items-center gap-3">
-                      <h3 class="font-display text-xl font-medium tracking-tight sm:text-2xl">
-                        {project.title}
-                      </h3>
-                      <span class="rounded-sm bg-surface-3 px-2.5 py-0.5 text-[0.65rem] font-medium text-text-subtle">
-                        {statusLabels[project.status][lang]}
-                      </span>
-                    </div>
-                    <span
-                      class="shrink-0 text-3xl leading-none font-light text-text-subtle transition-transform duration-300 group-open:rotate-45"
-                      aria-hidden="true"
-                    >
-                      +
-                    </span>
-                  </summary>
-
-                  <div class="mt-5 max-w-3xl">
-                    {project.image && (
-                      <img
-                        src={project.image}
-                        alt={project.title}
-                        loading="lazy"
-                        class="mb-5 w-full rounded-lg border border-border"
-                      />
-                    )}
-                    <div class="acc-body text-text" set:html={bodyHtml} />
-                  </div>
-
-                  <div class="mt-6 flex flex-wrap items-center gap-x-5 gap-y-2 text-sm">
-                    {project.url && (
-                      <a
-                        href={project.url}
-                        target="_blank"
-                        rel="me noopener"
-                        class="font-medium text-link hover:underline"
-                      >
-                        {isFr ? 'Visiter' : 'Visit'}
-                      </a>
-                    )}
-                    {project.repo && (
-                      <a
-                        href={project.repo}
-                        target="_blank"
-                        rel="noopener"
-                        class="font-medium text-link hover:underline"
-                      >
-                        Code
-                      </a>
-                    )}
-                    <span class="font-mono text-xs text-text-subtle">
-                      {project.stack.slice(0, 5).join(', ')}
-                    </span>
-                  </div>
-                </details>
-              );
-            })}
-          </div>
-        </div>
-      </section>
-    ))
-  }
 </BaseLayout>
-
-<style>
-  .acc > summary::-webkit-details-marker {
-    display: none;
-  }
-
-  @media (prefers-reduced-motion: no-preference) {
-    .acc[open] > :not(summary) {
-      animation: acc-open 0.35s cubic-bezier(0.22, 1, 0.36, 1) both;
-    }
-  }
-
-  @keyframes acc-open {
-    from {
-      opacity: 0;
-      transform: translateY(-0.35rem);
-    }
-    to {
-      opacity: 1;
-      transform: none;
-    }
-  }
-
-  .acc-body :global(p) {
-    margin-block: 0.75rem;
-    line-height: 1.8;
-  }
-
-  .acc-body :global(a) {
-    color: var(--color-brand-700);
-    text-underline-offset: 3px;
-    text-decoration: underline;
-  }
-
-  .acc-body :global(ul) {
-    margin-block: 0.75rem;
-    padding-left: 1.2rem;
-    list-style: disc;
-  }
-</style>
-
-<script>
-  // Un lien /projets#slug (depuis l'accueil) ouvre le dépliant correspondant et s'y cale.
-  const openFromHash = () => {
-    const id = decodeURIComponent(location.hash.slice(1));
-    if (!id) return;
-    const el = document.getElementById(id);
-    if (el instanceof HTMLDetailsElement) {
-      el.open = true;
-      requestAnimationFrame(() => el.scrollIntoView({ block: 'start' }));
-    }
-  };
-  openFromHash();
-  window.addEventListener('hashchange', openFromHash);
-  document.addEventListener('astro:page-load', openFromHash);
-</script>

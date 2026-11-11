@@ -12,7 +12,7 @@
   padding-bottom: 5rem;
 }
 
-@media (min-width: 1024px) {
+@media (width >= 1024px) {
   .block,
   .contact {
     padding-block: 9rem 0;
@@ -43,79 +43,6 @@
 
 .more:hover {
   text-decoration-color: var(--heading);
-}
-
-/* Réalisations : grille à largeurs alternées, pour que les captures ne s'alignent pas en damier. */
-.works {
-  display: grid;
-  gap: 3rem 1.5rem;
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
-
-@media (min-width: 900px) {
-  .works {
-    grid-template-columns: repeat(12, minmax(0, 1fr));
-    gap: 5rem 2rem;
-  }
-
-  .works li {
-    grid-column: span 7;
-  }
-
-  .works li:nth-child(4n + 2),
-  .works li:nth-child(4n + 3) {
-    grid-column: span 5;
-  }
-}
-
-.works a {
-  display: grid;
-  gap: 0.3rem;
-  color: var(--text-muted);
-}
-
-.shot {
-  display: block;
-  margin-bottom: 0.9rem;
-  overflow: hidden;
-  border: 1px solid var(--border);
-  background: var(--panel);
-}
-
-.shot img {
-  display: block;
-  width: 100%;
-  height: auto;
-  aspect-ratio: 16 / 9;
-  object-fit: cover;
-  object-position: left top;
-  transition: transform 0.9s cubic-bezier(0.22, 1, 0.36, 1);
-}
-
-.works a:hover .shot img {
-  transform: scale(1.04);
-}
-
-.works .name {
-  font-size: 1.35rem;
-  font-weight: 500;
-  letter-spacing: -0.03em;
-  color: var(--heading);
-}
-
-.works .desc {
-  max-width: 34rem;
-  font-size: 0.95rem;
-  line-height: 1.45;
-  text-wrap: pretty;
-}
-
-.works .host {
-  font-family: var(--font-mono);
-  font-size: 0.74rem;
-  overflow-wrap: anywhere;
 }
 
 /* Parcours */
@@ -172,7 +99,7 @@
   padding-left: 0.6rem;
 }
 
-@media (min-width: 900px) {
+@media (width >= 900px) {
   .rows li {
     grid-template-columns: 11rem minmax(0, 6fr) minmax(0, 5fr);
     align-items: baseline;
@@ -211,7 +138,7 @@
   overflow-wrap: anywhere;
 }
 
-@media (min-width: 900px) {
+@media (width >= 900px) {
   .rows .doi {
     text-align: right;
   }
@@ -319,7 +246,7 @@
   gap: 2rem;
 }
 
-@media (min-width: 900px) {
+@media (width >= 900px) {
   .figures {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
@@ -336,7 +263,7 @@
   margin-top: 4rem;
 }
 
-@media (min-width: 900px) {
+@media (width >= 900px) {
   .part {
     grid-template-columns: 11rem minmax(0, 46rem);
   }
@@ -383,7 +310,7 @@
 }
 
 /* Tarifs : une troisième colonne étroite pour le prix. */
-@media (min-width: 900px) {
+@media (width >= 900px) {
   .rows.services li {
     grid-template-columns: minmax(0, 4fr) minmax(0, 7fr) 9rem;
   }
@@ -391,19 +318,4 @@
   .rows.services .price {
     text-align: right;
   }
-}
-
-/* Projets : même grille que l'accueil, les liens sous chaque capture. */
-.work {
-  display: grid;
-  gap: 0.3rem;
-  color: var(--text-muted);
-}
-
-.work .host {
-  color: var(--heading);
-}
-
-.work:hover .shot img {
-  transform: scale(1.04);
 }

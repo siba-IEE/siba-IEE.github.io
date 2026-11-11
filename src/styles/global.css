@@ -99,15 +99,15 @@
     max-width: 96rem;
     padding-inline: 1.5rem;
 
-    @media (min-width: 640px) {
+    @media (width >= 640px) {
       padding-inline: 2rem;
     }
 
-    @media (min-width: 1024px) {
+    @media (width >= 1024px) {
       padding-inline: 4rem;
     }
 
-    @media (min-width: 1536px) {
+    @media (width >= 1536px) {
       padding-inline: 5rem;
     }
   }
@@ -116,7 +116,7 @@
 @layer base {
   html {
     scroll-behavior: smooth;
-    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
   }
 
   body {
@@ -124,7 +124,7 @@
     color: var(--text);
     font-family: var(--font-sans);
     -webkit-font-smoothing: antialiased;
-    text-rendering: optimizeLegibility;
+    text-rendering: optimizelegibility;
   }
 
   :focus-visible {

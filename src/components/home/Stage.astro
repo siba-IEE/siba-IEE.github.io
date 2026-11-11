@@ -4,7 +4,6 @@
  * défilement : un couloir, puis un salon. Ce composant porte le texte et le film de chaque
  * réalisation. Sans WebGL ou sans JavaScript, tout se lit à la suite.
  */
-import Shot from '../film/Shot.astro';
 import { SITE } from '../../lib/site';
 import { getLangFromUrl } from '../../lib/i18n';
 import {
@@ -64,8 +63,8 @@ const channels = getProjects()
       glyph: { path: glyph.path, width: glyph.width, height: glyph.height },
       beats: film.beats.map((beat) => ({
         line: beat.say[lang],
-        shot: beat.shot,
         notes: (beat.notes ?? []).map((note) => note[lang]),
+        scene: beat.scene((fr, en) => (isFr ? fr : en)),
       })),
     };
   });
@@ -127,12 +126,15 @@ const config = {
   channels: channels.map(({ title, tint, glyph }) => ({ title, tint, glyph })),
   hint: t.pick,
 };
+/** Les scènes 3D de chaque film, une par étape. */
+const scenes = channels.map((channel) => channel.beats.map((beat) => beat.scene));
 ---
 
 <section
   class="scene"
   data-scene
   data-config={JSON.stringify(config)}
+  data-films={JSON.stringify(scenes)}
   data-state="loading"
   style={`--units:${(T.end + 1.4).toFixed(2)}`}
 >
@@ -204,18 +206,13 @@ const config = {
               {channel.status && <span class="status">{channel.status}</span>}
             </header>
 
-            <div class="visual">
+            <div class="asides">
               {channel.beats.map((beat) => (
-                <div class="shot">
-                  <Shot shot={beat.shot} lang={lang} />
-                  {beat.notes.length > 0 && (
-                    <ul class="notes">
-                      {beat.notes.map((note, index) => (
-                        <li style={`--d:${(1.8 + index * 0.9).toFixed(1)}s`}>{note}</li>
-                      ))}
-                    </ul>
-                  )}
-                </div>
+                <ul class="notes" data-empty={beat.notes.length === 0 || undefined}>
+                  {beat.notes.map((note, index) => (
+                    <li style={`--d:${(2.2 + index * 0.9).toFixed(1)}s`}>{note}</li>
+                  ))}
+                </ul>
               ))}
             </div>
 
@@ -523,9 +520,9 @@ const config = {
   .film {
     position: absolute;
     inset: 0;
-    background: #0b0d12;
     opacity: 0;
     visibility: hidden;
+    pointer-events: none;
     transition:
       opacity 0.5s ease,
       visibility 0s 0.5s;
@@ -535,28 +532,6 @@ const config = {
     opacity: 1;
     visibility: visible;
     transition-delay: 0s;
-  }
-
-  /* Sol en perspective qui file vers le fond : le film se joue dans un espace, pas sur une page. */
-  .film::before {
-    content: '';
-    position: absolute;
-    inset: 35% -50% -60%;
-    background:
-      repeating-linear-gradient(90deg, rgb(127 220 255 / 16%) 0 1px, transparent 1px 5rem),
-      repeating-linear-gradient(rgb(127 220 255 / 16%) 0 1px, transparent 1px 5rem);
-    mask-image: linear-gradient(transparent 5%, #000 60%);
-    transform: perspective(700px) rotateX(64deg);
-    transform-origin: 50% 0;
-    animation: glide 6s linear infinite;
-  }
-
-  @keyframes glide {
-    to {
-      background-position:
-        0 5rem,
-        0 5rem;
-    }
   }
 
   .film article {
@@ -616,62 +591,26 @@ const config = {
     color: rgb(255 255 255 / 70%);
   }
 
-  /* Un plan à la fois, en plein cadre : il arrive du fond en pivotant, l'ancien repart de l'autre côté. */
-  .visual {
+  /* Notes de l'étape en cours, posées à côté de la projection. */
+  .asides {
     position: absolute;
-    inset: 5.5rem 0 11.5rem;
-    perspective: 1400px;
-  }
-
-  .shot {
-    position: absolute;
-    inset: 0;
-    display: none;
-    place-items: center;
-    padding-inline: 1.25rem;
-  }
-
-  .shot[data-state] {
+    inset: 6rem 1.25rem auto;
+    z-index: 2;
     display: grid;
-    grid-template-rows: minmax(0, 1fr) auto;
-    gap: 0.8rem;
   }
 
-  .shot[data-state='in'] {
-    animation: shot-in 1.1s cubic-bezier(0.22, 1, 0.36, 1) both;
+  .asides .notes {
+    grid-area: 1 / 1;
+    display: none;
+    max-width: 19rem;
+    padding: 0.9rem 1rem;
+    border-radius: 0.5rem;
+    background: rgb(11 13 18 / 72%);
+    backdrop-filter: blur(8px);
   }
 
-  .shot[data-state='out'] {
-    animation: shot-out 0.7s cubic-bezier(0.55, 0, 0.78, 0.3) both;
-  }
-
-  @keyframes shot-in {
-    from {
-      opacity: 0;
-      transform: translate3d(22%, 0, -520px) rotateY(-42deg);
-    }
-  }
-
-  @keyframes shot-out {
-    to {
-      opacity: 0;
-      transform: translate3d(-22%, 0, -520px) rotateY(42deg);
-    }
-  }
-
-  /* Le plan en cours dérive lentement, comme tenu par une caméra à l'épaule. */
-  .shot[data-state='in'] > :global(:first-child) {
-    animation: drift 11s ease-in-out 1.1s infinite alternate;
-  }
-
-  @keyframes drift {
-    from {
-      transform: rotateY(-7deg) rotateX(3deg);
-    }
-
-    to {
-      transform: rotateY(7deg) rotateX(-2deg) translateY(-1.5%);
-    }
+  .asides .notes[data-on]:not([data-empty]) {
+    display: grid;
   }
 
   .lines {
@@ -722,6 +661,7 @@ const config = {
 
   /* Chaque barre est un bouton : on revient à une étape en la touchant. */
   .beats button {
+    pointer-events: auto;
     display: block;
     width: 100%;
     height: 1.4rem;
@@ -765,6 +705,7 @@ const config = {
   .remote {
     position: absolute;
     z-index: 3;
+    pointer-events: auto;
     inset: auto 1.25rem 1.1rem;
     display: flex;
     align-items: center;
@@ -823,24 +764,14 @@ const config = {
       inset: 2.25rem 4rem auto;
     }
 
-    .visual {
-      inset: 8rem 0 10.5rem;
+    .asides {
+      inset: 9rem 4rem auto auto;
     }
 
-    .shot[data-state] {
-      grid-template: minmax(0, 1fr) / minmax(0, 1fr) 20rem;
-      gap: 2.5rem;
-      padding-inline: 4rem;
-    }
-
-    .shot[data-state]:not(:has(.notes)) {
-      grid-template-columns: minmax(0, 1fr);
-    }
-
-    .notes {
-      align-self: center;
+    .asides .notes {
       gap: 1rem;
-      font-size: 1.05rem;
+      max-width: 21rem;
+      font-size: 1rem;
     }
 
     .lines {
@@ -904,11 +835,12 @@ const config = {
 
 <script>
   import type { Stage, StageOptions } from '../../scripts/stage';
+  import type { Scene } from '../../scripts/holo';
 
   /** Durée d'une explication à l'écran, en millisecondes. */
-  const LINE_MS = 7600;
+  const LINE_MS = 9000;
   /** Temps que met la caméra à rejoindre l'écran avant que le film commence. */
-  const ZOOM_MS = 900;
+  const ZOOM_MS = 700;
 
   let stage: Stage | null = null;
   let onScroll: (() => void) | null = null;
@@ -935,6 +867,7 @@ const config = {
     const papers = [...root.querySelectorAll<HTMLElement>('[data-paper]')];
     const film = root.querySelector<HTMLElement>('[data-film]')!;
     const programs = [...film.querySelectorAll<HTMLElement>('[data-program]')];
+    const scenes = JSON.parse(root.dataset.films ?? '[]') as Scene[][];
     const open = film.querySelector<HTMLAnchorElement>('[data-remote="open"]')!;
     let current = -1;
 
@@ -946,26 +879,19 @@ const config = {
     const run = (program: HTMLElement) => {
       const lines = [...program.querySelectorAll('.lines li')];
       const beats = [...program.querySelectorAll<HTMLElement>('.beats button')];
-      const shots = [...program.querySelectorAll<HTMLElement>('.shot')];
+      const notes = [...program.querySelectorAll('.asides .notes')];
+      const film = scenes[programs.indexOf(program)];
       let started = performance.now();
       let shown = -1;
-      shots.forEach((shot) => delete shot.dataset.state);
       window.clearInterval(timer);
       const step = () => {
         const elapsed = performance.now() - started;
         const line = Math.min(lines.length - 1, Math.floor(elapsed / LINE_MS));
         if (line !== shown) {
-          // L'ancien plan sort, le nouveau entre : ses animations repartent de zéro.
-          const leaving = shots[shown];
-          if (leaving) {
-            leaving.dataset.state = 'out';
-            window.setTimeout(
-              () => leaving.dataset.state === 'out' && delete leaving.dataset.state,
-              700,
-            );
-          }
-          shots[line].dataset.state = 'in';
+          // Nouvelle étape : la maquette projetée dans le salon change avec la phrase.
+          stage?.project(film[line]);
           only(lines, line);
+          only(notes, line);
           shown = line;
         }
         beats.forEach((beat, i) =>
@@ -1012,6 +938,7 @@ const config = {
       film.removeAttribute('data-open');
       root.removeAttribute('data-playing');
       stage?.tune(-1);
+      stage?.project(null);
     };
 
     root

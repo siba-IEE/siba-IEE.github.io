@@ -7,12 +7,12 @@
   "year": "2026",
   "url": "https://solclim3.kumascience.com",
   "repo": null,
-  "summaryFr": "Logiciel de dimensionnement photovoltaïque et de stockage pour bureaux d’études. Les calculs sont vérifiés contre pvlib.",
-  "summaryEn": "PV and storage sizing software for design offices. The calculations are verified against pvlib.",
-  "stack": ["pvlib", "Tests automatisés"],
-  "tags": ["Outil", "Solaire", "Dimensionnement"],
-  "bodyFr": "SolClim-3 dimensionne des installations photovoltaïques et leur stockage pour les bureaux d’études.\n\nLes calculs sont vérifiés contre pvlib, la bibliothèque de référence du domaine, et couverts par 800 tests automatisés.",
-  "bodyEn": "SolClim-3 sizes photovoltaic systems and their storage for design offices.\n\nThe calculations are verified against pvlib, the field’s reference library, and covered by 800 automated tests.",
+  "summaryFr": "Ressource solaire calée sur mesures au sol, avec incertitude chiffrée, pour les 340 sous-préfectures de Guinée.",
+  "summaryEn": "Solar resource calibrated on ground measurements, with quantified uncertainty, for the 340 sub-prefectures of Guinea.",
+  "stack": ["Méthode LAT3", "31 stations au sol"],
+  "tags": ["Recherche", "Solaire", "Incertitude"],
+  "bodyFr": "Le satellite surestime le rayonnement en Afrique de l’Ouest : de 6,1 % en moyenne pour le global et de 24,6 % pour le direct. SolClim-3 corrige ces produits par calage sur des mesures au sol de référence.\n\nLà où il n’y a pas de station, la méthode LAT3 emprunte la correction de trois à dix stations de même latitude. Validée sur 31 stations et 930 transferts, elle ramène l’écart de 6,2 % à 2,0 % pour le global et de 24,6 % à 5,8 % pour le direct.",
+  "bodyEn": "The satellite overestimates irradiance in West Africa: by 6.1% on average for global and 24.6% for direct. SolClim-3 corrects these products by calibration on reference ground measurements.\n\nWhere there is no station, the LAT3 method borrows the correction of three to ten stations at the same latitude. Validated on 31 stations and 930 transfers, it cuts the gap from 6.2% to 2.0% for global and from 24.6% to 5.8% for direct.",
   "links": [
     {
       "label": "solclim3.kumascience.com",

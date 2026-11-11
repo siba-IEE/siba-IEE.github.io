@@ -34,8 +34,11 @@ export interface Room {
   frame(index: number): { z: number; side: number };
   /** Lumière d'accompagnement dans le couloir. */
   follow(position: THREE.Vector3): void;
-  /** 0 : plein jour ; 1 : pièce assombrie, éclairée par la télévision. */
-  setCinema(amount: number): void;
+  /**
+   * `amount` : 0 plein jour, 1 pièce assombrie, éclairée par la télévision.
+   * `dark` : 1 quand un film est projeté, la pièce s'efface presque entièrement.
+   */
+  setCinema(amount: number, dark?: number): void;
   setScreenTexture(texture: THREE.Texture): void;
   dispose(): void;
 }
@@ -373,7 +376,7 @@ export function buildRoom(frames: Frame[]): Room {
       ['side_table_01', 1.12, 0, doorZ - 4.15, 0],
       ['filmstrip_projector_8mm', 1.12, 0.55, doorZ - 4.15, Math.PI],
       ['steel_frame_shelves_03', -ROOM_HALF + 0.4, 0, doorZ - 5.5, Math.PI / 2, 0.9],
-      ['ceramic_vase_01', -0.42, 0.395, table.z - 0.04, 0],
+      ['ceramic_vase_01', 0.85, 0.68, far + 0.36, 0],
     ];
   let disposed = false;
   for (const [file, x, y, z, turn, scale = 1] of furniture) {
@@ -410,12 +413,13 @@ export function buildRoom(frames: Frame[]): Room {
       walkShadow.intensity = 2.2 * (1 - inside);
       walkShadow.castShadow = inside < 0.98;
     },
-    setCinema(amount) {
-      sun.intensity = baseSun * (1 - 0.82 * amount);
-      lamp.intensity = baseLamp * (1 - 0.7 * amount);
-      fill.intensity = baseFill * (1 - 0.6 * amount);
-      glass.color.setScalar(1).multiplyScalar(1 - 0.75 * amount);
-      tvLight.intensity = 9 * amount;
+    setCinema(amount, dark = 0) {
+      const rest = 1 - 0.88 * dark;
+      sun.intensity = baseSun * (1 - 0.82 * amount) * rest;
+      lamp.intensity = baseLamp * (1 - 0.7 * amount) * rest;
+      fill.intensity = baseFill * (1 - 0.6 * amount) * rest;
+      glass.color.setScalar(1).multiplyScalar((1 - 0.75 * amount) * rest);
+      tvLight.intensity = 9 * amount * (1 - 0.6 * dark);
     },
     setScreenTexture(texture) {
       screenMaterial.map = texture;

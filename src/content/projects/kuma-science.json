@@ -7,13 +7,13 @@
   "year": "2026",
   "url": "https://kumascience.com",
   "repo": null,
-  "summaryFr": "Site public de Kuma Science : données, méthodes et outils pour l’ingénierie énergétique en Afrique francophone.",
-  "summaryEn": "Kuma Science’s public site: data, methods and tools for energy engineering in French-speaking Africa.",
+  "summaryFr": "Site public de Kuma Science : référentiels nationaux de données énergétiques en Afrique de l’Ouest, outils et guides de méthode.",
+  "summaryEn": "Public site of Kuma Science: national energy data references in West Africa, tools and method guides.",
   "stack": ["Astro", "Supabase", "Cloudflare", "TypeScript"],
   "tags": ["Plateforme", "Énergie", "Afrique francophone"],
   "image": "/images/projets/kuma-science.webp",
-  "bodyFr": "Le site de Kuma Science publie en accès libre des données techniques, des pages de méthode et des outils pour l’ingénierie énergétique en Afrique francophone. Il comprend un média éditorial, le catalogue des séries issues de Kuma Data Core et une boutique d’outils.\n\nIl est construit avec Astro, utilise Supabase pour les comptes et est hébergé sur Cloudflare. Les erreurs sont suivies avec Sentry, et le code est couvert par des tests et une intégration continue.",
-  "bodyEn": "The Kuma Science site publishes open technical data, method pages and tools for energy engineering in French-speaking Africa. It includes an editorial section, the catalogue of series from Kuma Data Core and a tools shop.\n\nIt is built with Astro, uses Supabase for accounts and is hosted on Cloudflare. Errors are tracked with Sentry, and the code is covered by tests and continuous integration.",
+  "bodyFr": "Kuma Science construit et maintient des référentiels nationaux de données énergétiques en Afrique de l’Ouest. Chaque valeur y est publiée avec sa source et son niveau de confiance. Le site réunit quatre plateformes, les jeux de données, une API et des guides de méthode.\n\nIl propose aussi des outils : un explorateur cartographique, un atlas d’incertitude, un catalogue des séries et un atelier Python qui tourne dans le navigateur. Il est construit avec Astro, utilise Supabase pour les comptes et est hébergé sur Cloudflare.",
+  "bodyEn": "Kuma Science builds and maintains national energy data references in West Africa. Each value is published with its source and its confidence level. The site brings together four platforms, the datasets, an API and method guides.\n\nIt also offers tools: a map explorer, an uncertainty atlas, a catalogue of series and a Python workshop that runs in the browser. It is built with Astro, uses Supabase for accounts and is hosted on Cloudflare.",
   "links": [
     {
       "label": "kumascience.com",

@@ -15,6 +15,7 @@ import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { MeshoptDecoder } from 'three/addons/libs/meshopt_decoder.module.js';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
+import { createHolo, type Scene } from './holo';
 import { buildRoom, GAP, type Frame } from './room';
 import { createStack, type Volume } from './stack';
 import { createTelevision, type Channel } from './tv';
@@ -56,8 +57,10 @@ export interface StageOptions {
 export interface Stage {
   /** Position de défilement, en hauteurs d'écran depuis le haut de la scène. */
   setProgress: (progress: number) => void;
-  /** Rapproche la caméra de l'écran sur la chaîne donnée ; -1 pour revenir au fauteuil. */
+  /** Affiche le carton de la chaîne sur l'écran ; -1 pour revenir à la mosaïque. */
   tune: (index: number) => void;
+  /** Projette une scène du film au-dessus de la table basse ; `null` éteint le projecteur. */
+  project: (scene: Scene | null) => void;
   destroy: () => void;
 }
 
@@ -217,6 +220,23 @@ export function mountStage(
     object.receiveShadow = true;
   });
   scene.add(stack.group);
+
+  // Le film d'une réalisation se projette au-dessus de la table, depuis le projecteur 8 mm.
+  const holo = createHolo(
+    room.table,
+    {
+      tv: room.tv.center.clone().add(vec(0, 0.72, 0.1)),
+      lamp: vec(-1.75, 1.42, room.doorZ - 4.6),
+      window: vec(3.0, 1.7, room.doorZ - 4.3),
+      table: room.table.clone().add(vec(0, 0.5, 0)),
+      projector: vec(1.12, 0.78, room.doorZ - 4.15),
+    },
+    window.matchMedia('(prefers-reduced-motion: reduce)').matches,
+  );
+  scene.add(holo.group);
+  /** Point de vue demandé par la scène en cours : azimut, élévation, distance. */
+  const orbit = { azimuth: 0.4, elevation: 0.4, distance: 2.3 };
+  const orbitGoal = { ...orbit };
 
   /* ----- Trajet : le couloir en ligne droite, puis une courbe autour du fauteuil ----- */
 
@@ -458,7 +478,8 @@ export function mountStage(
 
     /* Décor : lumière d'accompagnement, télévision, pile de livres. */
     room.follow(point);
-    room.setCinema(power * 0.9 + zoom * 0.1);
+    room.setCinema(power, holo.level);
+    scene.environmentIntensity = 0.42 * (1 - 0.85 * holo.level);
     tv.setPower(power);
     watching = power > 0.95 && p < T.rise;
     if (!watching) {
@@ -523,21 +544,34 @@ export function mountStage(
       portrait ? 44 : 30,
       smooth(T.rise, T.books - 0.15, p),
     );
-    // Chaîne choisie : l'écran vient remplir l'image.
-    zoom += (zoomTarget - zoom) * Math.min(1, delta * 3.2);
+    // Chaîne choisie : la caméra quitte l'écran et tourne autour de la maquette projetée,
+    // le personnage assis derrière elle.
+    zoom += (zoomTarget - zoom) * (reduced ? 1 : Math.min(1, delta * 2.6));
+    const glide = reduced ? 1 : Math.min(1, delta * 1.8);
+    orbit.azimuth += (orbitGoal.azimuth - orbit.azimuth) * glide;
+    orbit.elevation += (orbitGoal.elevation - orbit.elevation) * glide;
+    orbit.distance += (orbitGoal.distance - orbit.distance) * glide;
     if (zoom > 0.001) {
-      // Assez près pour que l'écran déborde l'image, en largeur comme en hauteur.
-      const half = Math.tan(THREE.MathUtils.degToRad(tvFov) / 2);
-      const full =
-        Math.min(room.tv.height / 2 / half, room.tv.width / 2 / (half * camera.aspect)) * 0.98;
-      const eased = zoom * zoom * (3 - 2 * zoom);
-      view(center.x, center.y, center.z + full, center.x, center.y, center.z, tvFov, eased);
+      const reach = orbit.distance * (portrait ? 1.9 : 1.15);
+      const flat = Math.cos(orbit.elevation) * reach;
+      view(
+        holo.center.x + Math.sin(orbit.azimuth) * flat,
+        holo.center.y + Math.sin(orbit.elevation) * reach,
+        holo.center.z + Math.cos(orbit.azimuth) * flat,
+        holo.center.x,
+        holo.center.y - (portrait ? 0.25 : 0),
+        holo.center.z,
+        portrait ? 50 : 36,
+        zoom * zoom * (3 - 2 * zoom),
+      );
     }
+    stack.group.visible = holo.level < 0.5;
 
     camera.fov = fov;
     camera.updateProjectionMatrix();
     camera.position.copy(position);
     camera.lookAt(target);
+    holo.update(delta, camera);
     renderer.render(scene, camera);
   };
 
@@ -555,6 +589,15 @@ export function mountStage(
       zoomTarget = index >= 0 ? 1 : 0;
       tv.setProgram(index);
     },
+    project: (next) => {
+      holo.show(next);
+      if (!next?.cam) return;
+      // Jamais dans l'axe du fauteuil : le personnage masquerait la maquette.
+      const [azimuth, elevation, distance] = next.cam;
+      orbitGoal.azimuth = Math.sign(azimuth || 1) * Math.max(0.45, Math.abs(azimuth));
+      orbitGoal.elevation = elevation;
+      orbitGoal.distance = distance;
+    },
     destroy: () => {
       disposed = true;
       cancelAnimationFrame(frame);
@@ -563,6 +606,7 @@ export function mountStage(
       canvas.removeEventListener('pointermove', onMove);
       canvas.removeEventListener('click', onClick);
       stack.dispose();
+      holo.dispose();
       tv.dispose();
       room.dispose();
       environment.dispose();

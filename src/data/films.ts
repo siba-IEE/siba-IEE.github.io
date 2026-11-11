@@ -1,37 +1,27 @@
 /**
- * Le film de chaque réalisation, écrit comme une explication : à quoi elle sert, comment
- * elle fonctionne, ce qu'on en obtient. Chaque étape associe une phrase, un plan vectoriel
- * et, au besoin, quelques notes qui définissent les termes. Les faits viennent des fiches
- * de src/content/projects.
+ * Le film de chaque réalisation. Il ne se joue pas dans la télévision : il se construit en
+ * 3D au-dessus de la table du salon (src/scripts/holo.ts), à partir des données publiées
+ * des projets. Chaque étape associe une phrase, une scène et, au besoin, quelques notes.
+ *
+ * Sources des faits : dépôts rds-guinee, rds-cote-divoire et kuma-data-core, API publique
+ * du RNDE, sites rnde.kumascience.com, kumascience.com et solclim3.kumascience.com.
  */
 import type { Lang } from '../lib/i18n';
+import type { Scene } from '../scripts/holo';
+import donnees from './hologrammes.json';
 
 export type Label = Record<Lang, string>;
+/** Choisit le texte dans la langue de la page. */
+type Pick = (fr: string, en: string) => string;
 
-export type Shot =
-  | { scene: 'territory'; country: 'gn' | 'ci'; tag: Label; station?: Label }
-  | { scene: 'timeline'; from: number; to: number; steps: Label[] }
-  | { scene: 'sources'; inputs: Label[]; core: Label; output: Label }
-  | { scene: 'fields'; fields: Label[] }
-  | { scene: 'levels'; levels: { letter: string; label: Label; muted?: boolean }[] }
-  | { scene: 'versions'; note: Label; log?: boolean }
-  | { scene: 'layers'; layers: Label[] }
-  | { scene: 'network'; hub: Label; nodes: Label[]; flaky?: boolean }
-  | { scene: 'solar' }
-  | { scene: 'check'; left: Label; right: Label; count?: number }
-  | { scene: 'device'; kind: 'browser' | 'phone' | 'desktop'; address?: string; blocks: Label[] }
-  | { scene: 'convert'; output: Label }
-  | { scene: 'archive'; tags: Label[] };
+export interface Beat {
+  say: Label;
+  notes?: Label[];
+  scene: (t: Pick) => Scene;
+}
 
 /** Pictogramme de la chaîne sur la mosaïque de la télévision. */
 export type Glyph = 'gn' | 'ci' | 'database' | 'panel' | 'browser' | 'files' | 'phone';
-
-/** Une étape du film : ce qui est dit, ce qui est montré, et les précisions affichées à côté. */
-export interface Beat {
-  say: Label;
-  shot: Shot;
-  notes?: Label[];
-}
 
 export interface Film {
   glyph: Glyph;
@@ -40,17 +30,27 @@ export interface Film {
   beats: Beat[];
 }
 
-const same = (text: string): Label => ({ fr: text, en: text });
 const l = (fr: string, en: string): Label => ({ fr, en });
-const blank = same('');
+const k = donnees.gn.kankan;
+const SOL = '#ffc266';
+const NASA = '#7fdcff';
+const ERA5 = '#b8a1ff';
+const SARAH = '#ff7a7a';
+const months = (t: Pick) => t('J F M A M J J A S O N D', 'J F M A M J J A S O N D').split(' ');
 
-const radiation = [
-  l(
-    'GHI : rayonnement global sur un plan horizontal',
-    'GHI: global irradiance on a horizontal plane',
-  ),
-  l('DNI : rayonnement direct, face au soleil', 'DNI: direct irradiance, facing the sun'),
-  l('DHI : rayonnement diffusé par le ciel', 'DHI: irradiance scattered by the sky'),
+/** Kankan en 2022 : la mesure au sol et trois produits satellitaires, au même endroit. */
+const disagreement = (t: Pick): Scene['panels'] => [
+  {
+    kind: 'lines',
+    title: t('Kankan, 2022 : rayonnement global', 'Kankan, 2022: global irradiance'),
+    unit: 'kWh/m²/j',
+    series: [
+      { name: t('Sol', 'Ground'), color: SOL, values: k.sol },
+      { name: 'NASA POWER', color: NASA, values: k.nasa },
+      { name: 'ERA5-Land', color: ERA5, values: k.era5 },
+      { name: 'SARAH-3', color: SARAH, values: k.sarah },
+    ],
+  },
 ];
 
 export const films: Record<string, Film> = {
@@ -60,84 +60,153 @@ export const films: Record<string, Film> = {
     beats: [
       {
         say: l(
-          'Le RNDE rassemble en un seul endroit la donnée énergétique de la Guinée, sous-préfecture par sous-préfecture.',
-          'RNDE gathers Guinea’s energy data in one place, sub-prefecture by sub-prefecture.',
+          'Le RNDE publie la donnée énergétique de la Guinée, territoire par territoire. Le solaire est le premier domaine ouvert.',
+          'RNDE publishes Guinea’s energy data, territory by territory. Solar is the first domain opened.',
         ),
-        shot: {
-          scene: 'territory',
-          country: 'gn',
-          tag: l('340 sous-préfectures', '340 sub-prefectures'),
-        },
-        notes: [l('Un repère : un territoire décrit', 'One marker: one territory described')],
-      },
-      {
-        say: l(
-          'Chaque territoire a sa fiche. Il y en a 374.',
-          'Each territory has its own sheet. There are 374.',
-        ),
-        shot: {
-          scene: 'device',
-          kind: 'browser',
-          address: 'rnde.kumascience.com',
-          blocks: [
-            l('Fiche territoriale', 'Territory sheet'),
-            l('Fiche territoriale', 'Territory sheet'),
-            l('Fiche territoriale', 'Territory sheet'),
-          ],
-        },
-      },
-      {
-        say: l(
-          'Six jeux de données sont ouverts. On les lit par une API ou par des services cartographiques.',
-          'Six datasets are open. They are read through an API or through map services.',
-        ),
-        shot: {
-          scene: 'network',
-          hub: same('RNDE'),
-          nodes: [l('6 jeux ouverts', '6 open datasets'), same('API'), same('WMS'), same('WFS')],
-        },
         notes: [
-          l('API : les valeurs, pour un programme', 'API: the values, for a program'),
-          l('WMS : des cartes prêtes à afficher', 'WMS: maps ready to display'),
-          l('WFS : les objets géographiques eux-mêmes', 'WFS: the geographic features themselves'),
+          l('340 sous-préfectures', '340 sub-prefectures'),
+          l(
+            'Du plus clair au plus foncé : de 4,7 à 5,9 kWh/m²/j',
+            'Lightest to darkest: 4.7 to 5.9 kWh/m²/day',
+          ),
+          l(
+            'Yomou 4,76 au sud, Siguiri 5,75 au nord',
+            'Yomou 4.76 in the south, Siguiri 5.75 in the north',
+          ),
         ],
+        scene: () => ({
+          map: {
+            key: 'gn',
+            theme: 'ghi',
+            labels: { Siguiri: 'Siguiri 5,75', Yomou: 'Yomou 4,76' },
+          },
+          cam: [0.35, 0.62, 2.1],
+        }),
       },
       {
         say: l(
-          'Un catalogue décrit chaque jeu selon trois normes internationales.',
-          'A catalogue describes each dataset according to three international standards.',
+          'La même carte répond à une autre question : quelle confiance accorder à chaque valeur ?',
+          'The same map answers another question: how far can each value be trusted?',
         ),
-        shot: { scene: 'layers', layers: [same('ISO 19115'), same('CSW'), same('DCAT')] },
+        notes: [
+          l('Bleu : haute confiance', 'Blue: high confidence'),
+          l('Ocre : incertitude élevée', 'Ochre: high uncertainty'),
+        ],
+        scene: () => ({ map: { key: 'gn', theme: 'confiance' }, cam: [-0.3, 0.7, 2.0] }),
+      },
+      {
+        say: l(
+          'Et à une troisième : de combien la valeur peut-elle s’écarter d’une mesure au sol ?',
+          'And a third one: how far can the value deviate from a ground measurement?',
+        ),
+        notes: [
+          l('Clair : moins de 2 %', 'Light: under 2%'),
+          l('Moyen : 2 à 4 %', 'Medium: 2 to 4%'),
+          l('Foncé : 4 % et plus', 'Dark: 4% and above'),
+        ],
+        scene: () => ({ map: { key: 'gn', theme: 'ecart' }, cam: [0.1, 0.8, 1.9] }),
+      },
+      {
+        say: l(
+          'Chaque territoire a sa fiche, et chaque section de la fiche répond à une question.',
+          'Each territory has its sheet, and each section of the sheet answers a question.',
+        ),
         notes: [
           l(
-            'ISO 19115 : la fiche descriptive d’un jeu',
-            'ISO 19115: the description sheet of a dataset',
+            '374 fiches : 340 sous-préfectures et 34 préfectures',
+            '374 sheets: 340 sub-prefectures and 34 prefectures',
           ),
-          l('CSW : l’interrogation du catalogue', 'CSW: querying the catalogue'),
-          l('DCAT : l’échange entre portails', 'DCAT: exchange between portals'),
         ],
+        scene: (t) => ({
+          map: { key: 'gn', theme: 'ghi' },
+          panels: [
+            {
+              kind: 'card',
+              title: t('Fiche territoriale', 'Territory sheet'),
+              rows: [
+                [
+                  t('Ressource', 'Resource'),
+                  t('GHI et DNI annuels, 1991–2020', 'Annual GHI and DNI, 1991–2020'),
+                ],
+                [
+                  t('Fiabilité', 'Reliability'),
+                  t('Quelle confiance accorder aux valeurs ?', 'How far to trust the values?'),
+                ],
+                [
+                  t('Variabilité', 'Variability'),
+                  t('P50, P90, minimum, maximum', 'P50, P90, minimum, maximum'),
+                ],
+                [
+                  t('Saisons', 'Seasons'),
+                  t(
+                    'Sèche de novembre à mai, pluies de juin à octobre',
+                    'Dry November to May, rains June to October',
+                  ),
+                ],
+                [
+                  t('Profil', 'Profile'),
+                  t(
+                    '12 mois, avec leur bande d’incertitude',
+                    '12 months, with their uncertainty band',
+                  ),
+                ],
+              ],
+            },
+          ],
+          cam: [0.55, 0.42, 2.4],
+        }),
       },
       {
         say: l(
-          'Grâce à ces normes, un autre portail peut moissonner le catalogue et présenter ces données chez lui.',
-          'Thanks to these standards, another portal can harvest the catalogue and present the data on its side.',
+          'Une fiche ne donne jamais de rang. Une trentaine de mailles satellite pour 340 territoires ne permet pas de classer : elle dit « parmi le tiers le plus ensoleillé ».',
+          'A sheet never gives a rank. Some thirty satellite cells for 340 territories cannot support a ranking: it says “among the sunniest third”.',
         ),
-        shot: {
-          scene: 'network',
-          hub: l('Catalogue', 'Catalogue'),
-          nodes: [l('Portail', 'Portal'), l('Portail', 'Portal'), l('Portail', 'Portal')],
-        },
+        scene: () => ({ map: { key: 'gn', theme: 'ghi', grid: true }, cam: [0, 1.05, 1.8] }),
       },
       {
         say: l(
-          '« National » désigne la couverture du territoire, pas un statut conféré par l’État.',
-          '“National” refers to the coverage of the territory, not to a status granted by the State.',
+          'Six jeux de données sont ouverts, sans compte ni clé, et le même jeu se récupère de cinq façons.',
+          'Six datasets are open, with no account or key, and the same dataset can be fetched in five ways.',
         ),
-        shot: {
-          scene: 'territory',
-          country: 'gn',
-          tag: l('Tout le territoire', 'The whole territory'),
-        },
+        notes: [
+          l('WMS : des cartes prêtes à afficher', 'WMS: maps ready to display'),
+          l('WFS : les objets géographiques', 'WFS: the geographic features'),
+          l('CSW : le catalogue, moissonnable', 'CSW: the catalogue, harvestable'),
+        ],
+        scene: (t) => ({
+          panels: [
+            {
+              kind: 'card',
+              title: t('Six jeux ouverts', 'Six open datasets'),
+              rows: [
+                [
+                  'CC BY 4.0',
+                  t('Irradiation par sous-préfecture', 'Irradiation by sub-prefecture'),
+                ],
+                ['CC BY 4.0', t('Niveau de confiance', 'Confidence level')],
+                [
+                  'CC BY 4.0',
+                  t('Irradiation aux 34 chefs-lieux', 'Irradiation at the 34 capitals'),
+                ],
+                ['CC BY 4.0', t('Séries horaires 2001–2025', 'Hourly series 2001–2025')],
+                ['CC BY-IGO', t('Limites des préfectures', 'Prefecture boundaries')],
+                ['CC BY-IGO', t('Limites des sous-préfectures', 'Sub-prefecture boundaries')],
+              ],
+            },
+            {
+              kind: 'card',
+              title: t('Cinq accès', 'Five routes'),
+              rows: [
+                [t('Fichier', 'File'), 'CSV, GeoJSON'],
+                ['API', 'JSON, DCAT'],
+                ['WMS', t('Cartes', 'Maps')],
+                ['WFS', t('Objets', 'Features')],
+                ['CSW', t('Catalogue', 'Catalogue')],
+              ],
+            },
+          ],
+          cam: [0.25, 0.3, 2.5],
+        }),
       },
     ],
   },
@@ -147,103 +216,151 @@ export const films: Record<string, Film> = {
     beats: [
       {
         say: l(
-          'Pour dimensionner une installation solaire, il faut connaître le rayonnement du lieu sur de longues années.',
-          'Sizing a solar installation requires knowing the irradiance of the site over many years.',
+          'Un dimensionnement solaire vaut ce que valent ses données. Le référentiel donne le rayonnement de 34 localités de Guinée.',
+          'A solar design is only as good as its data. The reference gives the irradiance of 34 localities in Guinea.',
         ),
-        shot: { scene: 'solar' },
-        notes: [l('Le soleil reçu fixe la production', 'The sun received sets the output')],
-      },
-      {
-        say: l(
-          'Le référentiel donne cette information pour 34 chefs-lieux de préfecture de Guinée.',
-          'The reference gives this information for 34 prefecture capitals of Guinea.',
-        ),
-        shot: { scene: 'territory', country: 'gn', tag: l('34 localités', '34 localities') },
-        notes: [l('Plus de 68 millions d’enregistrements', 'More than 68 million records')],
-      },
-      {
-        say: l(
-          'Il réunit des sources satellitaires, des réanalyses et une station au sol.',
-          'It brings together satellite sources, reanalyses and a ground station.',
-        ),
-        shot: {
-          scene: 'sources',
-          inputs: [
-            same('NASA POWER'),
-            same('SARAH-3'),
-            same('CAMS'),
-            same('ERA5-Land'),
-            l('Station au sol', 'Ground station'),
-          ],
-          core: same('RDS Guinée'),
-          output: same('CSV'),
-        },
-      },
-      {
-        say: l(
-          'Les séries remontent jusqu’à 1981, au pas mensuel, journalier ou horaire.',
-          'The series go back to 1981, at monthly, daily or hourly steps.',
-        ),
-        shot: {
-          scene: 'timeline',
-          from: 1981,
-          to: 2025,
-          steps: [l('Mensuel', 'Monthly'), l('Journalier', 'Daily'), l('Horaire', 'Hourly')],
-        },
-      },
-      {
-        say: l(
-          'Chaque valeur garde ce qui permet de la juger : sa source, sa méthode, sa période de validité, son incertitude.',
-          'Each value keeps what is needed to judge it: its source, its method, its validity period, its uncertainty.',
-        ),
-        shot: {
-          scene: 'fields',
-          fields: [
-            same('Source'),
-            l('Méthode', 'Method'),
-            l('Niveau de confiance', 'Confidence level'),
-            l('Période de validité', 'Validity period'),
-            l('Incertitude', 'Uncertainty'),
-          ],
-        },
-      },
-      {
-        say: l(
-          'Le niveau de confiance dit d’où vient la valeur.',
-          'The confidence level tells where the value comes from.',
-        ),
-        shot: {
-          scene: 'levels',
-          levels: [
-            { letter: 'A', label: l('Mesure au sol validée', 'Validated ground measurement') },
-            { letter: 'B', label: l('Satellite ou réanalyse', 'Satellite or reanalysis') },
-          ],
-        },
-      },
-      {
-        say: l(
-          'La station de Kankan, issue de la campagne ESMAP/WAPP, est la première au niveau A.',
-          'The Kankan station, from the ESMAP/WAPP campaign, is the first at level A.',
-        ),
-        shot: {
-          scene: 'territory',
-          country: 'gn',
-          tag: same('ESMAP / WAPP'),
-          station: l('Kankan · niveau A', 'Kankan · level A'),
-        },
-      },
-      {
-        say: l(
-          'Le tout est publié sous licence CC BY 4.0 et archivé sur Zenodo.',
-          'Everything is published under the CC BY 4.0 licence and archived on Zenodo.',
-        ),
-        shot: { scene: 'archive', tags: [same('CC BY 4.0'), same('Zenodo'), same('v2.0.1')] },
         notes: [
           l(
-            'CC BY : réutilisation libre, en citant la source',
-            'CC BY: free reuse, with attribution',
+            'Une colonne : le rayonnement moyen, 1991–2020',
+            'One column: mean irradiance, 1991–2020',
+          ),
+          l('Plus de 68 millions de valeurs', 'More than 68 million values'),
+        ],
+        scene: () => ({
+          map: {
+            key: 'gn',
+            columns: true,
+            labels: { Siguiri: 'Siguiri 5,75', Yomou: 'Yomou 4,76' },
+          },
+          cam: [0.45, 0.5, 2.2],
+        }),
+      },
+      {
+        say: l(
+          'Kindia et Mamou, à 85 km l’une de l’autre, reçoivent exactement les mêmes valeurs : elles tombent dans la même maille de 110 km du satellite.',
+          'Kindia and Mamou, 85 km apart, get exactly the same values: they fall in the same 110 km cell of the satellite product.',
+        ),
+        notes: [
+          l(
+            'Le référentiel le dit, au lieu de le cacher',
+            'The reference says so, instead of hiding it',
           ),
         ],
+        scene: () => ({
+          map: {
+            key: 'gn',
+            columns: true,
+            grid: true,
+            mark: ['Kindia', 'Mamou'],
+            labels: { Kindia: 'Kindia', Mamou: 'Mamou' },
+          },
+          cam: [-0.5, 0.75, 1.9],
+        }),
+      },
+      {
+        say: l(
+          'Tout le pays repose sur un seul point de vérité au sol : la station de Kankan, 730 jours de mesure.',
+          'The whole country rests on a single ground-truth point: the Kankan station, 730 days of measurement.',
+        ),
+        notes: [
+          l('Campagne ESMAP / WAPP, 2021–2023', 'ESMAP / WAPP campaign, 2021–2023'),
+          l('Seule série au niveau de confiance A', 'The only series at confidence level A'),
+        ],
+        scene: () => ({
+          map: { key: 'gn', columns: true, mark: ['Kankan'], labels: { Kankan: 'Kankan' } },
+          cam: [0.9, 0.45, 2.0],
+        }),
+      },
+      {
+        say: l(
+          'Au même endroit, la même année, les sources ne disent pas la même chose.',
+          'In the same place, the same year, the sources do not say the same thing.',
+        ),
+        notes: [
+          l('Sol : 5,39 kWh/m²/j', 'Ground: 5.39 kWh/m²/day'),
+          l('NASA POWER : 5,52', 'NASA POWER: 5.52'),
+          l('ERA5-Land : 5,59', 'ERA5-Land: 5.59'),
+          l('SARAH-3 : 5,99, soit 11 % au-dessus du sol', 'SARAH-3: 5.99, 11% above the ground'),
+        ],
+        scene: (t) => ({
+          map: { key: 'gn', mark: ['Kankan'], labels: { Kankan: 'Kankan' } },
+          panels: disagreement(t),
+          cam: [0.3, 0.38, 2.4],
+        }),
+      },
+      {
+        say: l(
+          'Pendant l’harmattan, la poussière monte et le rayonnement direct mesuré au sol s’effondre. Le satellite le voit mal.',
+          'During the harmattan, dust rises and the direct irradiance measured on the ground collapses. The satellite sees it poorly.',
+        ),
+        notes: [
+          l(
+            'Poussières PM10 : 89 µg/m³ en mars, 14 en août',
+            'PM10 dust: 89 µg/m³ in March, 14 in August',
+          ),
+        ],
+        scene: (t) => ({
+          panels: [
+            {
+              kind: 'lines',
+              title: t('Kankan, 2022 : rayonnement direct', 'Kankan, 2022: direct irradiance'),
+              unit: 'kWh/m²/j',
+              series: [
+                { name: t('Sol', 'Ground'), color: SOL, values: k.dni_sol },
+                { name: 'CAMS', color: NASA, values: k.dni_cams },
+              ],
+            },
+            {
+              kind: 'bars',
+              title: t('Poussières à Kankan', 'Dust at Kankan'),
+              unit: 'PM10, µg/m³',
+              labels: months(t),
+              values: k.pm10,
+              mark: [1, 2],
+            },
+          ],
+          cam: [0.2, 0.28, 2.6],
+        }),
+      },
+      {
+        say: l(
+          'C’est pourquoi chaque valeur voyage avec un passeport, et un niveau de confiance qui dit d’où elle vient.',
+          'This is why every value travels with a passport, and a confidence level that tells where it comes from.',
+        ),
+        notes: [
+          l('A : mesure directe au sol', 'A: direct ground measurement'),
+          l(
+            'B : satellite ou réanalyse, non validé au sol',
+            'B: satellite or reanalysis, not validated on the ground',
+          ),
+          l('C : estimation tirée de la littérature', 'C: estimate drawn from the literature'),
+        ],
+        scene: (t) => ({
+          panels: [
+            {
+              kind: 'card',
+              title: t('Le passeport d’une valeur', 'The passport of a value'),
+              rows: [
+                ['source', 'NASA POWER'],
+                [t('méthode', 'method'), t('modèle satellitaire', 'satellite model')],
+                [t('confiance', 'confidence'), 'B'],
+                [t('validité', 'validity'), '1991–2020'],
+                [t('incertitude', 'uncertainty'), t('chiffrée', 'quantified')],
+              ],
+            },
+          ],
+          cam: [0.3, 0.25, 2.3],
+        }),
+      },
+      {
+        say: l(
+          '« Le terrain ne remplace pas le satellite, il le calibre. » Le tout est ouvert : licence CC BY 4.0, archivé sur Zenodo.',
+          '“The ground does not replace the satellite, it calibrates it.” Everything is open: CC BY 4.0 licence, archived on Zenodo.',
+        ),
+        scene: () => ({
+          map: { key: 'gn', columns: true, mark: ['Kankan'] },
+          cam: [-0.4, 0.55, 2.3],
+        }),
       },
     ],
   },
@@ -253,99 +370,59 @@ export const films: Record<string, Film> = {
     beats: [
       {
         say: l(
-          'Le même référentiel existe pour la Côte d’Ivoire : 142 localités.',
-          'The same reference exists for Côte d’Ivoire: 142 localities.',
+          'Le même référentiel existe pour la Côte d’Ivoire : 142 localités, les 31 régions et les 111 départements.',
+          'The same reference exists for Côte d’Ivoire: 142 localities, the 31 regions and the 111 departments.',
         ),
-        shot: { scene: 'territory', country: 'ci', tag: l('142 localités', '142 localities') },
-        notes: [l('31 régions', '31 regions'), l('111 départements', '111 departments')],
-      },
-      {
-        say: l(
-          'Il fournit le rayonnement, la température, l’humidité, le vent, la pluie et les particules.',
-          'It provides irradiance, temperature, humidity, wind, rain and particles.',
-        ),
-        shot: {
-          scene: 'layers',
-          layers: [
-            l('Rayonnement', 'Irradiance'),
-            l('Température, humidité', 'Temperature, humidity'),
-            l('Vent', 'Wind'),
-            l('Pluie', 'Rain'),
-            l('Particules', 'Particles'),
-          ],
-        },
-        notes: radiation,
-      },
-      {
-        say: l('Ces grandeurs viennent de six sources.', 'These quantities come from six sources.'),
-        shot: {
-          scene: 'sources',
-          inputs: [
-            same('NASA POWER'),
-            same('ERA5'),
-            same('CAMS'),
-            same('SARAH-3'),
-            same('GPM IMERG'),
-            same('CHIRPS'),
-          ],
-          core: same('RDS Côte d’Ivoire'),
-          output: same('CSV'),
-        },
-      },
-      {
-        say: l(
-          'Les séries couvrent 1991 à 2025, au pas mensuel et journalier.',
-          'The series cover 1991 to 2025, at monthly and daily steps.',
-        ),
-        shot: {
-          scene: 'timeline',
-          from: 1991,
-          to: 2025,
-          steps: [l('Mensuel', 'Monthly'), l('Journalier', 'Daily')],
-        },
-        notes: [l('37,6 millions de valeurs', '37.6 million values')],
-      },
-      {
-        say: l(
-          'Toutes sont au niveau de confiance B : aucune mesure au sol n’est encore intégrée.',
-          'All are at confidence level B: no ground measurement is integrated yet.',
-        ),
-        shot: {
-          scene: 'levels',
-          levels: [
-            {
-              letter: 'A',
-              label: l('Mesure au sol : pas encore', 'Ground measurement: not yet'),
-              muted: true,
-            },
-            { letter: 'B', label: l('Satellite ou réanalyse', 'Satellite or reanalysis') },
-          ],
-        },
-      },
-      {
-        say: l(
-          'Chaque lot est produit par Kuma Data Core, et une décision publiée le documente.',
-          'Each batch is produced by Kuma Data Core, and a published decision documents it.',
-        ),
-        shot: {
-          scene: 'sources',
-          inputs: [l('Lot', 'Batch'), l('Lot', 'Batch'), l('Lot', 'Batch')],
-          core: same('Kuma Data Core'),
-          output: l('Décision publiée', 'Published decision'),
-        },
-      },
-      {
-        say: l(
-          'Les données sont sous licence CC BY 4.0.',
-          'The data is under the CC BY 4.0 licence.',
-        ),
-        shot: { scene: 'archive', tags: [same('CC BY 4.0'), same('Zenodo')] },
         notes: [
           l(
-            'CC BY : réutilisation libre, en citant la source',
-            'CC BY: free reuse, with attribution',
+            'Une colonne : le rayonnement moyen, 1991–2020',
+            'One column: mean irradiance, 1991–2020',
           ),
+          l('De 4,52 au sud à 5,66 au nord', 'From 4.52 in the south to 5.66 in the north'),
         ],
+        scene: () => ({ map: { key: 'ci', columns: true }, cam: [0.4, 0.55, 2.2] }),
+      },
+      {
+        say: l(
+          'Il ne s’arrête pas au rayonnement : température, humidité, vent, pluie et particules, à partir de six sources.',
+          'It does not stop at irradiance: temperature, humidity, wind, rain and particles, from six sources.',
+        ),
+        scene: (t) => ({
+          map: { key: 'ci', columns: true },
+          panels: [
+            {
+              kind: 'card',
+              title: t('Six sources', 'Six sources'),
+              rows: [
+                ['NASA POWER', t('Rayonnement, météo', 'Irradiance, weather')],
+                ['ERA5', t('Réanalyse', 'Reanalysis')],
+                ['CAMS', t('Rayonnement direct, particules', 'Direct irradiance, particles')],
+                ['SARAH-3', t('Rayonnement, Meteosat', 'Irradiance, Meteosat')],
+                ['GPM IMERG', t('Pluie', 'Rain')],
+                ['CHIRPS', t('Pluie', 'Rain')],
+              ],
+            },
+          ],
+          cam: [0.6, 0.4, 2.4],
+        }),
+      },
+      {
+        say: l(
+          'Ici, aucune station au sol n’est encore intégrée. Toutes les séries restent donc au niveau B, et le référentiel le dit.',
+          'Here, no ground station is integrated yet. All series therefore stay at level B, and the reference says so.',
+        ),
+        notes: [
+          l('B : suffisant pour la préfaisabilité', 'B: enough for pre-feasibility'),
+          l('37,6 millions de valeurs, 1991–2025', '37.6 million values, 1991–2025'),
+        ],
+        scene: () => ({ map: { key: 'ci', columns: true }, cam: [-0.5, 0.8, 2.0] }),
+      },
+      {
+        say: l(
+          'Chaque lot est produit par Kuma Data Core et documenté par une décision publiée. Licence CC BY 4.0.',
+          'Each batch is produced by Kuma Data Core and documented by a published decision. CC BY 4.0 licence.',
+        ),
+        scene: () => ({ map: { key: 'ci', columns: true }, cam: [0.1, 0.45, 2.5] }),
       },
     ],
   },
@@ -355,97 +432,139 @@ export const films: Record<string, Film> = {
     beats: [
       {
         say: l(
-          'Kuma Data Core est le moteur qui fabrique les référentiels. Il ingère plusieurs sources.',
-          'Kuma Data Core is the engine that builds the references. It ingests several sources.',
+          'Le problème de départ : les produits satellitaires se contredisent, et rien ne dit lequel croire. Kuma Data Core est le moteur qui range ce désordre.',
+          'The starting problem: satellite products contradict each other, and nothing says which to believe. Kuma Data Core is the engine that puts this in order.',
         ),
-        shot: {
-          scene: 'sources',
-          inputs: [
-            same('NASA POWER'),
-            same('SARAH-3'),
-            same('CAMS'),
-            same('ERA5-Land'),
-            l('Mesures au sol', 'Ground measurements'),
+        scene: (t) => ({ panels: disagreement(t), cam: [0.2, 0.25, 2.2] }),
+      },
+      {
+        say: l(
+          'Une valeur n’y est jamais enregistrée seule. Voici ce que l’API renvoie pour un jour à Conakry.',
+          'A value is never stored alone. This is what the API returns for one day in Conakry.',
+        ),
+        scene: (t) => ({
+          panels: [
+            {
+              kind: 'card',
+              title: '/v1/series/gin_conakry_ghi_nasa_power',
+              rows: [
+                ['instant_mesure', '2024-06-15'],
+                ['valeur', '5,83 kWh/m²/j'],
+                ['niveau_effectif', 'B'],
+                ['statut', t('brut', 'brut (raw)')],
+                ['methode_collecte', t('modèle satellitaire', 'satellite model')],
+              ],
+            },
           ],
-          core: same('Kuma Data Core'),
-          output: l('Référentiels', 'References'),
-        },
+          cam: [0.3, 0.25, 2.2],
+        }),
       },
       {
         say: l(
-          'Une valeur n’est jamais enregistrée seule : elle porte sa source, sa méthode, son niveau de confiance, ses dates de validité et son statut éditorial.',
-          'A value is never stored alone: it carries its source, its method, its confidence level, its validity dates and its editorial status.',
+          'Le niveau de confiance n’est pas saisi à la main : quatre règles le déduisent de la source et de la méthode.',
+          'The confidence level is not typed by hand: four rules derive it from the source and the method.',
         ),
-        shot: {
-          scene: 'fields',
-          fields: [
-            same('Source'),
-            l('Méthode', 'Method'),
-            l('Confiance A · B · C', 'Confidence A · B · C'),
-            l('Dates de validité', 'Validity dates'),
-            l('Statut éditorial', 'Editorial status'),
-          ],
-        },
-      },
-      {
-        say: l(
-          'Rien n’est écrasé. Une correction crée une nouvelle version, et l’ancienne est conservée.',
-          'Nothing is overwritten. A correction creates a new version, and the previous one is kept.',
-        ),
-        shot: {
-          scene: 'versions',
-          note: l('L’ancienne version reste', 'The previous version stays'),
-        },
-      },
-      {
-        say: l(
-          'Des triggers PostgreSQL inscrivent chaque écriture dans une table d’audit.',
-          'PostgreSQL triggers record every write in an audit table.',
-        ),
-        shot: { scene: 'versions', note: l('Table d’audit', 'Audit table'), log: true },
-      },
-      {
-        say: l(
-          'À partir de modèles publiés, le moteur calcule ce dont l’ingénieur a besoin, jusqu’au productible.',
-          'From published models, the engine computes what the engineer needs, up to the energy yield.',
-        ),
-        shot: { scene: 'solar' },
         notes: [
-          l('Rayonnement dans le plan des modules', 'Irradiance in the plane of the modules'),
-          l('P50 : production atteinte une année sur deux', 'P50: output reached one year in two'),
           l(
-            'P90 : production atteinte neuf années sur dix',
-            'P90: output reached nine years in ten',
+            'Une valeur calculée hérite du plus faible de ses entrants',
+            'A computed value inherits the lowest of its inputs',
           ),
         ],
+        scene: (t) => ({
+          panels: [
+            {
+              kind: 'card',
+              title: t('Règles de confiance', 'Confidence rules'),
+              rows: [
+                ['→ C', t('source de fiabilité faible', 'low-reliability source')],
+                ['→ C', t('expertise humaine', 'human expertise')],
+                [
+                  '→ A',
+                  t(
+                    'mesure directe, source de haute fiabilité',
+                    'direct measurement, high-reliability source',
+                  ),
+                ],
+                ['→ B', t('tout le reste', 'everything else')],
+              ],
+            },
+          ],
+          cam: [-0.3, 0.25, 2.2],
+        }),
       },
       {
         say: l(
-          'Une API FastAPI sert ces données aux outils.',
-          'A FastAPI API serves this data to tools.',
+          'Rien n’est écrasé. Corriger une valeur ferme l’ancienne version et en ouvre une nouvelle au même instant ; la base refuse que deux versions se chevauchent.',
+          'Nothing is overwritten. Correcting a value closes the previous version and opens a new one at the same instant; the database refuses overlapping versions.',
         ),
-        shot: { scene: 'network', hub: same('API FastAPI'), nodes: [blank, blank, blank, blank] },
+        scene: (t) => ({
+          panels: [
+            {
+              kind: 'card',
+              title: t('Deux versions d’une valeur (exemple)', 'Two versions of a value (example)'),
+              rows: [
+                ['v1 · valide_du', '2026-05-11 12:30'],
+                ['v1 · valide_au', '2026-07-02 09:14'],
+                ['v2 · valide_du', '2026-07-02 09:14'],
+                ['v2 · valide_au', t('ouverte', 'open')],
+                ['EXCLUDE', t('chevauchement impossible', 'overlap impossible')],
+              ],
+            },
+            {
+              kind: 'card',
+              title: t('Journal d’audit (exemple)', 'Audit log (example)'),
+              rows: [
+                ['type_operation', 'U'],
+                ['champs_modifies', '{"valeur": [5.83, 5.79]}'],
+                ['auteur_applicatif', t('renseigné', 'recorded')],
+                ['horodatage', 'clock_timestamp()'],
+              ],
+            },
+          ],
+          cam: [0.15, 0.25, 2.6],
+        }),
       },
       {
         say: l(
-          'Une instance publique est en ligne pour la Guinée. Le même moteur tourne pour la Côte d’Ivoire et le Burkina Faso.',
-          'A public instance is online for Guinea. The same engine runs for Côte d’Ivoire and Burkina Faso.',
+          'Deux pièges que le moteur documente. Une unité de poussière mal convertie donnait 34 % de pertes par salissure au lieu de 2 %. Et le P90 est le 10ᵉ centile, pas le 90ᵉ.',
+          'Two pitfalls the engine documents. A wrongly converted dust unit gave 34% soiling losses instead of 2%. And P90 is the 10th percentile, not the 90th.',
         ),
-        shot: { scene: 'territory', country: 'gn', tag: same('api.kumascience.com') },
+        scene: (t) => ({
+          panels: [
+            {
+              kind: 'bars',
+              title: t('Pertes par salissure', 'Soiling losses'),
+              unit: '%',
+              labels: [
+                t('g/m³ pris pour des µg/m³', 'g/m³ read as µg/m³'),
+                t('unité corrigée', 'unit fixed'),
+              ],
+              values: [34, 2],
+              mark: [1],
+            },
+          ],
+          cam: [0.3, 0.25, 2.2],
+        }),
+      },
+      {
+        say: l(
+          'À partir de modèles publiés, il calcule ce dont l’ingénieur a besoin : rayonnement dans le plan des modules, productible corrigé de la chaleur, P50 et P90, salissure.',
+          'From published models, it computes what the engineer needs: plane-of-array irradiance, heat-corrected yield, P50 and P90, soiling.',
+        ),
         notes: [
-          l('Côte d’Ivoire : 142 localités', 'Côte d’Ivoire: 142 localities'),
           l(
-            'Burkina Faso : 47 provinces, 351 communes',
-            'Burkina Faso: 47 provinces, 351 communes',
+            'Perez 1990, Ross 1980, Coello et Boyle 2019',
+            'Perez 1990, Ross 1980, Coello and Boyle 2019',
           ),
         ],
+        scene: () => ({ model: 'kit', cam: [0.6, 0.45, 1.7] }),
       },
       {
-        say: l('Le code est sous licence AGPL.', 'The code is under the AGPL licence.'),
-        shot: {
-          scene: 'archive',
-          tags: [l('Licence AGPL', 'AGPL licence'), same('github.com/siba-IEE')],
-        },
+        say: l(
+          'Une API publique sert le tout : clé gratuite, 5 000 requêtes par jour. Le code est sous licence AGPL.',
+          'A public API serves everything: free key, 5,000 requests a day. The code is under the AGPL licence.',
+        ),
+        scene: () => ({ map: { key: 'gn', columns: true }, cam: [-0.3, 0.6, 2.3] }),
       },
     ],
   },
@@ -455,40 +574,110 @@ export const films: Record<string, Film> = {
     beats: [
       {
         say: l(
-          'SolClim-3 dimensionne une installation photovoltaïque et son stockage.',
-          'SolClim-3 sizes a photovoltaic installation and its storage.',
+          'En Afrique de l’Ouest, le satellite surestime le rayonnement : de 6,1 % en moyenne pour le global, de 24,6 % pour le direct, à cause des poussières de l’harmattan.',
+          'In West Africa, the satellite overestimates irradiance: by 6.1% on average for global, by 24.6% for direct, because of harmattan dust.',
         ),
-        shot: { scene: 'solar' },
-        notes: [l('Modules photovoltaïques', 'Photovoltaic modules'), l('Batteries', 'Batteries')],
-      },
-      {
-        say: l('Il s’adresse aux bureaux d’études.', 'It is meant for engineering offices.'),
-        shot: {
-          scene: 'device',
-          kind: 'browser',
-          address: 'solclim3.kumascience.com',
-          blocks: [
-            l('Photovoltaïque', 'Photovoltaics'),
-            l('Stockage', 'Storage'),
-            l('Étude', 'Study'),
+        notes: [l('31 stations de mesure au sol', '31 ground measurement stations')],
+        scene: (t) => ({
+          map: { key: 'ao', mark: ['Kankan'], labels: { Kankan: 'Kankan' } },
+          panels: [
+            {
+              kind: 'bars',
+              title: t('Surestimation du satellite', 'Satellite overestimation'),
+              unit: '%',
+              labels: [t('Global', 'Global'), t('Direct', 'Direct')],
+              values: [6.1, 24.6],
+            },
           ],
-        },
+          cam: [0.2, 0.5, 2.7],
+        }),
       },
       {
         say: l(
-          'Chaque calcul est vérifié contre pvlib, la bibliothèque de référence du domaine.',
-          'Each calculation is checked against pvlib, the reference library of the field.',
+          'Corriger là où il y a une station est simple. La question est : que faire là où il n’y en a pas ?',
+          'Correcting where there is a station is simple. The question is: what to do where there is none?',
         ),
-        shot: { scene: 'check', left: same('SolClim-3'), right: same('pvlib') },
-        notes: [l('Les deux courbes doivent se superposer', 'The two curves must overlap')],
+        scene: () => ({
+          map: {
+            key: 'ao',
+            mark: ['Kankan', 'Tarambaly', 'Bissau', 'Kenema', 'Farafenni', 'Maradi'],
+          },
+          cam: [0, 0.9, 2.4],
+        }),
       },
       {
         say: l(
-          '800 tests automatisés couvrent ces calculs.',
-          '800 automated tests cover these calculations.',
+          'La réponse est la latitude, pas la distance. Farafenni et Maradi sont à 2 460 km l’une de l’autre, sur le même parallèle : la correction de l’une vaut pour l’autre à 2 % près.',
+          'The answer is latitude, not distance. Farafenni and Maradi are 2,460 km apart, on the same parallel: the correction of one holds for the other within 2%.',
         ),
-        shot: { scene: 'check', left: same('SolClim-3'), right: same('pvlib'), count: 800 },
-        notes: [l('Un point : un test', 'One dot: one test')],
+        scene: () => ({
+          map: {
+            key: 'ao',
+            mark: ['Farafenni', 'Maradi'],
+            arcs: [['Farafenni', 'Maradi']],
+            labels: { Farafenni: 'Farafenni', Maradi: 'Maradi' },
+          },
+          cam: [0.1, 0.6, 2.6],
+        }),
+      },
+      {
+        say: l(
+          'À l’inverse, Bissau et Kenema ne sont qu’à 660 km, mais séparées de 4° de latitude : l’écart reste de 9 à 10 %.',
+          'Conversely, Bissau and Kenema are only 660 km apart, but 4° of latitude away: the gap stays at 9 to 10%.',
+        ),
+        notes: [
+          l(
+            'Le biais baisse de 1,65 point par degré de latitude',
+            'The bias drops 1.65 points per degree of latitude',
+          ),
+        ],
+        scene: () => ({
+          map: {
+            key: 'ao',
+            mark: ['Bissau', 'Kenema'],
+            arcs: [['Bissau', 'Kenema']],
+            labels: { Bissau: 'Bissau', Kenema: 'Kenema' },
+          },
+          cam: [-0.5, 0.6, 2.3],
+        }),
+      },
+      {
+        say: l(
+          'C’est la méthode LAT3 : chaque point emprunte la correction de trois à dix stations de même latitude. Validée sur 930 transferts.',
+          'This is the LAT3 method: each point borrows the correction of three to ten stations at the same latitude. Validated on 930 transfers.',
+        ),
+        scene: (t) => ({
+          panels: [
+            {
+              kind: 'bars',
+              title: t(
+                'Écart au sol, avant et après calage',
+                'Gap to ground, before and after calibration',
+              ),
+              unit: '%',
+              labels: [
+                t('Global brut', 'Global raw'),
+                t('Global calé', 'Global calibrated'),
+                t('Direct brut', 'Direct raw'),
+                t('Direct calé', 'Direct calibrated'),
+              ],
+              values: [6.2, 2.0, 24.6, 5.8],
+              mark: [1, 3],
+            },
+          ],
+          cam: [0.3, 0.25, 2.2],
+        }),
+      },
+      {
+        say: l(
+          'Résultat pour la Guinée : une ressource solaire calée pour les 340 sous-préfectures, avec son incertitude chiffrée.',
+          'Result for Guinea: a calibrated solar resource for the 340 sub-prefectures, with its quantified uncertainty.',
+        ),
+        notes: [
+          l('Résidu médian : 2,39 % pour le global', 'Median residual: 2.39% for global'),
+          l('79 896 260 enregistrements calés', '79,896,260 calibrated records'),
+        ],
+        scene: () => ({ map: { key: 'gn', theme: 'ecart' }, cam: [0.3, 0.75, 2.0] }),
       },
     ],
   },
@@ -498,61 +687,76 @@ export const films: Record<string, Film> = {
     beats: [
       {
         say: l(
-          'Kuma Science publie en accès libre des données, des méthodes et des outils pour l’ingénierie énergétique en Afrique francophone.',
-          'Kuma Science openly publishes data, methods and tools for energy engineering in French-speaking Africa.',
+          '« Un dimensionnement ne peut pas être plus fiable que les données qui le fondent. » Kuma Science construit et maintient des référentiels nationaux de données énergétiques en Afrique de l’Ouest.',
+          '“A design cannot be more reliable than the data it rests on.” Kuma Science builds and maintains national energy data references in West Africa.',
         ),
-        shot: {
-          scene: 'network',
-          hub: same('Kuma Science'),
-          nodes: [l('Données', 'Data'), l('Méthodes', 'Methods'), l('Outils', 'Tools')],
-        },
+        scene: () => ({ map: { key: 'ao', mark: ['Kankan'] }, cam: [0.2, 0.7, 2.6] }),
       },
       {
         say: l(
-          'Le site réunit un média éditorial, un catalogue de séries et une boutique d’outils.',
-          'The site brings together an editorial media, a catalogue of series and a tool shop.',
+          'Quatre plateformes tournent sur le même moteur, Kuma Data Core.',
+          'Four platforms run on the same engine, Kuma Data Core.',
         ),
-        shot: {
-          scene: 'device',
-          kind: 'browser',
-          address: 'kumascience.com',
-          blocks: [l('Média', 'Media'), l('Catalogue', 'Catalogue'), l('Boutique', 'Shop')],
-        },
+        scene: (t) => ({
+          panels: [
+            {
+              kind: 'card',
+              title: t('Quatre plateformes', 'Four platforms'),
+              rows: [
+                ['RNDE', t('Données énergétiques de la Guinée', 'Energy data of Guinea')],
+                ['RDS', t('Référentiels solaires, sous DOI', 'Solar references, under DOI')],
+                [t('Catalogue', 'Catalogue'), 'ISO 19115, CSW, WMS, WFS'],
+                [
+                  'SolClim-3',
+                  t(
+                    'Ressource calée et logiciel d’étude',
+                    'Calibrated resource and study software',
+                  ),
+                ],
+              ],
+            },
+          ],
+          cam: [0.3, 0.25, 2.2],
+        }),
       },
       {
         say: l(
-          'Les séries du catalogue viennent de Kuma Data Core.',
-          'The series in the catalogue come from Kuma Data Core.',
+          'Le site donne aussi de quoi travailler : un explorateur cartographique, un atlas d’incertitude, et un atelier Python qui tourne dans le navigateur.',
+          'The site also gives tools to work with: a map explorer, an uncertainty atlas, and a Python workshop that runs in the browser.',
         ),
-        shot: {
-          scene: 'sources',
-          inputs: [same('Kuma Data Core')],
-          core: l('Catalogue', 'Catalogue'),
-          output: l('Séries', 'Series'),
-        },
-      },
-      {
-        say: l(
-          'Il est construit avec Astro. Supabase gère les comptes, Cloudflare l’héberge.',
-          'It is built with Astro. Supabase handles accounts, Cloudflare hosts it.',
-        ),
-        shot: { scene: 'layers', layers: [same('Astro'), same('Supabase'), same('Cloudflare')] },
         notes: [
-          l('Astro : les pages', 'Astro: the pages'),
-          l('Supabase : les comptes', 'Supabase: the accounts'),
-          l('Cloudflare : l’hébergement', 'Cloudflare: the hosting'),
+          l(
+            'Dans l’atelier, les données ne quittent pas votre appareil',
+            'In the workshop, the data never leaves your device',
+          ),
+          l('2 728 séries servies par l’API', '2,728 series served by the API'),
         ],
+        scene: () => ({ map: { key: 'gn', theme: 'ghi' }, cam: [0.5, 0.6, 2.1] }),
       },
       {
         say: l(
-          'Les erreurs sont suivies avec Sentry. Des tests et une intégration continue couvrent le code.',
-          'Errors are tracked with Sentry. Tests and continuous integration cover the code.',
+          'Et des guides qui partent de cas réels. Kankan et Tarambaly, à 328 km, reçoivent presque la même énergie sur l’année, mais leurs journées ne se ressemblent pas : corrélation de 0,29.',
+          'And guides that start from real cases. Kankan and Tarambaly, 328 km apart, get almost the same energy over the year, but their days do not match: correlation of 0.29.',
         ),
-        shot: {
-          scene: 'check',
-          left: l('Tests', 'Tests'),
-          right: l('Intégration continue', 'Continuous integration'),
-        },
+        notes: [
+          l(
+            'Un facteur appris à Kankan ramène l’écart de 3,07 % à 0,45 %',
+            'A factor learned at Kankan cuts the gap from 3.07% to 0.45%',
+          ),
+          l(
+            'Le même facteur dégrade la série à Tarambaly',
+            'The same factor degrades the series at Tarambaly',
+          ),
+        ],
+        scene: () => ({
+          map: {
+            key: 'ao',
+            mark: ['Kankan', 'Tarambaly'],
+            arcs: [['Kankan', 'Tarambaly']],
+            labels: { Kankan: 'Kankan', Tarambaly: 'Tarambaly' },
+          },
+          cam: [-0.2, 0.7, 2.2],
+        }),
       },
     ],
   },
@@ -562,39 +766,98 @@ export const films: Record<string, Film> = {
     beats: [
       {
         say: l(
-          'Une installation solaire enregistre ses mesures dans un datalogger.',
-          'A solar installation records its measurements in a datalogger.',
+          'Solar Bridge est le logiciel d’étude de SolClim-3. Son premier module dimensionne un mini-réseau : un village, un champ solaire, des batteries, un groupe électrogène.',
+          'Solar Bridge is the study software of SolClim-3. Its first module sizes a mini-grid: a village, a solar field, batteries, a generator.',
         ),
-        shot: { scene: 'solar' },
+        scene: () => ({ model: 'village', cam: [0.5, 0.5, 1.8] }),
       },
       {
         say: l(
-          'Chaque fabricant exporte ses fichiers CSV à sa manière.',
-          'Each manufacturer exports its CSV files in its own way.',
+          'L’étude suit huit étapes, du site aux résultats.',
+          'The study follows eight steps, from site to results.',
         ),
-        shot: { scene: 'device', kind: 'desktop', blocks: [same('CSV'), same('CSV'), same('CSV')] },
-        notes: [l('Mêmes mesures, colonnes différentes', 'Same measurements, different columns')],
+        scene: (t) => ({
+          model: 'village',
+          panels: [
+            {
+              kind: 'card',
+              title: t('Huit étapes', 'Eight steps'),
+              rows: [
+                ['1 · 2', t('Site, ressource solaire', 'Site, solar resource')],
+                ['3', t('Charge du village', 'Village load')],
+                ['4 · 5', t('Champ photovoltaïque, stockage', 'Photovoltaic field, storage')],
+                ['6', t('Groupe électrogène', 'Generator')],
+                ['7 · 8', t('Simulation horaire, résultats', 'Hourly simulation, results')],
+              ],
+            },
+          ],
+          cam: [0.7, 0.4, 2.2],
+        }),
       },
       {
         say: l(
-          'Solar Bridge lit ces fichiers et les convertit vers un format commun.',
-          'Solar Bridge reads these files and converts them to a common format.',
+          'Il ne propose pas une solution, il les essaie toutes : chaque combinaison de champ et de stockage qui tient l’objectif de fiabilité, classée par coût. La moins chère est retenue.',
+          'It does not propose one solution, it tries them all: every combination of field and storage that meets the reliability target, ranked by cost. The cheapest is kept.',
         ),
-        shot: { scene: 'convert', output: l('Format commun', 'Common format') },
+        notes: [
+          l('Schéma de principe', 'Schematic'),
+          l('Cases pleines : l’objectif est tenu', 'Filled cells: the target is met'),
+        ],
+        scene: (t) => ({
+          model: 'village',
+          panels: [
+            {
+              kind: 'matrix',
+              title: t('Nappe d’admissibilité', 'Admissibility surface'),
+              across: t('Champ photovoltaïque →', 'Photovoltaic field →'),
+              down: t('Stockage →', 'Storage →'),
+            },
+          ],
+          cam: [0.3, 0.4, 2.2],
+        }),
       },
       {
         say: l(
-          'C’est le premier outil qui utilise l’API de Kuma Data Core.',
-          'It is the first tool that uses the Kuma Data Core API.',
+          'Chaque chiffre porte un badge : calé sur mesures au sol, ou brut. Hors du domaine qualifié, le logiciel refuse le calage plutôt que d’inventer une précision.',
+          'Every figure carries a badge: calibrated on ground measurements, or raw. Outside the qualified domain, the software refuses calibration rather than inventing precision.',
         ),
-        shot: { scene: 'network', hub: same('Kuma Data Core'), nodes: [same('Solar Bridge')] },
+        scene: () => ({ map: { key: 'gn', theme: 'confiance' }, cam: [0.2, 0.8, 2.0] }),
       },
       {
         say: l(
-          'Un logiciel de bureau, pour les bureaux d’études photovoltaïques d’Afrique de l’Ouest. Il est en cours de développement.',
-          'A desktop application for photovoltaic engineering offices in West Africa. It is in development.',
+          'Le module bureau d’études vérifie les chaînes de modules aux températures extrêmes. Un matin de janvier à 10,6 °C à Kankan pousse une chaîne de trois modules à 154 V, au-dessus d’un régulateur de 150 V.',
+          'The engineering module checks module strings at temperature extremes. A January morning at 10.6 °C in Kankan pushes a three-module string to 154 V, above a 150 V regulator.',
         ),
-        shot: { scene: 'layers', layers: [same('Tauri'), same('React'), same('TypeScript')] },
+        notes: [
+          l(
+            'La moyenne de 26 °C n’aurait rien signalé',
+            'The 26 °C mean would have flagged nothing',
+          ),
+        ],
+        scene: (t) => ({
+          model: 'kit',
+          panels: [
+            {
+              kind: 'bars',
+              title: t('Tension d’une chaîne de trois modules', 'Voltage of a three-module string'),
+              unit: 'V',
+              labels: [
+                t('Limite du régulateur', 'Regulator limit'),
+                t('Matin à 10,6 °C', 'Morning at 10.6 °C'),
+              ],
+              values: [150, 154],
+              mark: [1],
+            },
+          ],
+          cam: [0.5, 0.4, 2.0],
+        }),
+      },
+      {
+        say: l(
+          'Aucune formule n’entre dans le code avant d’être écrite dans la méthode. Plus de 800 tests, et une vérification contre pvlib.',
+          'No formula enters the code before being written in the method. More than 800 tests, and a check against pvlib.',
+        ),
+        scene: () => ({ model: 'village', cam: [-0.5, 0.55, 1.9] }),
       },
     ],
   },
@@ -604,58 +867,105 @@ export const films: Record<string, Film> = {
     beats: [
       {
         say: l(
-          'Kuma Solaire est une application mobile pour dimensionner une installation solaire sur le terrain.',
-          'Kuma Solaire is a mobile app for sizing a solar installation in the field.',
+          'Kuma Solaire aide un foyer à savoir de quoi il a besoin avant de parler à un installateur. Prenons ce salon.',
+          'Kuma Solaire helps a household know what it needs before talking to an installer. Take this living room.',
         ),
-        shot: {
-          scene: 'device',
-          kind: 'phone',
-          blocks: [
-            l('Lieu de l’installation', 'Installation site'),
-            l('Appareils', 'Appliances'),
-            l('Dimensionnement', 'Sizing'),
-          ],
-        },
-      },
-      {
-        say: l(
-          'Le moteur de calcul est séparé de l’interface par une règle d’imports stricte.',
-          'The calculation engine is separated from the interface by a strict import rule.',
-        ),
-        shot: {
-          scene: 'layers',
-          layers: [
-            l('Interface', 'Interface'),
-            l('Règle d’imports', 'Import rule'),
-            l('Moteur de calcul', 'Calculation engine'),
-          ],
-        },
         notes: [
-          l('Le calcul se vérifie sans l’écran', 'The calculation is checked without the screen'),
+          l('Hors ligne, sans compte, gratuite', 'Offline, no account, free'),
+          l('En cours de développement', 'In development'),
         ],
+        scene: (t) => ({
+          tags: [
+            { at: 'tv', text: t('Téléviseur · 60 W', 'Television · 60 W') },
+            {
+              at: 'table',
+              text: t('Qu’est-ce que ce salon consomme ?', 'What does this living room use?'),
+            },
+          ],
+          cam: [0.5, 0.32, 2.6],
+        }),
       },
       {
         say: l(
-          'Une page de vérification expose ses résultats.',
-          'A verification page exposes its results.',
+          'On liste ses appareils et leurs heures d’usage, de jour et de nuit. Exemple : un foyer de Kankan, six heures de coupure par jour.',
+          'You list your appliances and their hours of use, by day and by night. Example: a household in Kankan, six hours of power cuts a day.',
         ),
-        shot: {
-          scene: 'check',
-          left: l('Moteur', 'Engine'),
-          right: l('Vérification', 'Verification'),
-        },
+        notes: [
+          l('4 096 Wh par jour', '4,096 Wh a day'),
+          l('Pointe de 1 220 W', 'Peak of 1,220 W'),
+        ],
+        scene: (t) => ({
+          panels: [
+            {
+              kind: 'card',
+              title: t('Les appareils du foyer', 'The household’s appliances'),
+              rows: [
+                ['90 W', t('Réfrigérateur', 'Fridge')],
+                ['6 × 9 W', t('Ampoules LED', 'LED bulbs')],
+                ['60 W', t('Téléviseur', 'Television')],
+                ['2 × 45 W', t('Ventilateurs', 'Fans')],
+                ['1 000 W', t('Fer à repasser', 'Iron')],
+              ],
+            },
+          ],
+          cam: [0.3, 0.25, 2.2],
+        }),
       },
       {
         say: l(
-          'L’application est conçue pour fonctionner avec une connexion intermittente. Elle est en cours de développement.',
-          'The app is designed to work with an intermittent connection. It is in development.',
+          'Le calcul se fait sur le pire mois de l’année. Si le système suffit ce mois-là, il suffit toute l’année.',
+          'The calculation is done on the worst month of the year. If the system is enough that month, it is enough all year.',
         ),
-        shot: {
-          scene: 'network',
-          hub: same('Kuma Solaire'),
-          nodes: [blank, blank, blank],
-          flaky: true,
-        },
+        notes: [l('À Kankan : août', 'At Kankan: August')],
+        scene: (t) => ({
+          panels: [
+            {
+              kind: 'bars',
+              title: t('Rayonnement mensuel à Kankan', 'Monthly irradiance at Kankan'),
+              unit: 'kWh/m²/j',
+              labels: months(t),
+              values: k.normale,
+              mark: [7],
+            },
+          ],
+          cam: [0.3, 0.25, 2.2],
+        }),
+      },
+      {
+        say: l(
+          'Résultat pour ce foyer : 350 à 390 Wc de panneaux, une batterie de 2 190 Wh au lithium ou 3 500 Wh au plomb, un onduleur de 1 525 VA.',
+          'Result for this household: 350 to 390 Wp of panels, a 2,190 Wh lithium or 3,500 Wh lead battery, a 1,525 VA inverter.',
+        ),
+        notes: [
+          l('Une fourchette, pas un chiffre : ± 4,5 %', 'A range, not a figure: ± 4.5%'),
+          l('Un ordre de grandeur, pas un devis', 'An order of magnitude, not a quote'),
+        ],
+        scene: () => ({ model: 'kit', cam: [0.6, 0.45, 1.6] }),
+      },
+      {
+        say: l(
+          'Le rapport porte un QR code qui contient les besoins saisis, pas les résultats. Le vendeur le scanne, la page officielle refait le calcul avec le même moteur : un rapport gonflé ne passe pas.',
+          'The report carries a QR code holding the needs entered, not the results. The seller scans it, the official page redoes the calculation with the same engine: an inflated report does not pass.',
+        ),
+        scene: (t) => ({
+          model: 'kit',
+          panels: [
+            {
+              kind: 'card',
+              title: t('Ce que contient le QR code', 'What the QR code holds'),
+              rows: [
+                [t('lieu', 'place'), 'Kankan'],
+                [t('appareils', 'appliances'), t('la liste saisie', 'the list entered')],
+                [t('scénario', 'scenario'), t('secours, 6 h de coupure', 'backup, 6 h of cuts')],
+                [
+                  t('résultats', 'results'),
+                  t('aucun : ils sont recalculés', 'none: they are recomputed'),
+                ],
+              ],
+            },
+          ],
+          cam: [0.4, 0.4, 2.1],
+        }),
       },
     ],
   },

@@ -27,5 +27,10 @@
       "label": "doi:10.5281/zenodo.21117158",
       "url": "https://doi.org/10.5281/zenodo.21117158"
     }
-  ]
+  ],
+  "geo": {
+    "lat": 12.3,
+    "lon": -1.6,
+    "span": 9
+  }
 }

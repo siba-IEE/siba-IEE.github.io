@@ -2,56 +2,22 @@
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import Hero from '../home/Hero.astro';
 import { SITE } from '../../lib/site';
-import { getLangFromUrl, localizePath } from '../../lib/i18n';
-import { getProfile, getProjects } from '../../lib/content';
+import { getLangFromUrl } from '../../lib/i18n';
+import { getProfile } from '../../lib/content';
 
 const lang = getLangFromUrl(Astro.url);
 const isFr = lang === 'fr';
 
 const profile = getProfile();
 const tagline = (isFr ? profile.taglineFr : profile.taglineEn) || SITE.tagline[lang];
-const live = getProjects().filter((project) => project.status === 'live');
-
-const t = isFr
-  ? { works: 'Réalisations', allProjects: 'Tous les projets', contact: 'Contact' }
-  : { works: 'Work', allProjects: 'All projects', contact: 'Contact' };
 ---
 
 <BaseLayout description={tagline.slice(0, 158)}>
   <Hero />
 
-  <section id="production" class="block scroll-mt-16">
-    <div class="shell">
-      <h2 class="label" data-reveal>{t.works}</h2>
-      <ul class="works">
-        {
-          live.map((project) => (
-            <li data-reveal>
-              <a
-                class="work"
-                href={project.url ?? `${localizePath('/projets', lang)}#${project.slug}`}
-                target="_blank"
-                rel="noopener"
-              >
-                {project.image && (
-                  <span class="shot">
-                    <img src={project.image} alt="" width="1400" height="650" loading="lazy" />
-                  </span>
-                )}
-                <span class="name">{project.title}</span>
-                <span class="desc">{isFr ? project.summaryFr : project.summaryEn}</span>
-              </a>
-            </li>
-          ))
-        }
-      </ul>
-      <a href={localizePath('/projets', lang)} class="more">{t.allProjects}</a>
-    </div>
-  </section>
-
   <section class="contact">
     <div class="shell">
-      <h2 class="label" data-reveal>{t.contact}</h2>
+      <h2 class="label" data-reveal>Contact</h2>
       <a href={`mailto:${SITE.email}`} class="mail" data-reveal>{SITE.email}</a>
     </div>
   </section>

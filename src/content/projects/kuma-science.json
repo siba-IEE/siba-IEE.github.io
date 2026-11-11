@@ -19,5 +19,10 @@
       "label": "kumascience.com",
       "url": "https://kumascience.com"
     }
-  ]
+  ],
+  "geo": {
+    "lat": 9.51,
+    "lon": -13.71,
+    "span": 4
+  }
 }

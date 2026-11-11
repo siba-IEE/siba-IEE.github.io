@@ -23,5 +23,10 @@
       "label": "github.com/siba-IEE/rds-guinee",
       "url": "https://github.com/siba-IEE/rds-guinee"
     }
-  ]
+  ],
+  "geo": {
+    "lat": 10.38,
+    "lon": -9.3,
+    "span": 5
+  }
 }

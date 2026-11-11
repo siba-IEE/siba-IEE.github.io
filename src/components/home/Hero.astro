@@ -1,18 +1,20 @@
 ---
 /**
- * Ouverture de l'accueil : le globe, et un parcours en quatre vues piloté par le défilement
- * (la Terre, l'Afrique de l'Ouest et ses stations, le biais du satellite, la Guinée).
+ * Ouverture de l'accueil : le globe, et un parcours en cinq vues piloté par le défilement
+ * (la Terre, l'Afrique de l'Ouest et ses stations, le biais du satellite, la Guinée, puis
+ * les projets, épinglés là où ils sont déployés).
  * Le dessin est dans src/scripts/globe.ts. Sans WebGL ou sans JavaScript, une image fixe
  * de la région reste affichée et les légendes se lisent à la suite.
  */
 import { SITE } from '../../lib/site';
 import { getLangFromUrl, localizePath } from '../../lib/i18n';
-import { getProfile } from '../../lib/content';
+import { getProfile, getProjects } from '../../lib/content';
 import { STATIONS } from '../../data/stations';
 
 const lang = getLangFromUrl(Astro.url);
 const isFr = lang === 'fr';
 const profile = getProfile();
+const projects = getProjects().filter((project) => project.status === 'live' && project.geo);
 
 const cities = [
   { name: 'Conakry', lat: 9.51, lon: -13.71 },
@@ -30,6 +32,7 @@ const captions = isFr
       'The satellite overestimates that radiation, more and more towards the south.',
       'The correction was applied to 340 localities in Guinea.',
     ];
+const allProjects = isFr ? 'Tous les projets' : 'All projects';
 const more = isFr ? 'Méthode et résultats' : 'Method and results';
 const alt = isFr ? 'L’Afrique de l’Ouest vue de l’espace.' : 'West Africa seen from space.';
 const credit = isFr
@@ -63,6 +66,19 @@ const credit = isFr
           ))
         }
         {
+          projects.map((project) => (
+            <g
+              class="pin"
+              data-pin={project.slug}
+              data-lat={project.geo!.lat}
+              data-lon={project.geo!.lon}
+            >
+              <circle class="ring" r="11" />
+              <circle r="4.5" />
+            </g>
+          ))
+        }
+        {
           cities.map((city) => (
             <g class="city" data-lat={city.lat} data-lon={city.lon}>
               <circle r="4.5" />
@@ -90,12 +106,52 @@ const credit = isFr
         ))
       }
     </ol>
+    {
+      /* Projets : la liste en bas à gauche, la fiche du projet choisi en haut à droite, le globe entre les deux */
+    }
+    <div class="projects">
+      <ul>
+        {
+          projects.map((project) => (
+            <li>
+              <button
+                type="button"
+                data-project={project.slug}
+                data-geo={JSON.stringify(project.geo)}
+              >
+                {project.title}
+              </button>
+            </li>
+          ))
+        }
+        <li class="all">
+          <a href={localizePath('/projets', lang)}>{allProjects}</a>
+        </li>
+      </ul>
+      {
+        projects.map((project) => (
+          <a
+            class="card"
+            href={project.url ?? '#'}
+            target="_blank"
+            rel="noopener"
+            data-card={project.slug}
+          >
+            {project.image && (
+              <img src={project.image} alt="" width="1400" height="650" loading="lazy" />
+            )}
+            <span>{isFr ? project.summaryFr : project.summaryEn}</span>
+            <small>{project.links?.[0]?.label}</small>
+          </a>
+        ))
+      }
+    </div>
     <p class="credit">{credit}</p>
   </div>
 
   {/* Piste de défilement : une hauteur d'écran par vue */}
   <div class="track" aria-hidden="true">
-    {[0, 1, 2, 3].map(() => <div />)}
+    {[0, 1, 2, 3, 4].map(() => <div />)}
   </div>
 </section>
 
@@ -186,8 +242,41 @@ const credit = isFr
     transition: opacity 0.6s ease;
   }
 
-  .journey[data-step='0'] .station {
+  .journey[data-step='0'] .station,
+  .journey[data-step='4'] .station,
+  .journey[data-step='4'] .city {
     opacity: 0;
+  }
+
+  /* Épingles des projets */
+  .pin {
+    opacity: 0;
+    transition: opacity 0.5s ease;
+  }
+
+  .journey[data-step='4'] .pin {
+    opacity: 1;
+  }
+
+  .markers .pin circle {
+    fill: #f50;
+    stroke: #fff;
+    stroke-width: 1.5;
+  }
+
+  .markers .pin .ring {
+    fill: none;
+    stroke: #fff;
+    opacity: 0;
+    transform: scale(0.4);
+    transition:
+      opacity 0.4s ease,
+      transform 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  .markers .pin[data-active] .ring {
+    opacity: 1;
+    transform: none;
   }
 
   /* Nom : au centre, en négatif sur le globe */
@@ -273,6 +362,120 @@ const credit = isFr
     text-underline-offset: 5px;
   }
 
+  /* Projets */
+  .projects {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.5s ease;
+  }
+
+  .journey[data-step='4'] .projects {
+    opacity: 1;
+  }
+
+  .journey[data-step='4'] .projects button,
+  .journey[data-step='4'] .projects a {
+    pointer-events: auto;
+  }
+
+  .projects ul {
+    position: absolute;
+    inset: auto auto 3.25rem 1.25rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .projects button {
+    display: block;
+    padding: 0.1em 0;
+    font: inherit;
+    font-size: clamp(1.5rem, 3.6vw, 3.4rem);
+    font-weight: 500;
+    line-height: 1.02;
+    letter-spacing: -0.045em;
+    color: rgb(255 255 255 / 45%);
+    text-align: left;
+    text-shadow: 0 0 24px rgb(0 0 0 / 70%);
+    cursor: pointer;
+    transition:
+      color 0.3s ease,
+      transform 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  .projects button:hover,
+  .projects button[aria-pressed='true'] {
+    color: #fff;
+    transform: translateX(0.35em);
+  }
+
+  .projects .all a {
+    display: inline-block;
+    margin-top: 1rem;
+    font-size: 0.9rem;
+    color: #fff;
+    text-decoration: underline;
+    text-underline-offset: 5px;
+  }
+
+  .card {
+    position: absolute;
+    top: 1.25rem;
+    right: 1.25rem;
+    display: grid;
+    gap: 0.5rem;
+    width: min(62vw, 30rem);
+    padding: 0.5rem 0.5rem 0.8rem;
+    background: rgb(10 10 10 / 82%);
+    backdrop-filter: blur(14px);
+    color: #fff;
+    font-size: 0.9rem;
+    line-height: 1.4;
+    opacity: 0;
+    transform: translateY(1rem);
+    visibility: hidden;
+    transition:
+      opacity 0.4s ease,
+      transform 0.6s cubic-bezier(0.22, 1, 0.36, 1),
+      visibility 0s linear 0.4s;
+  }
+
+  .card[data-open] {
+    opacity: 1;
+    transform: none;
+    visibility: visible;
+    transition-delay: 0s;
+  }
+
+  .card img {
+    width: 100%;
+    height: auto;
+  }
+
+  .card span,
+  .card small {
+    padding-inline: 0.4rem;
+  }
+
+  .card small {
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    color: rgb(255 255 255 / 65%);
+  }
+
+  @media (min-width: 1024px) {
+    .projects ul {
+      inset: auto auto 4rem 4rem;
+    }
+
+    .card {
+      top: 3rem;
+      right: 4rem;
+    }
+  }
+
   .credit {
     position: absolute;
     inset: auto 1.25rem 1rem;
@@ -314,16 +517,18 @@ const credit = isFr
 </style>
 
 <script>
-  import { mountGlobe, VIEW_COUNT, type Globe } from '../../scripts/globe';
+  import { mountGlobe, VIEW_COUNT, type Globe, type Place } from '../../scripts/globe';
 
   let globe: Globe | null = null;
   let onScroll: (() => void) | null = null;
+  let selected: string | null = null;
 
   const stop = () => {
     globe?.destroy();
     globe = null;
     if (onScroll) window.removeEventListener('scroll', onScroll);
     onScroll = null;
+    selected = null;
   };
 
   const init = () => {
@@ -343,6 +548,42 @@ const credit = isFr
       );
       globe?.setProgress(progress);
       journey.dataset.step = String(Math.round(progress));
+    };
+    // Projets : choisir un nom tourne le globe vers son pays et ouvre sa fiche.
+    const buttons = [...journey.querySelectorAll<HTMLButtonElement>('[data-project]')];
+    const toggle = (selector: string, key: 'card' | 'pin', slug: string | null) =>
+      journey
+        .querySelectorAll<HTMLElement | SVGElement>(selector)
+        .forEach((el) =>
+          el.toggleAttribute(
+            key === 'card' ? 'data-open' : 'data-active',
+            el.dataset[key] === slug,
+          ),
+        );
+    const select = (slug: string | null) => {
+      if (slug === selected) return;
+      selected = slug;
+      buttons.forEach((button) =>
+        button.setAttribute('aria-pressed', String(button.dataset.project === slug)),
+      );
+      toggle('[data-card]', 'card', slug);
+      toggle('[data-pin]', 'pin', slug);
+      const chosen = buttons.find((button) => button.dataset.project === slug);
+      globe?.focus(chosen ? (JSON.parse(chosen.dataset.geo ?? 'null') as Place | null) : null);
+    };
+    buttons.forEach((button) => {
+      const choose = () => select(button.dataset.project ?? null);
+      button.addEventListener('pointerenter', choose);
+      button.addEventListener('focus', choose);
+      button.addEventListener('click', choose);
+    });
+
+    // En quittant la vue des projets, le globe reprend le parcours.
+    const lastStep = String(VIEW_COUNT - 1);
+    const follow = onScroll;
+    onScroll = () => {
+      follow();
+      if (journey.dataset.step !== lastStep) select(null);
     };
     window.addEventListener('scroll', onScroll, { passive: true });
     onScroll();

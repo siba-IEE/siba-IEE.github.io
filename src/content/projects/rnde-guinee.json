@@ -23,5 +23,10 @@
   "tags": ["Plateforme", "Données", "Énergie"],
   "bodyFr": "Le Référentiel national de données énergétiques rassemble la donnée énergétique de la Guinée à l’échelle de ses 340 sous-préfectures. Il comprend 374 fiches territoriales, six jeux de données ouverts, une API et des services cartographiques WMS et WFS.\n\nLe catalogue de données suit les normes ISO 19115, CSW et DCAT. Chaque jeu y est décrit et peut être moissonné par d’autres portails. Le mot « national » désigne la couverture du territoire et non un statut officiel conféré par l’État.",
   "bodyEn": "The National Energy Data Reference gathers Guinea’s energy data at the scale of its 340 sub-prefectures. It includes 374 territorial profiles, six open datasets, an API and WMS and WFS map services.\n\nThe data catalogue follows ISO 19115, CSW and DCAT. Each dataset is described there and can be harvested by other portals. The word “national” refers to territorial coverage and not to an official status granted by the State.",
-  "image": "/images/projets/rnde-guinee.webp"
+  "image": "/images/projets/rnde-guinee.webp",
+  "geo": {
+    "lat": 10.9,
+    "lon": -10.9,
+    "span": 9.5
+  }
 }

@@ -42,6 +42,8 @@ export interface ProjectRaw {
   summaryEn: string;
   stack: string[];
   tags: string[];
+  /** Où regarder sur le globe : centre de la vue et largeur montrée, en degrés. Optionnel. */
+  geo?: { lat: number; lon: number; span: number };
   /** Adresses publiques (site, API, DOI, dépôt). Optionnel. */
   links?: { label: string; url: string }[];
   /** Visuel de carte (chemin sous /public, ex. "/images/projets/rds.jpg"). Optionnel. */

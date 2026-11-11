@@ -19,5 +19,10 @@
       "url": "https://solclim3.kumascience.com"
     }
   ],
-  "image": "/images/projets/solclim-3.webp"
+  "image": "/images/projets/solclim-3.webp",
+  "geo": {
+    "lat": 10,
+    "lon": -3.5,
+    "span": 30
+  }
 }

@@ -160,6 +160,14 @@ const VIEWS: View[] = [
     daylight: 1,
     band: 0.35,
   },
+  // Dernière vue : les trois pays où les projets sont déployés.
+  {
+    lat: 9.6,
+    lon: -7.2,
+    radius: (w, h) => radiusFor(21, Math.min(w * 0.9, h * 0.86)),
+    daylight: 1,
+    band: 0,
+  },
 ];
 
 export const VIEW_COUNT = VIEWS.length;
@@ -219,9 +227,18 @@ function createProgram(gl: WebGLRenderingContext): WebGLProgram | null {
   return gl.getProgramParameter(program, gl.LINK_STATUS) ? program : null;
 }
 
+/** Un lieu à regarder : centre de la vue et largeur montrée, en degrés. */
+export interface Place {
+  lat: number;
+  lon: number;
+  span: number;
+}
+
 export interface Globe {
   /** Position dans le parcours : 0 pour la première vue, VIEW_COUNT - 1 pour la dernière. */
   setProgress: (progress: number) => void;
+  /** Fixe la vue sur un lieu (largeur montrée en degrés), ou rend la main au défilement avec null. */
+  focus: (place: Place | null) => void;
   destroy: () => void;
 }
 
@@ -273,6 +290,11 @@ export function mountGlobe(root: HTMLElement): Globe | null {
   let progress = 0;
   let frame = 0;
   let dirty = true;
+  let focused: Place | null = null;
+  // Vue affichée : elle rattrape en douceur la vue demandée (défilement ou lieu fixé).
+  const pose = { lat: VIEWS[0].lat, lon: VIEWS[0].lon, zoom: 0 };
+  let posed = false;
+  let settling = false;
   const started = performance.now();
 
   const resize = () => {
@@ -295,12 +317,31 @@ export function mountGlobe(root: HTMLElement): Globe | null {
     // Vue entière : la Terre tourne lentement sur elle-même, puis s'arrête en approchant.
     const far = 1 - Math.min(1, progress);
     const spin = reduced ? 0 : ((now - started) / 1000) * 2.2 * far;
-    const lat = mix(from.lat, to.lat, t);
-    const lon = mix(from.lon, to.lon, t) + spin;
     // Le zoom se fait sur le logarithme du rayon, pour une vitesse d'approche constante.
-    const radius = Math.exp(
-      mix(Math.log(from.radius(width, height)), Math.log(to.radius(width, height)), t),
-    );
+    const wanted = focused
+      ? {
+          lat: focused.lat,
+          lon: focused.lon,
+          zoom: Math.log(radiusFor(focused.span, Math.min(width, height) * 0.8)),
+        }
+      : {
+          lat: mix(from.lat, to.lat, t),
+          lon: mix(from.lon, to.lon, t) + spin,
+          zoom: mix(Math.log(from.radius(width, height)), Math.log(to.radius(width, height)), t),
+        };
+    // Le défilement est suivi tel quel ; un lieu fixé, ou le retour au parcours, se rejoint en glissant.
+    const rate = posed && !reduced && (focused || settling) ? 0.07 : 1;
+    pose.lat += (wanted.lat - pose.lat) * rate;
+    pose.lon += (wanted.lon - pose.lon) * rate;
+    pose.zoom += (wanted.zoom - pose.zoom) * rate;
+    posed = true;
+    settling =
+      Math.abs(wanted.lat - pose.lat) +
+        Math.abs(wanted.lon - pose.lon) +
+        Math.abs(wanted.zoom - pose.zoom) >
+      0.002;
+    const { lat, lon } = pose;
+    const radius = Math.exp(pose.zoom);
     const centerX = width / 2;
     const centerY = height * mix(0.52, 0.44, Math.min(1, progress));
 
@@ -332,7 +373,8 @@ export function mountGlobe(root: HTMLElement): Globe | null {
         el.setAttribute('transform', `translate(${x.toFixed(1)} ${y.toFixed(1)})`);
       }
     }
-    return far > 0 && !reduced;
+    // Il faut redessiner tant que la Terre tourne ou que la vue n'a pas rejoint sa cible.
+    return (far > 0 && !reduced) || settling;
   };
 
   const loop = (now: number) => {
@@ -361,6 +403,11 @@ export function mountGlobe(root: HTMLElement): Globe | null {
   return {
     setProgress: (value) => {
       target = Math.min(VIEWS.length - 1, Math.max(0, value));
+    },
+    focus: (place) => {
+      focused = place;
+      settling = true;
+      dirty = true;
     },
     destroy: () => {
       cancelAnimationFrame(frame);

@@ -1,0 +1,23 @@
+{
+  "categoryFr": "Bâtiment",
+  "categoryEn": "Buildings",
+  "order": 3,
+  "itemsFr": [
+    "Audit énergétique",
+    "DPE",
+    "Bilan carbone",
+    "EnergyPlus",
+    "OpenStudio",
+    "ClimaWin",
+    "Revit"
+  ],
+  "itemsEn": [
+    "Energy audit",
+    "Energy performance certificates",
+    "Carbon assessment",
+    "EnergyPlus",
+    "OpenStudio",
+    "ClimaWin",
+    "Revit"
+  ]
+}

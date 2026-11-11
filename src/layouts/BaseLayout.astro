@@ -1,11 +1,10 @@
 ---
-import '@fontsource-variable/inter';
-import '@fontsource-variable/manrope';
-import '@fontsource-variable/source-code-pro';
+import '@fontsource-variable/instrument-sans';
+import '@fontsource/instrument-serif/400.css';
+import '@fontsource-variable/geist-mono';
 import '../styles/global.css';
 
 import Nav from '../components/chrome/Nav.astro';
-import Footer from '../components/chrome/Footer.astro';
 import { SITE } from '../lib/site';
 import {
   getLangFromUrl,
@@ -24,6 +23,7 @@ interface Props {
   image?: string;
   ogType?: 'website' | 'article' | 'profile';
   jsonLd?: object | object[];
+  /** L'accueil est une scène unique : il se passe de pied de page. */
 }
 
 const lang = getLangFromUrl(Astro.url);
@@ -32,7 +32,7 @@ const t = useTranslations(lang);
 const {
   title,
   description = SITE.tagline[lang],
-  image = '/og.png?v=2',
+  image = '/og.png?v=4',
   ogType = 'website',
   jsonLd,
 } = Astro.props;
@@ -82,17 +82,31 @@ const alternates: { hreflang: string; href: string }[] = [
 
     <script is:inline type="application/ld+json" set:html={structuredData} />
 
-    {/* Thème appliqué avant le premier rendu et après chaque transition ; classe .js pour activer les révélations. */}
+    {
+      /* Thème appliqué avant le premier rendu et après chaque transition ; classe .js pour activer les révélations. */
+    }
     <script is:inline>
       (() => {
-        document.documentElement.classList.add('js');
+        // Une navigation interne remplace les attributs de <html> : la classe .js et le thème
+        // sont donc reposés après chaque changement de page.
         const setTheme = () => {
+          document.documentElement.classList.add('js');
           const stored = localStorage.getItem('theme');
           const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
           document.documentElement.dataset.theme = stored ?? (prefersDark ? 'dark' : 'light');
         };
         setTheme();
         document.addEventListener('astro:after-swap', setTheme);
+        // La page suivante s'ouvre en cercle depuis l'endroit du clic.
+        document.addEventListener(
+          'pointerdown',
+          (event) => {
+            const root = document.documentElement;
+            root.style.setProperty('--vt-x', `${event.clientX}px`);
+            root.style.setProperty('--vt-y', `${event.clientY}px`);
+          },
+          { passive: true },
+        );
       })();
     </script>
   </head>
@@ -107,7 +121,6 @@ const alternates: { hreflang: string; href: string }[] = [
     <main id="main" class="flex-1">
       <slot />
     </main>
-    <Footer />
 
     <script>
       const initReveal = () => {

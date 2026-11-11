@@ -1,0 +1,23 @@
+{
+  "categoryFr": "Ressource solaire",
+  "categoryEn": "Solar resource",
+  "order": 1,
+  "itemsFr": [
+    "Produits satellitaires et réanalyses",
+    "NASA POWER",
+    "SARAH-3",
+    "CAMS",
+    "ERA5-Land",
+    "Mesures au sol de classe A",
+    "Calage et incertitude"
+  ],
+  "itemsEn": [
+    "Satellite products and reanalyses",
+    "NASA POWER",
+    "SARAH-3",
+    "CAMS",
+    "ERA5-Land",
+    "Class A ground measurements",
+    "Site adaptation and uncertainty"
+  ]
+}

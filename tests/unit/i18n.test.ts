@@ -26,7 +26,7 @@ describe('getLangFromUrl', () => {
     expect(getLangFromUrl(url('/en/projets/kuma-science'))).toBe('en');
   });
 
-  it("ne confond pas un slug commençant par « en »", () => {
+  it('ne confond pas un slug commençant par « en »', () => {
     expect(getLangFromUrl(url('/english'))).toBe('fr');
   });
 });
@@ -66,7 +66,7 @@ describe('unlocalizePath', () => {
     expect(unlocalizePath('/projets/')).toBe('/projets');
   });
 
-  it("ne casse pas un slug commençant par « en »", () => {
+  it('ne casse pas un slug commençant par « en »', () => {
     expect(unlocalizePath('/english')).toBe('/english');
   });
 });

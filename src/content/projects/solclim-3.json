@@ -1,16 +1,28 @@
 {
   "title": "SolClim-3",
-  "kind": "platform",
-  "status": "wip",
+  "kind": "tool",
+  "status": "live",
   "featured": true,
-  "order": 4,
+  "order": 5,
   "year": "2026",
-  "url": null,
+  "url": "https://solclim3.kumascience.com",
   "repo": null,
-  "summaryFr": "Des données solaires calées au sol pour l’Afrique de l’Ouest, avec un tableau de bord sur le pilote guinéen.",
-  "summaryEn": "Ground-calibrated solar data for West Africa, with a dashboard of the Guinean pilot.",
-  "stack": ["Astro", "Tailwind", "MapLibre", "D3"],
-  "tags": ["Plateforme", "Données", "Solaire"],
-  "bodyFr": "Une plateforme de données solaires calées au sol pour l’Afrique de l’Ouest, signée Kuma Science. Son tableau de bord donne à explorer le référentiel ouvert du pilote guinéen, ses 34 communes : chaque bloc garde en mémoire sa source, sa période et son niveau de confiance, et dit d’où viennent ses calculs.\n\nLes séries sont servies sous forme d’extraits statiques, triés à la main depuis le dépôt de données, avec une palette de couleurs pensée pour rester lisible en cas de daltonisme.",
-  "bodyEn": "A ground-calibrated solar-data platform for West Africa, from Kuma Science. Its dashboard opens up the open reference of the Guinean pilot and its 34 communes: each block remembers its source, its period and its confidence level, and says where its figures come from.\n\nThe series are served as static extracts, hand-picked from the data repository, with a colour palette meant to stay readable for colour-blind viewers."
+  "summaryFr": "Ressource solaire calée sur mesures au sol, avec incertitude chiffrée, pour les 340 sous-préfectures de Guinée.",
+  "summaryEn": "Solar resource calibrated on ground measurements, with quantified uncertainty, for the 340 sub-prefectures of Guinea.",
+  "stack": ["Méthode LAT3", "31 stations au sol"],
+  "tags": ["Recherche", "Solaire", "Incertitude"],
+  "bodyFr": "Le satellite surestime le rayonnement en Afrique de l’Ouest : de 6,1 % en moyenne pour le global et de 24,6 % pour le direct. SolClim-3 corrige ces produits par calage sur des mesures au sol de référence.\n\nLà où il n’y a pas de station, la méthode LAT3 emprunte la correction de trois à dix stations de même latitude. Validée sur 31 stations et 930 transferts, elle ramène l’écart de 6,2 % à 2,0 % pour le global et de 24,6 % à 5,8 % pour le direct.",
+  "bodyEn": "The satellite overestimates irradiance in West Africa: by 6.1% on average for global and 24.6% for direct. SolClim-3 corrects these products by calibration on reference ground measurements.\n\nWhere there is no station, the LAT3 method borrows the correction of three to ten stations at the same latitude. Validated on 31 stations and 930 transfers, it cuts the gap from 6.2% to 2.0% for global and from 24.6% to 5.8% for direct.",
+  "links": [
+    {
+      "label": "solclim3.kumascience.com",
+      "url": "https://solclim3.kumascience.com"
+    }
+  ],
+  "image": "/images/projets/solclim-3.webp",
+  "geo": {
+    "lat": 10,
+    "lon": -3.5,
+    "span": 30
+  }
 }

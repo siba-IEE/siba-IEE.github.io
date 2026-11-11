@@ -3,15 +3,34 @@
   "kind": "data",
   "status": "live",
   "featured": true,
-  "order": 1,
+  "order": 4,
   "year": "2026",
-  "url": "https://zenodo.org/records/21117159",
+  "url": "https://api.kumascience.com",
   "repo": "https://github.com/siba-IEE/kuma-data-core",
-  "summaryFr": "L’infrastructure de données maison de Kuma : un seul schéma générique, une API privée, et de la donnée solaire qualifiée derrière.",
-  "summaryEn": "Kuma’s in-house data backbone: one generic schema, a private API, and qualified solar data behind it.",
-  "stack": ["Python", "FastAPI", "PostgreSQL", "SQLAlchemy", "Docker", "GitHub Actions"],
+  "summaryFr": "Moteur de données qui produit les référentiels : ingestion de plusieurs sources, niveau de confiance A, B ou C par valeur, versionnement sans écrasement, API publique.",
+  "summaryEn": "The data engine that produces the references: multi-source ingestion, an A, B or C confidence level per value, versioning without overwriting, public API.",
+  "stack": ["Python", "FastAPI", "PostgreSQL", "Alembic", "Docker", "GitHub Actions"],
   "tags": ["Données", "Infrastructure", "Solaire"],
-  "image": "/images/kuma-data-core.png",
-  "bodyFr": "C’est la pièce qui coiffe toute l’infrastructure Kuma : un schéma générique unique qui alimente le média Kuma Science, les bases par domaine (le solaire d’abord) et les outils qui vont avec. Son API privée expose 17 points d’accès : le catalogue, les séries, des calculs d’ingénierie paramétrables (POA, correction thermique, PR réaliste, salissure) et les données horaires passées au contrôle qualité.\n\nChaque donnée voyage avec son passeport : source primaire, méthode, niveau de confiance (A/B/C), période de validité, statut éditorial. Rien n’est écrasé, tout est versionné et audité. Côté sources : NASA POWER, PVGIS SARAH-3, ERA5-Land, CAMS et les premières stations au sol, sur six villes pilotes de Guinée.",
-  "bodyEn": "It’s the piece that sits on top of the whole Kuma infrastructure: one generic schema feeding the Kuma Science media, the domain bases (solar first) and the tools that go with them. Its private API exposes 17 endpoints: the catalogue, the series, parametric engineering calculations (POA, thermal correction, realistic PR, soiling) and hourly data run through quality control.\n\nEvery datum travels with its passport: primary source, method, confidence level (A/B/C), validity window, editorial status. Nothing gets overwritten; everything is versioned and audited. On the source side: NASA POWER, PVGIS SARAH-3, ERA5-Land, CAMS and the first ground stations, across six pilot cities in Guinea."
+  "image": "/images/projets/kuma-data-core.webp",
+  "bodyFr": "Kuma Data Core enregistre chaque valeur avec sa source, sa méthode, son niveau de confiance (A, B ou C), ses dates de validité et son statut éditorial. Une correction crée une nouvelle version et l’ancienne est conservée. Des triggers PostgreSQL tracent chaque écriture dans une table d’audit.\n\nLe moteur ingère NASA POWER, SARAH-3, CAMS, ERA5-Land et les mesures au sol. Il calcule des grandeurs d’ingénierie à partir de modèles publiés : fraction diffuse, rayonnement dans le plan des modules, productible avec correction thermique, P50 et P90, salissure. Une API FastAPI sert les données. Une instance publique est en ligne pour la Guinée sur api.kumascience.com. Le même moteur est déployé pour la Côte d’Ivoire (142 localités) et le Burkina Faso (47 provinces et 351 communes). Le code est sous licence AGPL.",
+  "bodyEn": "Kuma Data Core stores every value with its source, method, confidence level (A, B or C), validity dates and editorial status. A correction creates a new version and the old one is kept. PostgreSQL triggers trace every write to an audit table.\n\nThe engine ingests NASA POWER, SARAH-3, CAMS, ERA5-Land and ground measurements. It computes engineering quantities from published models: diffuse fraction, plane-of-array irradiance, yield with thermal correction, P50 and P90, soiling. A FastAPI API serves the data. A public instance is online for Guinea at api.kumascience.com. The same engine is deployed for Côte d’Ivoire (142 localities) and Burkina Faso (47 provinces and 351 communes). The code is under the AGPL licence.",
+  "links": [
+    {
+      "label": "api.kumascience.com",
+      "url": "https://api.kumascience.com"
+    },
+    {
+      "label": "github.com/siba-IEE/kuma-data-core",
+      "url": "https://github.com/siba-IEE/kuma-data-core"
+    },
+    {
+      "label": "doi:10.5281/zenodo.21117158",
+      "url": "https://doi.org/10.5281/zenodo.21117158"
+    }
+  ],
+  "geo": {
+    "lat": 12.3,
+    "lon": -1.6,
+    "span": 9
+  }
 }

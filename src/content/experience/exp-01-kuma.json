@@ -1,6 +1,6 @@
 {
-  "roleFr": "Fondateur et ingénieur",
-  "roleEn": "Founder and engineer",
+  "roleFr": "Fondateur et ingénieur en efficacité énergétique",
+  "roleEn": "Founder and energy-efficiency engineer",
   "org": "Kuma Science",
   "locationFr": "Conakry, Guinée",
   "locationEn": "Conakry, Guinea",
@@ -8,6 +8,8 @@
   "end": "",
   "current": true,
   "order": 1,
-  "descFr": "Construction de référentiels de données solaires ouverts et qualifiés pour l'Afrique de l'Ouest francophone : infrastructure de données, outils de dimensionnement et méthode de qualification de la donnée (recherche, traitement Python, développement assisté par IA).",
-  "descEn": "Building open, qualified solar-data references for French-speaking West Africa: data infrastructure, sizing tools and a data-qualification method (research, Python processing, AI-assisted development)."
+  "descFr": "Société guinéenne de traitement et d’exploitation des données énergétiques et d’appui technique aux projets. Conception et production du référentiel de données solaires de la Guinée, publié en accès ouvert. Conception et mise en service du Référentiel national de données énergétiques (RNDE) et de son catalogue aux normes ISO 19115, CSW et DCAT. Mise au point et validation de la méthode de correction des produits satellitaires sur mesures au sol, puis correction des séries de 340 localités. Architecture du moteur de données et du logiciel de dimensionnement, développés avec l’équipe. Rédaction de propositions de programmes publics de données énergétiques.",
+  "descEn": "A Guinean company that processes and exploits energy data and provides technical support to projects. Designed and produced Guinea’s solar-data reference, published as open data. Designed and commissioned the National Energy Data Reference (RNDE) and its catalogue, compliant with ISO 19115, CSW and DCAT. Developed and validated the method for correcting satellite products against ground measurements, then corrected the series of 340 localities. Architecture of the data engine and the sizing software, built with the team. Drafted proposals for public energy-data programmes.",
+  "storyFr": "Puis Conakry, où je fonde Kuma Science : des référentiels de données énergétiques pour la Guinée, publiés en accès ouvert. Entrez, je vous montre.",
+  "storyEn": "Then Conakry, where I found Kuma Science: energy data references for Guinea, published in open access. Come in, let me show you."
 }

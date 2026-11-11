@@ -1,0 +1,11 @@
+{
+  "categoryFr": "Ingénierie solaire",
+  "categoryEn": "Solar engineering",
+  "order": 2,
+  "itemsFr": [
+    "Dimensionnement photovoltaïque et stockage",
+    "Mini-réseaux",
+    "Calcul de productible avec pvlib"
+  ],
+  "itemsEn": ["PV and storage sizing", "Mini-grids", "Yield calculation with pvlib"]
+}

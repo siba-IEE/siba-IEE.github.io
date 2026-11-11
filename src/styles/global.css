@@ -4,51 +4,56 @@
 @custom-variant dark (&:where([data-theme='dark'], [data-theme='dark'] *));
 
 @theme {
-  --font-sans: 'Inter Variable', ui-sans-serif, system-ui, -apple-system, sans-serif;
-  --font-display: 'Manrope Variable', 'Inter Variable', ui-sans-serif, sans-serif;
-  --font-mono: 'Source Code Pro Variable', ui-monospace, SFMono-Regular, monospace;
+  --font-sans: 'Instrument Sans Variable', 'Helvetica Neue', helvetica, arial, sans-serif;
+  --font-display: 'Instrument Serif', 'Iowan Old Style', georgia, serif;
+  --font-mono: 'Geist Mono Variable', ui-monospace, sfmono-regular, monospace;
 
-  /* Palette de marque, encre bleue (OKLCH) : accent unique et sobre, registre revue scientifique. */
-  --color-brand-50: oklch(0.96 0.015 255);
-  --color-brand-100: oklch(0.91 0.03 255);
-  --color-brand-200: oklch(0.83 0.055 255);
-  --color-brand-300: oklch(0.72 0.08 255);
-  --color-brand-400: oklch(0.6 0.1 255);
-  --color-brand-500: oklch(0.5 0.11 255);
-  --color-brand-600: oklch(0.42 0.11 255);
-  --color-brand-700: oklch(0.35 0.09 256);
-  --color-brand-800: oklch(0.29 0.07 258);
-  --color-brand-900: oklch(0.24 0.05 260);
+  /* Orange (50 à 600) : la couleur de l'erreur sur la carte. Noirs (700 à 900) : les aplats. */
+  --color-brand-50: #fff1e8;
+  --color-brand-100: #ffe0cc;
+  --color-brand-200: #ffc199;
+  --color-brand-300: #ff9a5c;
+  --color-brand-400: #ff7429;
+  --color-brand-500: #f50;
+  --color-brand-600: #d94800;
+  --color-brand-700: #2b2b2b;
+  --color-brand-800: #1c1c1c;
+  --color-brand-900: #111;
 
-  /* Accent secondaire, réservé aux touches de données (graphes, points). */
-  --color-accent-400: oklch(0.72 0.12 205);
-  --color-accent-500: oklch(0.62 0.13 205);
-  --color-accent-600: oklch(0.54 0.12 208);
+  /* Jaune : le soleil. Une seule teinte, utilisée en aplat. */
+  --color-accent-300: #fff566;
+  --color-accent-400: #ff0;
+  --color-accent-500: #ffe600;
+  --color-accent-600: #e0c800;
 }
 
 /* Jetons sémantiques, valeurs qui basculent en sombre. */
 :root {
   color-scheme: light;
-  --surface: oklch(0.985 0.008 82);
-  --surface-2: oklch(0.965 0.01 80);
-  --surface-3: oklch(0.93 0.013 78);
-  --border: oklch(0.88 0.013 78);
-  --text: oklch(0.23 0.016 62);
-  --text-muted: oklch(0.46 0.016 62);
-  --text-subtle: oklch(0.6 0.014 64);
-  --heading: oklch(0.33 0.055 262);
+  --surface: #ededed;
+  --surface-2: #e4e4e4;
+  --surface-3: #d8d8d8;
+  --panel: #fff;
+  --border: #cdcdcd;
+  --text: #171717;
+  --text-muted: #5a5a5a;
+  --text-subtle: #858585;
+  --heading: #0a0a0a;
+  --link: #171717;
 }
 
 [data-theme='dark'] {
   color-scheme: dark;
-  --surface: oklch(0.16 0.018 262);
-  --surface-2: oklch(0.2 0.02 262);
-  --surface-3: oklch(0.25 0.022 262);
-  --border: oklch(0.31 0.02 262);
-  --text: oklch(0.95 0.008 85);
-  --text-muted: oklch(0.72 0.011 85);
-  --text-subtle: oklch(0.57 0.011 85);
-  --heading: oklch(0.95 0.01 88);
+  --surface: #111;
+  --surface-2: #1a1a1a;
+  --surface-3: #262626;
+  --panel: #1a1a1a;
+  --border: #333;
+  --text: #ededed;
+  --text-muted: #a8a8a8;
+  --text-subtle: #7d7d7d;
+  --heading: #fff;
+  --link: #ededed;
 }
 
 /* Expose les jetons sémantiques comme utilitaires Tailwind (bg-surface, text-text, border-border...). */
@@ -61,13 +66,29 @@
   --color-text-muted: var(--text-muted);
   --color-text-subtle: var(--text-subtle);
   --color-heading: var(--heading);
+  --color-link: var(--link);
+  --color-panel: var(--panel);
 }
 
-/* Titres en bleu-encre par défaut (clair) / crème (sombre) ; les bandeaux
-   encre remettent leurs titres en blanc via l'utilitaire text-white. */
+/* Titres en encre (clair) / crème (sombre) ; les bandeaux encre remettent leurs
+   titres en blanc via l'utilitaire text-white. */
 @layer base {
   :where(h1, h2, h3) {
     color: var(--heading);
+  }
+
+  /* Le sérif des titres n'existe qu'en une graisse, et se compose à peine serré. */
+  .font-display {
+    font-weight: 400;
+    letter-spacing: -0.015em;
+  }
+
+  /* Les liens de texte se reconnaissent à leur souligné orange. */
+  .text-link {
+    text-decoration: underline;
+    text-decoration-color: var(--color-brand-500);
+    text-decoration-thickness: 1.5px;
+    text-underline-offset: 3px;
   }
 }
 
@@ -79,15 +100,15 @@
     max-width: 96rem;
     padding-inline: 1.5rem;
 
-    @media (min-width: 640px) {
+    @media (width >= 640px) {
       padding-inline: 2rem;
     }
 
-    @media (min-width: 1024px) {
+    @media (width >= 1024px) {
       padding-inline: 4rem;
     }
 
-    @media (min-width: 1536px) {
+    @media (width >= 1536px) {
       padding-inline: 5rem;
     }
   }
@@ -96,7 +117,7 @@
 @layer base {
   html {
     scroll-behavior: smooth;
-    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
   }
 
   body {
@@ -104,7 +125,7 @@
     color: var(--text);
     font-family: var(--font-sans);
     -webkit-font-smoothing: antialiased;
-    text-rendering: optimizeLegibility;
+    text-rendering: optimizelegibility;
   }
 
   :focus-visible {
@@ -114,8 +135,8 @@
   }
 
   ::selection {
-    background-color: var(--color-brand-200);
-    color: var(--color-brand-900);
+    background-color: var(--color-accent-400);
+    color: #111;
   }
 
   @media (prefers-reduced-motion: reduce) {
@@ -150,4 +171,51 @@
     opacity: 1;
     transform: none;
   }
+}
+
+/* ---------- Mouvement commun à toutes les pages ---------- */
+
+@media (prefers-reduced-motion: no-preference) {
+  /* Transition de page : la nouvelle page s'ouvre en cercle depuis le point du clic. */
+  ::view-transition-old(root) {
+    animation: none !important;
+  }
+
+  ::view-transition-new(root) {
+    animation: page-open 0.75s cubic-bezier(0.7, 0, 0.2, 1) both !important;
+  }
+
+  /* Les titres de page montent à l'arrivée. */
+  :root.js main h1 {
+    animation: title-rise 0.9s cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+}
+
+@keyframes page-open {
+  from {
+    clip-path: circle(0 at var(--vt-x, 50%) var(--vt-y, 0%));
+  }
+
+  to {
+    clip-path: circle(150vmax at var(--vt-x, 50%) var(--vt-y, 0%));
+  }
+}
+
+@keyframes title-rise {
+  from {
+    opacity: 0;
+    transform: translateY(0.5em);
+  }
+}
+
+/* Souligné qui se trace au survol, pour les liens de liste. */
+.draw {
+  background: linear-gradient(currentcolor, currentcolor) 0 100% / 0 1.5px no-repeat;
+  transition: background-size 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.draw:hover,
+.draw:focus-visible,
+.group:hover .draw {
+  background-size: 100% 1.5px;
 }

@@ -1,0 +1,15 @@
+{
+  "roleFr": "Projet de fin d’études d’ingénieur",
+  "roleEn": "Final-year engineering project",
+  "org": "École de technologie supérieure (ÉTS)",
+  "locationFr": "Montréal, Canada",
+  "locationEn": "Montréal, Canada",
+  "start": "2025",
+  "end": "",
+  "current": false,
+  "order": 2,
+  "descFr": "Simulation de scénarios de flexibilité énergétique d’un bâtiment pour réduire ses émissions de gaz à effet de serre (EnergyPlus, OpenStudio, Python).",
+  "descEn": "Simulation of energy-flexibility scenarios for a building to cut its greenhouse-gas emissions (EnergyPlus, OpenStudio, Python).",
+  "storyFr": "Retour à Montréal pour le projet de fin d’études. La question : comment un bâtiment peut-il consommer autrement pour émettre moins ? Je la traite par la simulation.",
+  "storyEn": "Back to Montreal for the final-year project. The question: how can a building consume differently to emit less? I tackle it through simulation."
+}

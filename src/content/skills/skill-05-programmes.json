@@ -1,0 +1,15 @@
+{
+  "categoryFr": "Programmes",
+  "categoryEn": "Programmes",
+  "order": 5,
+  "itemsFr": [
+    "Montage de propositions et de budgets",
+    "Conventions avec des institutions publiques",
+    "Licences ouvertes"
+  ],
+  "itemsEn": [
+    "Proposal and budget development",
+    "Agreements with public institutions",
+    "Open licences"
+  ]
+}

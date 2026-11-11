@@ -3,15 +3,20 @@
   "kind": "tool",
   "status": "wip",
   "featured": false,
-  "order": 6,
+  "order": 8,
   "year": "2026",
   "url": null,
   "repo": null,
-  "summaryFr": "Une appli mobile de dimensionnement solaire, posée sur un moteur de calcul pur et vérifiable.",
-  "summaryEn": "A mobile solar-sizing app, sitting on a pure, verifiable calculation engine.",
+  "summaryFr": "Application mobile qui donne à un foyer un premier dimensionnement solaire, hors ligne, avant de parler à un installateur.",
+  "summaryEn": "Mobile app that gives a household a first solar sizing, offline, before talking to an installer.",
   "stack": ["Expo", "React Native", "TypeScript"],
   "tags": ["Outil", "Mobile", "Solaire"],
   "image": "/images/kuma-solaire-app.png",
-  "bodyFr": "Une appli mobile pour dimensionner du solaire directement sur le terrain. Elle est bâtie en monorepo TypeScript autour d’un moteur de calcul pur, tenu à l’écart de l’interface par une règle d’imports stricte et doublé d’une page de vérification. Pensée pour les réseaux capricieux et le travail de terrain en Afrique de l’Ouest.",
-  "bodyEn": "A mobile app for sizing solar right there in the field. It’s built as a TypeScript monorepo around a pure calculation engine, kept away from the interface by a strict import rule and backed by a verification page. Designed for patchy networks and fieldwork in West Africa."
+  "bodyFr": "Kuma Solaire demande le lieu, les appareils et leurs heures d’usage, puis dimensionne panneaux, batterie, onduleur et câbles sur le pire mois de l’année. Elle donne des ordres de grandeur, pas un devis.\n\nLe rapport porte un QR code qui contient les besoins saisis : une page de vérification refait le calcul avec le même moteur. Ce moteur est séparé de l’interface par une règle d’imports stricte. L’application fonctionne sans connexion.",
+  "bodyEn": "Kuma Solaire asks for the place, the appliances and their hours of use, then sizes panels, battery, inverter and cables on the worst month of the year. It gives orders of magnitude, not a quote.\n\nThe report carries a QR code holding the needs entered: a verification page redoes the calculation with the same engine. That engine is separated from the interface by a strict import rule. The app works without a connection.",
+  "geo": {
+    "lat": 9.2,
+    "lon": -9.5,
+    "span": 20
+  }
 }

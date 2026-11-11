@@ -3,15 +3,30 @@
   "kind": "data",
   "status": "live",
   "featured": true,
-  "order": 3,
+  "order": 2,
   "year": "2026",
-  "url": "https://zenodo.org/records/21051755",
-  "repo": null,
-  "summaryFr": "Le référentiel de données solaires de la Guinée : de la donnée ouverte et qualifiée, citable par un DOI.",
-  "summaryEn": "Guinea’s solar-data reference: open, qualified data you can cite by DOI.",
-  "stack": ["Zenodo", "CC BY 4.0", "DOI"],
+  "url": "https://doi.org/10.5281/zenodo.21051754",
+  "repo": "https://github.com/siba-IEE/rds-guinee",
+  "summaryFr": "Référentiel de données solaires de la Guinée : 34 chefs-lieux de préfecture, six sources satellitaires et de réanalyse, de 1981 à 2025. Licence CC BY 4.0.",
+  "summaryEn": "Guinea’s solar-data reference: 34 prefecture seats, six satellite and reanalysis sources, from 1981 to 2025. CC BY 4.0 licence.",
+  "stack": ["CSV", "CC BY 4.0", "Zenodo"],
   "tags": ["Données", "Recherche", "Solaire"],
-  "image": "/images/rds-guinee.png",
-  "bodyFr": "Ici, c’est un référentiel, pas un entrepôt : ce qui compte, c’est la qualité de chaque donnée bien plus que leur nombre. Chaque mesure voyage avec son passeport (source, méthode, niveau de confiance, période de validité, incertitude), et le référentiel assume de dire ce qu’il sait comme ce qu’il ignore.\n\nLa Guinée sert de pays pilote. La donnée y est ouverte (CC BY 4.0), publiée par instantanés versionnés, chacun archivé sur Zenodo avec un DOI qui ne bouge plus. Les niveaux de confiance s’échelonnent du satellite et de la réanalyse (B) jusqu’au mesuré-sol validé (A), avec un premier point terrain à Kankan.",
-  "bodyEn": "This is a reference, not a warehouse: what counts is the quality of each datum far more than their number. Every measurement travels with its passport (source, method, confidence level, validity window, uncertainty), and the reference is willing to say what it knows as much as what it doesn’t.\n\nGuinea serves as the pilot country. The data there is open (CC BY 4.0), released as versioned snapshots, each archived on Zenodo with a DOI that never moves. Confidence levels run from satellite and reanalysis (B) up to validated ground measurement (A), with a first field point in Kankan."
+  "image": "/images/projets/rds-guinee.webp",
+  "bodyFr": "Le référentiel publie plus de 68 millions d’enregistrements pour 34 localités, de 1981 à 2025 selon le paramètre, aux pas mensuel, journalier et horaire. Les sources sont NASA POWER, SARAH-3, CAMS, ERA5-Land et une station au sol.\n\nChaque mesure est accompagnée de sa source, de sa méthode, de son niveau de confiance, de sa période de validité et de son incertitude. Le niveau B correspond aux données satellitaires et de réanalyse, le niveau A aux mesures au sol validées. La station de Kankan, issue de la campagne ESMAP/WAPP, est la première au niveau A. Les données sont sous licence CC BY 4.0 et archivées sur Zenodo (version 2.0.1).",
+  "bodyEn": "The reference publishes more than 68 million records for 34 localities, from 1981 to 2025 depending on the parameter, at monthly, daily and hourly steps. The sources are NASA POWER, SARAH-3, CAMS, ERA5-Land and one ground station.\n\nEach measurement comes with its source, method, confidence level, validity period and uncertainty. Level B covers satellite and reanalysis data, level A validated ground measurements. The Kankan station, from the ESMAP/WAPP campaign, is the first at level A. The data are under the CC BY 4.0 licence and archived on Zenodo (version 2.0.1).",
+  "links": [
+    {
+      "label": "doi:10.5281/zenodo.21051754",
+      "url": "https://doi.org/10.5281/zenodo.21051754"
+    },
+    {
+      "label": "github.com/siba-IEE/rds-guinee",
+      "url": "https://github.com/siba-IEE/rds-guinee"
+    }
+  ],
+  "geo": {
+    "lat": 10.38,
+    "lon": -9.3,
+    "span": 5
+  }
 }

@@ -1,351 +1,95 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
-import OrcidIcon from '../ui/OrcidIcon.astro';
-import { SITE, orcidUrl } from '../../lib/site';
-import { getLangFromUrl, localizePath, useTranslations } from '../../lib/i18n';
-import { getProfile, getProjects, getPublications, statusLabels } from '../../lib/content';
+import Stage from '../home/Stage.astro';
+import { SITE, socialLinks } from '../../lib/site';
+import { getLangFromUrl } from '../../lib/i18n';
+import { getProfile } from '../../lib/content';
 
 const lang = getLangFromUrl(Astro.url);
-const t = useTranslations(lang);
 const isFr = lang === 'fr';
-
 const profile = getProfile();
-const bio = (isFr ? profile.bioFr : profile.bioEn) || SITE.bio[lang];
-
-const projects = getProjects();
-const publications = getPublications();
-
-const prettyType = (type: string) =>
-  type.replace(/[-_]/g, ' ').replace(/^\w/, (character) => character.toUpperCase());
-
-// Kuma Data Core et RDS Guinée sont déjà présentés en publications (Zenodo) plus haut :
-// on les retire de la liste de l'accueil pour éviter le doublon (ils restent sur /projets).
-const shownAsPublication = new Set(['kuma-data-core', 'rds-guinee']);
-const homeProjects = projects.filter((p) => !shownAsPublication.has(p.slug));
-
-// Réalisations = abouti (en ligne) ; Projets = en cours.
-const realisations = homeProjects.filter((p) => p.status === 'live');
-const enCours = homeProjects.filter((p) => p.status !== 'live');
-
-// Accroche de mission (à affiner librement).
-const mission = isFr
-  ? 'Fiabiliser le solaire ouest-africain'
-  : 'Making West African solar trustworthy';
-const missionLede = isFr
-  ? 'Chercheur et ingénieur, je m’attaque au maillon faible du solaire ouest-africain : la fiabilité de la donnée.'
-  : 'A researcher and engineer going after the weak link of West African solar: whether you can trust the data.';
-
-const pillars = [
-  {
-    n: '01',
-    title: isFr ? 'Recherche & méthode' : 'Research & method',
-    desc: isFr
-      ? 'Qualifier et transférer une donnée solaire, méthode à l’appui : calage spatial, incertitude, dégénérescence de pixel. Validé, puis publié.'
-      : 'Qualifying and transferring solar data, with a method behind it: spatial calibration, uncertainty, pixel degeneracy. Validated, then published.',
-    href: localizePath('/travaux', lang),
-  },
-  {
-    n: '02',
-    title: isFr ? 'Infrastructure de données' : 'Data infrastructure',
-    desc: isFr
-      ? 'Kuma Data Core : la brique qui ingère la donnée solaire, lui attribue un niveau de confiance (A/B/C) et la sert par millions de points.'
-      : 'Kuma Data Core: the piece that ingests solar data, gives it a confidence level (A/B/C) and serves it by the million.',
-    href: `${localizePath('/projets', lang)}#kuma-data-core`,
-  },
-  {
-    n: '03',
-    title: isFr ? 'Outils & logiciels' : 'Tools & software',
-    desc: isFr
-      ? 'Des applis de dimensionnement, sur bureau et sur mobile, pour que la donnée qualifiée arrive vraiment jusqu’aux bureaux d’études.'
-      : 'Sizing apps, desktop and mobile, so the qualified data actually reaches the design offices that need it.',
-    href: localizePath('/projets', lang),
-  },
-  {
-    n: '04',
-    title: isFr ? 'Ingénierie énergétique' : 'Energy engineering',
-    desc: isFr
-      ? 'Mon métier d’origine : la performance énergétique des bâtiments. Audits, DPE, bilans carbone, simulation thermique.'
-      : 'My original trade: building energy performance. Audits, EPC ratings, carbon assessments, thermal simulation.',
-    href: localizePath('/a-propos', lang),
-  },
-];
+const tagline = (isFr ? profile.taglineFr : profile.taglineEn) || SITE.tagline[lang];
+const address = (href: string) =>
+  href.replace(/^(https?:\/\/(www\.)?|mailto:)/, '').replace(/\/$/, '');
 ---
 
-<BaseLayout description={missionLede.slice(0, 155)}>
-  {/* Hero de mission : bandeau encre */}
-  <section class="relative overflow-hidden bg-brand-900 text-white">
-    <div
-      class="pointer-events-none absolute inset-0 opacity-[0.12] [background-image:linear-gradient(rgba(255,255,255,0.7)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.7)_1px,transparent_1px)] [background-size:46px_46px] [mask-image:radial-gradient(80%_75%_at_25%_0%,black,transparent)]"
-      aria-hidden="true"
-    >
-    </div>
-    <div class="shell relative py-14 sm:py-20">
-      <p class="inline-flex items-center gap-2 text-xs font-medium tracking-[0.15em] text-white/70 uppercase">
-        <span class="relative flex size-2">
-          <span class="absolute inline-flex size-full animate-ping rounded-full bg-accent-400 opacity-75"></span>
-          <span class="relative inline-flex size-2 rounded-full bg-accent-400"></span>
-        </span>
-        {t('hero.availability')}
-      </p>
+<BaseLayout description={tagline.slice(0, 158)}>
+  <Stage />
 
-      <h1 class="mt-5 font-display text-4xl font-bold tracking-tight text-balance text-white sm:text-5xl lg:whitespace-nowrap">
-        {mission}
-      </h1>
-      <p class="mt-4 max-w-2xl text-base text-white/75 text-pretty">{missionLede}</p>
-
-      <div class="mt-8 flex flex-wrap items-center gap-4">
-        <a
-          href={localizePath('/projets', lang)}
-          class="inline-flex items-center gap-2 rounded-full bg-white px-6 py-3 text-sm font-semibold text-brand-900 transition-transform hover:-translate-y-0.5"
-        >
-          {isFr ? 'Voir mes travaux' : 'See my work'}
-        </a>
-        <a
-          href={localizePath('/contact', lang)}
-          class="inline-flex items-center gap-2 text-sm font-semibold text-white/90 underline-offset-4 hover:underline"
-        >
-          {t('nav.contact')}
-        </a>
-      </div>
-    </div>
-  </section>
-
-  {/* Présentation : panneau encre + portrait */}
-  <section data-reveal class="bg-surface-2/60">
-    <div class="shell py-12 sm:py-16">
-      <div class="grid overflow-hidden rounded-2xl border border-border sm:grid-cols-[1.05fr_0.95fr]">
-        <div class="flex flex-col justify-center gap-6 bg-brand-900 p-8 text-white sm:p-10">
-          <p class="text-lg leading-relaxed text-white/90 text-pretty">{bio}</p>
-          <div class="flex flex-wrap items-center gap-4">
-            <a
-              href={localizePath('/contact', lang)}
-              class="inline-flex items-center gap-2 rounded-full bg-white px-6 py-3 text-sm font-semibold text-brand-900 transition-transform hover:-translate-y-0.5"
-            >
-              {t('nav.contact')}
-            </a>
-            <a
-              href={localizePath('/a-propos', lang)}
-              class="text-sm font-semibold text-white/90 underline-offset-4 hover:underline"
-            >
-              {t('about.pageTitle')}
-            </a>
-            <a
-              href={orcidUrl}
-              target="_blank"
-              rel="me noopener"
-              class="inline-flex items-center gap-2 rounded-full bg-white/10 px-4 py-2.5 text-sm font-medium text-white/85 ring-1 ring-white/15 transition-colors hover:bg-white/15"
-            >
-              <OrcidIcon class="size-4" />
-              <span class="font-mono text-xs tracking-tight">{SITE.orcid}</span>
-            </a>
-          </div>
-        </div>
-        <div class="relative min-h-[22rem] bg-surface-3">
-          <img
-            src="/images/ph.jpeg"
-            alt={isFr ? `${SITE.name}, à son poste de travail` : `${SITE.name}, at work`}
-            loading="lazy"
-            class="absolute inset-0 size-full object-cover object-[50%_55%]"
-          />
-        </div>
-      </div>
-    </div>
-  </section>
-
-  {/* Ce que je fais : titre figé (sticky) + piliers qui défilent */}
-  <section class="relative bg-brand-900 text-white">
-    <div
-      class="pointer-events-none absolute inset-0 opacity-[0.08] [background-image:linear-gradient(rgba(255,255,255,0.7)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.7)_1px,transparent_1px)] [background-size:46px_46px]"
-      aria-hidden="true"
-    >
-    </div>
-    <div class="shell relative py-16 sm:py-24">
-      <div class="grid gap-10 lg:grid-cols-[0.72fr_1.28fr] lg:gap-16">
-        <div class="lg:sticky lg:top-24 lg:self-start">
-          <h2 class="font-display text-2xl font-bold tracking-tight text-white sm:text-3xl">
-            {isFr ? 'Ce que je fais' : 'What I do'}
-          </h2>
-          <p class="mt-4 max-w-sm text-white/70 text-pretty">
-            {
-              isFr
-                ? 'Ça part toujours du même endroit : rendre la ressource solaire mesurable, puis en faire quelque chose d’utile.'
-                : 'It always starts in the same place: making the solar resource measurable, then turning it into something useful.'
-            }
-          </p>
-        </div>
-        <div>
-          {
-            pillars.map((p) => (
-              <a
-                href={p.href}
-                class="group flex gap-5 border-t border-white/15 py-6 first:border-t-0 first:pt-0 sm:gap-8"
-              >
-                <span class="pt-1 font-mono text-sm text-accent-400">{p.n}</span>
-                <div class="flex-1">
-                  <h3 class="font-display text-xl font-bold tracking-tight text-white sm:text-2xl">{p.title}</h3>
-                  <p class="mt-2 text-white/70 text-pretty">{p.desc}</p>
-                  <span class="mt-3 inline-block text-sm font-medium text-white/90 group-hover:underline">
-                    {isFr ? 'En savoir plus' : 'Learn more'}
-                  </span>
-                </div>
-              </a>
-            ))
-          }
-        </div>
-      </div>
-    </div>
-  </section>
-
-  {/* Publications : cartes, synchronisées depuis ORCID (sans photos) */}
-  <section data-reveal class="border-t border-border">
-    <div class="shell py-12 sm:py-16">
-      <div class="flex flex-wrap items-end justify-between gap-4">
-        <div>
-          <h2 class="font-display text-2xl font-bold tracking-tight sm:text-3xl">
-            {isFr ? 'Contributions scientifiques' : 'Scientific contributions'}
-          </h2>
-          <p class="mt-3 max-w-2xl text-text-muted text-pretty">{t('publications.pageLede')}</p>
-        </div>
-        <a
-          href={orcidUrl}
-          target="_blank"
-          rel="me noopener"
-          class="inline-flex items-center gap-2 text-sm font-medium text-brand-700 underline-offset-4 hover:underline"
-        >
-          <OrcidIcon class="size-4" />
-          {t('publications.viewOrcid')}
-        </a>
-      </div>
-
+  <section id="contact" class="contact">
+    <h2>Contact</h2>
+    <a href={`mailto:${SITE.email}`} class="mail">{SITE.email}</a>
+    <ul>
       {
-        publications.length === 0 ? (
-          <p class="mt-8 text-text-muted">{t('publications.empty')}</p>
-        ) : (
-          <div class="mt-8 grid gap-4 sm:grid-cols-2">
-            {publications.map((pub) => (
-              <article class="flex flex-col rounded-2xl border border-border p-6 transition-colors hover:border-brand-300">
-                <div class="flex items-center gap-2 text-xs">
-                  <span class="rounded bg-surface-2 px-2 py-0.5 font-medium text-text-muted">
-                    {prettyType(pub.type)}
-                  </span>
-                  {pub.year && <span class="font-mono text-text-subtle">{pub.year}</span>}
-                </div>
-                <h3 class="mt-3 font-display text-lg font-bold leading-snug tracking-tight text-pretty">
-                  {pub.url ? (
-                    <a
-                      href={pub.url}
-                      target="_blank"
-                      rel="noopener"
-                      class="underline-offset-4 hover:text-brand-700 hover:underline"
-                    >
-                      {pub.title}
-                    </a>
-                  ) : (
-                    pub.title
-                  )}
-                </h3>
-                {pub.venue && <p class="mt-2 text-sm text-text-muted text-pretty">{pub.venue}</p>}
-                {pub.authors.length > 0 && (
-                  <p class="mt-1 text-xs text-text-subtle text-pretty">{pub.authors.join(', ')}</p>
-                )}
-                {(pub.doi || pub.url) && (
-                  <div class="mt-auto flex flex-wrap items-center gap-x-4 gap-y-1 pt-4 text-sm">
-                    {pub.doi && (
-                      <a
-                        href={`https://doi.org/${pub.doi}`}
-                        target="_blank"
-                        rel="noopener"
-                        class="font-mono text-xs text-brand-700 hover:underline"
-                      >
-                        DOI
-                      </a>
-                    )}
-                    {pub.url && (
-                      <a
-                        href={pub.url}
-                        target="_blank"
-                        rel="noopener"
-                        class="font-medium text-brand-700 hover:underline"
-                      >
-                        {isFr ? 'Lire' : 'Read'}
-                      </a>
-                    )}
-                  </div>
-                )}
-              </article>
-            ))}
-          </div>
-        )
+        socialLinks
+          .filter((link) => link.key !== 'email')
+          .map((link) => (
+            <li>
+              <a href={link.href} target="_blank" rel="me noopener">
+                {address(link.href)}
+              </a>
+            </li>
+          ))
       }
-    </div>
+    </ul>
   </section>
-
-  {/* Réalisations & projets : aperçu en liste, détail sur /projets */}
-  <section class="border-t border-border">
-    <div class="shell py-12 sm:py-16">
-      <div class="flex flex-wrap items-end justify-between gap-4">
-        <h2 class="font-display text-2xl font-bold tracking-tight sm:text-3xl">
-          {isFr ? 'Réalisations & projets' : 'Work & projects'}
-        </h2>
-        <a
-          href={localizePath('/projets', lang)}
-          class="text-sm font-medium text-brand-700 hover:underline"
-        >
-          {isFr ? 'Tout voir en détail' : 'See it all in detail'}
-        </a>
-      </div>
-
-      <ul class="mt-8 border-t border-border">
-        {
-          [...realisations, ...enCours].map((project) => {
-            // Lien vers le vrai produit s'il existe (site officiel), sinon vers
-            // l'entrée correspondante dans la page /projets (pas de sous-page).
-            const external = Boolean(project.url);
-            const href = project.url ?? `${localizePath('/projets', lang)}#${project.slug}`;
-            return (
-              <li class="border-b border-border">
-                <a
-                  href={href}
-                  target={external ? '_blank' : undefined}
-                  rel={external ? 'me noopener' : undefined}
-                  class="group grid gap-1 py-5 sm:grid-cols-[1fr_auto] sm:items-baseline sm:gap-8"
-                >
-                  <div>
-                    <span class="font-display text-lg font-bold tracking-tight group-hover:underline">
-                      {project.title}
-                    </span>
-                    <p class="mt-1 max-w-2xl text-sm text-text-muted text-pretty">
-                      {isFr ? project.summaryFr : project.summaryEn}
-                    </p>
-                  </div>
-                  <span class="rounded-full bg-surface-3 px-2.5 py-0.5 text-[0.65rem] font-medium tracking-wide text-text-subtle uppercase sm:justify-self-end">
-                    {statusLabels[project.status][lang]}
-                  </span>
-                </a>
-              </li>
-            );
-          })
-        }
-      </ul>
-    </div>
-  </section>
-
-  {/* Contact : bandeau encre */}
-  <section data-reveal class="bg-brand-900 text-white">
-    <div
-      class="shell flex flex-col items-start gap-6 py-16 sm:flex-row sm:items-center sm:justify-between sm:py-20"
-    >
-      <div>
-        <h2 class="font-display text-2xl font-bold tracking-tight text-white sm:text-3xl">{t('nav.contact')}</h2>
-        <p class="mt-3 max-w-xl text-white/80 text-pretty">{t('contact.pageLede')}</p>
-      </div>
-      <a
-        href={`mailto:${SITE.email}`}
-        class="inline-flex shrink-0 items-center gap-2 rounded-full bg-white px-6 py-3 text-sm font-semibold text-brand-900 transition-transform hover:-translate-y-0.5"
-      >
-        {SITE.email}
-      </a>
-    </div>
-  </section>
-
 </BaseLayout>
+
+<style>
+  .contact {
+    display: grid;
+    align-content: center;
+    gap: 1.5rem;
+    min-height: 70svh;
+    padding: 5rem 1.25rem;
+    background: #0b0c0e;
+    color: #fff;
+  }
+
+  h2 {
+    margin: 0;
+    font-size: 0.9rem;
+    font-weight: 400;
+    color: rgb(255 255 255 / 55%);
+  }
+
+  .mail {
+    justify-self: start;
+    font-family: var(--font-display);
+    font-size: clamp(2rem, 8.4vw, 8.5rem);
+    line-height: 0.95;
+    letter-spacing: -0.015em;
+    overflow-wrap: anywhere;
+    background: linear-gradient(#4fd8ff, #4fd8ff) 0 100% / 100% 0 no-repeat;
+    transition:
+      background-size 0.45s cubic-bezier(0.22, 1, 0.36, 1),
+      color 0.3s ease;
+  }
+
+  .mail:hover {
+    background-size: 100% 100%;
+    color: #0b0c0e;
+  }
+
+  ul {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem 2rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    font-family: var(--font-mono);
+    font-size: 0.78rem;
+    color: rgb(255 255 255 / 70%);
+  }
+
+  ul a:hover {
+    color: #fff;
+  }
+
+  @media (min-width: 1024px) {
+    .contact {
+      padding-inline: 4rem;
+    }
+  }
+</style>

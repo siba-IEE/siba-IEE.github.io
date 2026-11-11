@@ -1,0 +1,23 @@
+{
+  "categoryFr": "Données et logiciel",
+  "categoryEn": "Data and software",
+  "order": 4,
+  "itemsFr": [
+    "Python scientifique",
+    "PostgreSQL et PostGIS",
+    "GeoServer et GeoNetwork",
+    "API",
+    "Git",
+    "Tests automatisés",
+    "LaTeX"
+  ],
+  "itemsEn": [
+    "Scientific Python",
+    "PostgreSQL and PostGIS",
+    "GeoServer and GeoNetwork",
+    "APIs",
+    "Git",
+    "Automated testing",
+    "LaTeX"
+  ]
+}

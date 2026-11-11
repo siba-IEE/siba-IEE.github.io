@@ -9,8 +9,7 @@ const storage = import.meta.env.DEV
   ? ({ kind: 'local' } as const)
   : ({ kind: 'github', repo: 'siba-IEE/portfolio' } as const);
 
-const localizedText = (labelFr: string) =>
-  fields.text({ label: labelFr, multiline: true });
+const localizedText = (labelFr: string) => fields.text({ label: labelFr, multiline: true });
 
 export default config({
   storage,
@@ -129,6 +128,8 @@ export default config({
         order: fields.integer({ label: 'Ordre', defaultValue: 0 }),
         descFr: localizedText('Description (FR)'),
         descEn: localizedText('Description (EN)'),
+        storyFr: fields.text({ label: 'Récit à la première personne (FR)', multiline: true }),
+        storyEn: fields.text({ label: 'Récit à la première personne (EN)', multiline: true }),
       },
     }),
     skills: collection({

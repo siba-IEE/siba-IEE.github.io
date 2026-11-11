@@ -17,6 +17,9 @@ export interface Profile {
   taglineEn: string;
   bioFr: string;
   bioEn: string;
+  /** Second paragraphe de la page À propos : ce qui précède Kuma Science. */
+  backgroundFr: string;
+  backgroundEn: string;
   photo: string | null;
 }
 
@@ -42,6 +45,10 @@ export interface ProjectRaw {
   summaryEn: string;
   stack: string[];
   tags: string[];
+  /** Où regarder sur le globe : centre de la vue et largeur montrée, en degrés. Optionnel. */
+  geo?: { lat: number; lon: number; span: number };
+  /** Adresses publiques (site, API, DOI, dépôt). Optionnel. */
+  links?: { label: string; url: string }[];
   /** Visuel de carte (chemin sous /public, ex. "/images/projets/rds.jpg"). Optionnel. */
   image?: string;
   bodyFr: string;
@@ -59,7 +66,10 @@ const projectModules = import.meta.glob<{ default: ProjectRaw }>('../content/pro
 export function getProjects(): Project[] {
   return Object.entries(projectModules)
     .map(([path, mod]) => ({
-      slug: path.split('/').pop()!.replace(/\.json$/, ''),
+      slug: path
+        .split('/')
+        .pop()!
+        .replace(/\.json$/, ''),
       ...mod.default,
     }))
     .sort((a, b) => a.order - b.order);
@@ -126,9 +136,14 @@ export function getPublications(): Publication[] {
   }));
 
   const orcidWorks = (orcidSnapshot.works ?? []) as OrcidWork[];
-  const seen = new Set(manual.map((pub) => pub.doi ?? pub.title));
+  // Dédoublonnage insensible à la casse, sur le DOI et sur le titre : ORCID renvoie parfois
+  // le DOI d'une version là où la curation cite le DOI de concept.
+  const norm = (value: string) => value.trim().toLowerCase();
+  const seen = new Set(
+    manual.flatMap((pub) => [pub.doi, pub.title].filter(Boolean).map((v) => norm(v!))),
+  );
   const fromOrcid: Publication[] = orcidWorks
-    .filter((work) => !seen.has(work.doi ?? work.title))
+    .filter((work) => !(work.doi && seen.has(norm(work.doi))) && !seen.has(norm(work.title)))
     .map((work) => ({
       title: work.title,
       authors: [],
@@ -157,6 +172,9 @@ export interface Experience {
   order: number;
   descFr: string;
   descEn: string;
+  /** L'étape racontée à la première personne, pour le couloir de l'accueil. */
+  storyFr?: string;
+  storyEn?: string;
 }
 
 const experienceModules = import.meta.glob<{ default: Experience }>(
@@ -201,6 +219,9 @@ export interface Education {
   order: number;
   noteFr: string;
   noteEn: string;
+  /** L'étape racontée à la première personne, pour le couloir de l'accueil. */
+  storyFr?: string;
+  storyEn?: string;
 }
 
 const educationModules = import.meta.glob<{ default: Education }>('../content/education/*.json', {
@@ -226,6 +247,8 @@ export interface ResearchMetric {
 export interface ResearchFigure {
   /** Chemin sous /public (ex. "/images/recherche/calage-variogramme.png"). */
   src: string;
+  /** Variante anglaise de la figure (libellés traduits). Optionnel. */
+  srcEn?: string;
   /** Section d'ancrage : la figure s'affiche sous cette section. */
   section: 'method' | 'result';
   captionFr: string;
@@ -268,6 +291,8 @@ export interface Research {
   questionsEn: string[];
   /** Lien vers l'article / le DOI si publié. Optionnel. */
   url?: string;
+  /** Capture de la page de dépôt (chemin sous /public). Optionnel. */
+  preview?: string;
 }
 
 const researchModules = import.meta.glob<{ default: Research }>('../content/recherche/*.json', {
@@ -290,13 +315,13 @@ export interface Service {
   nameEn: string;
   descFr: string;
   descEn: string;
-  /** Tarif de départ, texte libre (ex. « 1 000 $ », « 30 000 € », « sur devis »). */
-  priceFrom: string;
   order: number;
 }
 
 export function getServices(): Service[] {
-  return (servicesData.services as Service[]).slice().sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+  return (servicesData.services as Service[])
+    .slice()
+    .sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
 }
 
 export const serviceCategoryLabels: Record<ServiceCategory, Record<Lang, string>> = {

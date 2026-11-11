@@ -1,0 +1,1195 @@
+---
+/**
+ * La page d'accueil tient dans une seule scène 3D (src/scripts/stage.ts), pilotée par le
+ * défilement : un couloir, puis un salon. Ce composant porte le texte et le film de chaque
+ * réalisation. Sans WebGL ou sans JavaScript, tout se lit à la suite.
+ */
+import { SITE } from '../../lib/site';
+import { getLangFromUrl } from '../../lib/i18n';
+import {
+  getProfile,
+  getExperience,
+  getEducation,
+  getProjects,
+  getPublications,
+  statusLabels,
+} from '../../lib/content';
+import { films, glyphs } from '../../data/films';
+import outlines from '../../data/outlines.json';
+import { timeline } from '../../scripts/stage';
+
+const lang = getLangFromUrl(Astro.url);
+const isFr = lang === 'fr';
+const profile = getProfile();
+
+const since = isFr ? 'Depuis' : 'Since';
+const dates = (start: string, end: string, current = false) =>
+  current ? `${since} ${start}` : end ? `${start}–${end}` : start;
+
+/* ---------- Parcours : formation et postes, dans l'ordre du temps ---------- */
+
+const milestones = [
+  ...getEducation().map((item) => ({
+    year: Number(item.start),
+    when: dates(item.start, item.end),
+    title: isFr ? item.titleFr : item.titleEn,
+    place: [item.school, isFr ? item.locationFr : item.locationEn].filter(Boolean).join(', '),
+    story: (isFr ? item.storyFr : item.storyEn) ?? '',
+  })),
+  ...getExperience().map((item) => ({
+    // Un poste suit la formation commencée la même année ; le poste en cours ferme la marche.
+    year: Number(item.start) + (item.current ? 0.75 : 0.5),
+    when: dates(item.start, item.end, item.current),
+    title: isFr ? item.roleFr : item.roleEn,
+    place: `${item.org}, ${isFr ? item.locationFr : item.locationEn}`,
+    story: (isFr ? item.storyFr : item.storyEn) ?? '',
+  })),
+].sort((a, b) => a.year - b.year);
+
+/* ---------- Réalisations : une chaîne par projet, un film par chaîne ---------- */
+
+const channels = getProjects()
+  .filter((project) => films[project.slug])
+  .map((project) => {
+    const film = films[project.slug];
+    const glyph =
+      film.glyph === 'gn' || film.glyph === 'ci'
+        ? outlines[film.glyph]
+        : { path: glyphs[film.glyph], width: 100, height: 100 };
+    return {
+      title: project.title,
+      status: project.status === 'live' ? '' : statusLabels[project.status][lang],
+      url: project.url,
+      tint: film.tint,
+      glyph: { path: glyph.path, width: glyph.width, height: glyph.height },
+      beats: film.beats.map((beat) => {
+        const scene = beat.scene((fr, en) => (isFr ? fr : en));
+        return {
+          say: beat.say[lang],
+          // La phrase désigne l'élément nommé, sinon le premier que la scène met en avant.
+          focus:
+            beat.focus ??
+            scene.map?.mark?.[0] ??
+            (scene.panels?.length
+              ? 'panneau1'
+              : scene.map
+                ? 'carte'
+                : scene.model
+                  ? 'maquette'
+                  : ''),
+          notes: (beat.notes ?? []).map((note) => ({ text: note[lang], at: note.at ?? '' })),
+          scene,
+        };
+      }),
+    };
+  });
+
+/* ---------- Recherche : un volume par publication ---------- */
+
+const types: Record<string, { fr: string; en: string }> = {
+  'journal-article': { fr: 'Article', en: 'Article' },
+  preprint: { fr: 'Prépublication', en: 'Preprint' },
+  'data-set': { fr: 'Jeu de données', en: 'Dataset' },
+  software: { fr: 'Logiciel', en: 'Software' },
+};
+const cloths = ['#1f3a5f', '#7a2a2a', '#2f4a3a', '#c9a23f', '#3d3f47', '#b5532a', '#d8cdb8'];
+const papers = getPublications().map((pub, index) => ({
+  title: pub.title,
+  mention: `${pub.year}, ${types[pub.type]?.[lang] ?? pub.type}`,
+  authors: [pub.authors.join(', '), pub.venue].filter(Boolean).join('. '),
+  doi: pub.doi,
+  url: pub.url ?? `https://doi.org/${pub.doi}`,
+  color: cloths[index % cloths.length],
+}));
+
+const T = timeline(milestones.length, papers.length);
+const pad = (n: number) => String(n).padStart(2, '0');
+
+const t = isFr
+  ? {
+      role: profile.roleFr,
+      scroll: 'Défiler',
+      pick: 'Mes réalisations',
+      tip: 'Choisissez une chaîne sur l’écran',
+      channel: 'Chaîne',
+      change: 'Changer de chaîne',
+      previous: 'Chaîne précédente',
+      next: 'Chaîne suivante',
+      open: 'Ouvrir le projet',
+      read: 'Lire',
+      back: 'Étape précédente',
+      forward: 'Étape suivante',
+    }
+  : {
+      role: profile.roleEn,
+      scroll: 'Scroll',
+      pick: 'My work',
+      tip: 'Pick a channel on the screen',
+      channel: 'Channel',
+      change: 'Change channel',
+      previous: 'Previous channel',
+      next: 'Next channel',
+      open: 'Open the project',
+      read: 'Read',
+      back: 'Previous step',
+      forward: 'Next step',
+    };
+
+const config = {
+  avatar: '/models/avatar.glb',
+  walk: '/models/walk.json',
+  frames: milestones.map(({ when, title, place }) => ({ when, title, place })),
+  volumes: papers.map(({ title, mention, color }) => ({ title, mention, color })),
+  channels: channels.map(({ title, tint, glyph }) => ({ title, tint, glyph })),
+  hint: t.pick,
+};
+/** Les films, tels que le script de la page les joue. */
+const programs = channels.map(({ title, status, url, beats }, index) => ({
+  title,
+  status,
+  url: url ?? '',
+  number: `${t.channel} ${pad(index + 1)}`,
+  beats,
+}));
+---
+
+<section
+  class="scene"
+  data-scene
+  data-config={JSON.stringify(config)}
+  data-films={JSON.stringify(programs)}
+  data-state="loading"
+  style={`--units:${(T.end + 1.4).toFixed(2)}`}
+>
+  <div class="stage">
+    <canvas aria-hidden="true"></canvas>
+    <i class="shade"></i>
+
+    <div class="intro">
+      <h1>{SITE.name}</h1>
+      <p>{t.role}</p>
+      <span class="cue">{t.scroll}</span>
+    </div>
+
+    <ol class="path">
+      {
+        milestones.map((item, index) => (
+          <li data-milestone={index}>
+            {/* Le récit, à la première personne ; le titre exact est sur le cadre et ici en petit. */}
+            <p class="when">{item.when}</p>
+            <p class="story">{item.story || item.title}</p>
+            <h2>{item.title}</h2>
+            <p class="place">{item.place}</p>
+          </li>
+        ))
+      }
+    </ol>
+    {/* Le trait qui relie l'étape en cours à son cadre, sur le mur du couloir. */}
+    <svg class="trail" aria-hidden="true">
+      <line data-trail-line></line>
+      <circle data-trail-dot r="5"></circle>
+    </svg>
+
+    {/* Les chaînes se choisissent sur l'écran 3D ; cette liste les rend accessibles au clavier. */}
+    <div class="channels">
+      <p class="tip">{t.tip}</p>
+      <ul>
+        {
+          channels.map((channel, index) => (
+            <li>
+              <button type="button" data-channel={index}>
+                <span>{pad(index + 1)}</span>
+                {channel.title}
+              </button>
+            </li>
+          ))
+        }
+      </ul>
+    </div>
+
+    <ol class="papers">
+      {
+        papers.map((paper, index) => (
+          <li data-paper={index}>
+            <p class="when">{paper.mention}</p>
+            <h2>{paper.title}</h2>
+            <p class="place">{paper.authors}</p>
+            <a href={paper.url} target="_blank" rel="noopener">
+              {t.read}
+              <span>doi:{paper.doi?.toLowerCase()}</span>
+            </a>
+          </li>
+        ))
+      }
+    </ol>
+
+    {/* Le film : la maquette est en 3D ; ici, seulement le texte qui la désigne. */}
+    <div class="film" data-film>
+      <p class="playing">
+        <span data-film-number></span>
+        <b data-film-title></b>
+        <i data-film-status></i>
+      </p>
+
+      <svg class="leads" aria-hidden="true">
+        <line data-lead></line>
+        <circle data-dot r="5"></circle>
+      </svg>
+
+      {/* La phrase en cours, posée à côté de l'élément dont elle parle. */}
+      <div class="say" data-say aria-live="polite">
+        <i class="clock" data-clock></i>
+        <p data-sentence></p>
+        <ul data-extras></ul>
+        <div class="steps">
+          <button type="button" data-step="-1" aria-label={t.back}>
+            <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M10 3 5 8l5 5"></path></svg>
+          </button>
+          <span data-count></span>
+          <button type="button" data-step="1" aria-label={t.forward}>
+            <svg viewBox="0 0 16 16" aria-hidden="true"><path d="m6 3 5 5-5 5"></path></svg>
+          </button>
+        </div>
+      </div>
+
+      {/* Les précisions, épinglées sur les éléments qu'elles concernent. */}
+      <div data-pins></div>
+
+      <div class="remote">
+        <button type="button" data-remote="grid">{t.change}</button>
+        <a data-remote="open" target="_blank" rel="noopener">{t.open}</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<style>
+  .scene {
+    --nav: 0rem;
+    --stage: calc(100svh - var(--nav));
+    --ink: #0b0c0e;
+    --glow: #7fdcff;
+
+    position: relative;
+    height: calc(var(--stage) * var(--units));
+    background: var(--ink);
+    color: #fff;
+  }
+
+  .stage {
+    position: sticky;
+    top: var(--nav);
+    height: var(--stage);
+    overflow: hidden;
+  }
+
+  canvas {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0;
+    transition: opacity 1.2s ease;
+  }
+
+  .scene:not([data-state='loading']) canvas {
+    opacity: 1;
+  }
+
+  /* Voile du bas : le texte reste lisible sur un décor clair. */
+  .shade {
+    position: absolute;
+    inset: 45% 0 0;
+    background: linear-gradient(rgb(11 12 14 / 0%), rgb(11 12 14 / 88%) 78%);
+    pointer-events: none;
+    transition: opacity 0.6s ease;
+  }
+
+  .scene[data-act='walk'] .shade,
+  .scene[data-act='screen'] .shade,
+  .scene[data-act='enter'] .shade {
+    opacity: 0;
+  }
+
+  /* Chargement : un trait qui pulse. */
+  .scene[data-state='loading'] .stage::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 6rem;
+    height: 1.5px;
+    background: #fff;
+    translate: -50% 0;
+    animation: load 1.2s ease-in-out infinite;
+  }
+
+  @keyframes load {
+    0%,
+    100% {
+      scale: 0.2 1;
+      opacity: 0.4;
+    }
+
+    50% {
+      scale: 1 1;
+      opacity: 1;
+    }
+  }
+
+  /* ---------- Textes posés sur la scène ---------- */
+
+  .intro,
+  .papers,
+  .channels {
+    position: absolute;
+    inset: auto 1.25rem 2rem;
+    pointer-events: none;
+  }
+
+  .intro {
+    transition:
+      opacity 0.5s ease,
+      translate 0.7s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  .scene:not([data-act='intro']) .intro {
+    opacity: 0;
+    translate: 0 -1.5rem;
+  }
+
+  h1 {
+    margin: 0;
+    font-family: var(--font-display);
+    font-size: clamp(3.2rem, 10vw, 10rem);
+    font-weight: 400;
+    line-height: 0.86;
+    letter-spacing: -0.02em;
+    color: #fff;
+  }
+
+  .intro p {
+    max-width: 26rem;
+    margin: 1.2rem 0 0;
+    font-size: 1rem;
+    color: rgb(255 255 255 / 80%);
+  }
+
+  .cue {
+    display: inline-grid;
+    justify-items: center;
+    gap: 0.5rem;
+    margin-top: 1.6rem;
+    font-size: 0.72rem;
+    color: rgb(255 255 255 / 70%);
+  }
+
+  .cue::after {
+    content: '';
+    width: 1.5px;
+    height: 2rem;
+    background: #fff;
+    transform-origin: top;
+    animation: drip 1.8s cubic-bezier(0.65, 0, 0.35, 1) infinite;
+  }
+
+  @keyframes drip {
+    0% {
+      transform: scaleY(0);
+    }
+
+    50% {
+      transform: scaleY(1);
+      transform-origin: top;
+    }
+
+    51% {
+      transform-origin: bottom;
+    }
+
+    100% {
+      transform: scaleY(0);
+      transform-origin: bottom;
+    }
+  }
+
+  /* Parcours : l'étape en cours se pose du côté opposé à son cadre, reliée à lui par un trait.
+     Sa position est réglée par le script, qui suit le cadre à l'écran. */
+  :global(html.js) .scene:not([data-flat]) .path {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: min(27rem, calc(100% - 2.5rem));
+    padding: 1.3rem 1.4rem 1.2rem;
+    border-radius: 0.6rem;
+    background: rgb(11 13 18 / 88%);
+    backdrop-filter: blur(10px);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.4s ease;
+    will-change: transform;
+  }
+
+  :global(html.js) .scene[data-act='walk']:not([data-flat]) .path {
+    opacity: 1;
+  }
+
+  /* Une seule étape occupe le cartouche, qui prend exactement sa taille. */
+  :global(html.js) .scene:not([data-flat]) .path li:not([data-on]) {
+    display: none;
+  }
+
+  :global(html.js) .scene:not([data-flat]) .path li[data-on] {
+    animation: step-in 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+
+  @keyframes step-in {
+    from {
+      opacity: 0;
+      translate: 0 0.6rem;
+    }
+  }
+
+  .trail {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.4s ease;
+  }
+
+  .scene[data-act='walk'] .trail {
+    opacity: 1;
+  }
+
+  .trail line {
+    stroke: #fff;
+    stroke-width: 1.5;
+  }
+
+  .trail circle {
+    fill: #ffc266;
+    stroke: #fff;
+    stroke-width: 1.5;
+  }
+
+  /* Parcours et publications : une fiche à la fois. */
+  .path,
+  .papers {
+    display: grid;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .path li,
+  .papers li {
+    grid-area: 1 / 1;
+    align-self: end;
+    max-width: 32rem;
+    opacity: 0;
+    translate: 0 1rem;
+    transition:
+      opacity 0.35s ease,
+      translate 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  .path li[data-on],
+  .papers li[data-on] {
+    opacity: 1;
+    translate: 0;
+    pointer-events: auto;
+    transition-delay: 0.1s;
+  }
+
+  .when {
+    margin: 0 0 0.6rem;
+    font-family: var(--font-mono);
+    font-size: 0.76rem;
+    color: rgb(255 255 255 / 70%);
+  }
+
+  h2 {
+    margin: 0;
+    font-family: var(--font-display);
+    font-size: clamp(1.9rem, 3.6vw, 3.2rem);
+    font-weight: 400;
+    line-height: 1;
+    letter-spacing: -0.015em;
+    color: #fff;
+    text-wrap: balance;
+  }
+
+  .story {
+    margin: 0;
+    font-size: clamp(1.1rem, 1.7vw, 1.6rem);
+    line-height: 1.28;
+    text-wrap: pretty;
+  }
+
+  .path h2 {
+    margin-top: 1rem;
+    font-family: var(--font-sans);
+    font-size: 0.86rem;
+    font-weight: 500;
+    line-height: 1.3;
+    letter-spacing: 0;
+  }
+
+  .path .place {
+    margin-top: 0.15rem;
+    font-size: 0.82rem;
+  }
+
+  .papers h2 {
+    font-size: clamp(1.4rem, 2.2vw, 2rem);
+    line-height: 1.08;
+  }
+
+  .place {
+    margin: 0.7rem 0 0;
+    font-size: 0.95rem;
+    color: rgb(255 255 255 / 80%);
+  }
+
+  .text {
+    margin: 0.7rem 0 0;
+    font-size: 0.9rem;
+    line-height: 1.5;
+    color: rgb(255 255 255 / 68%);
+    text-wrap: pretty;
+  }
+
+  .papers a {
+    display: inline-flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0.4rem 1rem;
+    margin-top: 1.1rem;
+    padding: 0.7rem 1.1rem;
+    border-radius: 2rem;
+    background: #fff;
+    color: var(--ink);
+    font-size: 0.9rem;
+    font-weight: 500;
+  }
+
+  .papers a span {
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    font-weight: 400;
+    overflow-wrap: anywhere;
+  }
+
+  /* Invitation à choisir une chaîne ; la liste elle-même n'apparaît qu'au clavier. */
+  .channels {
+    display: grid;
+    justify-items: center;
+    opacity: 0;
+    transition: opacity 0.5s ease;
+  }
+
+  .scene[data-act='screen']:not([data-playing]) .channels {
+    opacity: 1;
+  }
+
+  .tip {
+    margin: 0;
+    padding: 0.55rem 1rem;
+    border-radius: 2rem;
+    background: rgb(11 12 14 / 72%);
+    backdrop-filter: blur(8px);
+    font-size: 0.82rem;
+  }
+
+  .channels ul {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    clip-path: inset(50%);
+    list-style: none;
+  }
+
+  /* ---------- Film d'une réalisation : le texte suit la maquette ---------- */
+
+  .film {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transition:
+      opacity 0.5s ease,
+      visibility 0s 0.5s;
+  }
+
+  .film[data-open] {
+    opacity: 1;
+    visibility: visible;
+    transition-delay: 0s;
+  }
+
+  .playing {
+    position: absolute;
+    top: 1.25rem;
+    left: 1.25rem;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0.2rem 0.8rem;
+    margin: 0;
+  }
+
+  .playing span {
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    color: var(--glow);
+  }
+
+  .playing b {
+    font-family: var(--font-display);
+    font-size: clamp(1.5rem, 2.6vw, 2.2rem);
+    font-weight: 400;
+    line-height: 1;
+  }
+
+  .playing i {
+    font-size: 0.75rem;
+    font-style: normal;
+    color: rgb(255 255 255 / 70%);
+  }
+
+  /* Le trait qui relie la phrase à ce qu'elle désigne. */
+  .leads {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+  }
+
+  .leads line {
+    stroke: #fff;
+    stroke-width: 1.5;
+  }
+
+  .leads circle {
+    fill: var(--warm);
+    stroke: #fff;
+    stroke-width: 1.5;
+  }
+
+  .leads :global(.tick) {
+    stroke: var(--glow);
+    stroke-width: 1;
+  }
+
+  .say {
+    --warm: #ffc266;
+
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: min(27rem, calc(100% - 2.5rem));
+    padding: 1.3rem 1.4rem 1rem;
+    border-radius: 0.6rem;
+    background: rgb(11 13 18 / 88%);
+    backdrop-filter: blur(10px);
+    pointer-events: auto;
+    will-change: transform;
+  }
+
+  .film {
+    --warm: #ffc266;
+  }
+
+  /* Temps restant avant l'étape suivante : un filet au sommet de la phrase. */
+  .clock {
+    position: absolute;
+    inset: 0 0 auto;
+    height: 2px;
+    border-radius: 2px;
+    background: var(--glow);
+    transform: scaleX(var(--left, 1));
+    transform-origin: left;
+  }
+
+  .say p {
+    margin: 0;
+    font-size: clamp(1.1rem, 1.7vw, 1.6rem);
+    line-height: 1.28;
+    text-wrap: pretty;
+  }
+
+  .say ul {
+    display: grid;
+    gap: 0.45rem;
+    margin: 0.8rem 0 0;
+    padding: 0;
+    list-style: none;
+    font-size: 0.86rem;
+    line-height: 1.35;
+    color: rgb(255 255 255 / 78%);
+  }
+
+  .say ul:empty {
+    display: none;
+  }
+
+  .say li {
+    padding-left: 0.7rem;
+    border-left: 1.5px solid var(--glow);
+  }
+
+  .steps {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-top: 0.8rem;
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    color: rgb(255 255 255 / 70%);
+  }
+
+  .steps button,
+  .remote button,
+  .remote a {
+    display: grid;
+    place-items: center;
+    height: 2rem;
+    min-width: 2rem;
+    padding-inline: 0.8rem;
+    border-radius: 2rem;
+    background: rgb(255 255 255 / 12%);
+    color: #fff;
+    font-size: 0.76rem;
+    white-space: nowrap;
+    cursor: pointer;
+    transition: background 0.2s ease;
+  }
+
+  .steps button {
+    padding: 0;
+  }
+
+  .steps button:hover,
+  .remote button:hover,
+  .remote a:hover {
+    background: rgb(255 255 255 / 28%);
+  }
+
+  .steps svg {
+    width: 0.8rem;
+    height: 0.8rem;
+    fill: none;
+    stroke: currentcolor;
+    stroke-width: 1.8;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  /* Précision épinglée sur un élément de la maquette. */
+  .film :global(.pin) {
+    position: absolute;
+    top: 0;
+    left: 0;
+    max-width: 15rem;
+    padding: 0.4rem 0.65rem;
+    border: 1px solid var(--glow);
+    border-radius: 0.35rem;
+    background: rgb(11 13 18 / 88%);
+    font-size: 0.8rem;
+    line-height: 1.3;
+    will-change: transform;
+  }
+
+  .remote {
+    position: absolute;
+    top: 3.9rem;
+    left: 1.25rem;
+    display: flex;
+    gap: 0.4rem;
+    pointer-events: auto;
+  }
+
+  .remote [data-remote='grid'] {
+    background: #fff;
+    color: var(--ink);
+    font-weight: 500;
+  }
+
+  @media (min-width: 1024px) {
+    .intro,
+    .papers,
+    .channels {
+      inset: auto 4rem 3rem;
+    }
+
+    .playing {
+      top: 2rem;
+      left: 4rem;
+    }
+
+    .remote {
+      top: 2rem;
+      right: 12.5rem;
+      left: auto;
+    }
+  }
+
+  /* ---------- Sans JavaScript ou sans WebGL : tout se lit à la suite ---------- */
+
+  :global(html:not(.js)) .scene,
+  .scene[data-flat] {
+    height: auto;
+  }
+
+  :global(html:not(.js)) .stage,
+  .scene[data-flat] .stage {
+    position: static;
+    height: auto;
+    padding: 4rem 1.25rem;
+  }
+
+  :global(html:not(.js)) :is(canvas, .shade, .cue, .tip, .film, .trail),
+  .scene[data-flat] :is(canvas, .shade, .cue, .tip, .trail) {
+    display: none;
+  }
+
+  :global(html:not(.js)) :is(.intro, .path, .papers, .channels, .channels ul),
+  .scene[data-flat] :is(.intro, .path, .papers, .channels, .channels ul) {
+    position: static;
+    display: block;
+    width: auto;
+    height: auto;
+    clip-path: none;
+    opacity: 1;
+    translate: 0;
+    pointer-events: auto;
+  }
+
+  :global(html:not(.js)) :is(.path li, .papers li, .channels li),
+  .scene[data-flat] :is(.path li, .papers li, .channels li) {
+    margin-top: 2.5rem;
+    opacity: 1;
+    translate: 0;
+    pointer-events: auto;
+  }
+
+  .scene[data-flat] .film {
+    position: fixed;
+    inset: var(--nav) 0 0;
+    z-index: 30;
+  }
+</style>
+
+<script>
+  import type { Stage, StageOptions } from '../../scripts/stage';
+  import type { Scene } from '../../scripts/holo';
+
+  /** Durée d'une explication à l'écran, en millisecondes. */
+  const LINE_MS = 9000;
+  /** Temps que met la caméra à rejoindre l'écran avant que le film commence. */
+  const ZOOM_MS = 700;
+
+  let stage: Stage | null = null;
+  let onScroll: (() => void) | null = null;
+  let follow = 0;
+  let opening = 0;
+
+  const stop = () => {
+    stage?.destroy();
+    stage = null;
+    if (onScroll) window.removeEventListener('scroll', onScroll);
+    onScroll = null;
+    cancelAnimationFrame(follow);
+    window.clearTimeout(opening);
+  };
+
+  const init = async () => {
+    stop();
+    const root = document.querySelector<HTMLElement>('[data-scene]');
+    const canvas = root?.querySelector('canvas');
+    if (!root || !canvas) return;
+
+    const config = JSON.parse(root.dataset.config ?? '{}') as Omit<StageOptions, 'onPick'>;
+    const milestones = [...root.querySelectorAll<HTMLElement>('[data-milestone]')];
+    const papers = [...root.querySelectorAll<HTMLElement>('[data-paper]')];
+    const only = (items: Element[], index: number) =>
+      items.forEach((item, i) => item.toggleAttribute('data-on', i === index));
+
+    /* ----- Film : une phrase à la fois, posée à côté de ce qu'elle désigne ----- */
+
+    interface Beat {
+      say: string;
+      focus: string;
+      notes: { text: string; at: string }[];
+      scene: Scene;
+    }
+    interface Program {
+      title: string;
+      status: string;
+      url: string;
+      number: string;
+      beats: Beat[];
+    }
+    const film = root.querySelector<HTMLElement>('[data-film]')!;
+    const programs = JSON.parse(root.dataset.films ?? '[]') as Program[];
+    const part = <T extends Element>(name: string) => film.querySelector<T>(`[data-${name}]`)!;
+    const box = part<HTMLElement>('say');
+    const sentence = part<HTMLElement>('sentence');
+    const extras = part<HTMLElement>('extras');
+    const count = part<HTMLElement>('count');
+    const clock = part<HTMLElement>('clock');
+    const pins = part<HTMLElement>('pins');
+    const leads = film.querySelector<SVGSVGElement>('.leads')!;
+    const lead = part<SVGLineElement>('lead');
+    const dot = part<SVGCircleElement>('dot');
+    const open = film.querySelector<HTMLAnchorElement>('[data-remote="open"]')!;
+    let current = -1;
+    let beat = 0;
+    let started = 0;
+    /** Position lissée de la phrase, pour qu'elle ne tremble pas quand la caméra tourne. */
+    const place = { x: 0, y: 0, set: false };
+    /** Écran étroit : pas la place d'épingler des précisions sur la maquette. */
+    const narrow = () => film.clientWidth < 1024;
+
+    const showBeat = (index: number) => {
+      const program = programs[current];
+      beat = (index + program.beats.length) % program.beats.length;
+      const { say, notes, scene } = program.beats[beat];
+      started = performance.now();
+      stage?.project(scene);
+      sentence.textContent = say;
+      count.textContent = `${beat + 1} / ${program.beats.length}`;
+      // Les précisions rattachées à un élément s'épinglent dessus ; les autres suivent la phrase.
+      extras.replaceChildren(
+        ...notes
+          .filter((note) => narrow() || !note.at)
+          .map((note) => Object.assign(document.createElement('li'), { textContent: note.text })),
+      );
+      leads.querySelectorAll('.tick').forEach((tick) => tick.remove());
+      pins.replaceChildren(
+        ...notes
+          .filter((note) => !narrow() && note.at)
+          .map((note) => {
+            const pin = Object.assign(document.createElement('p'), {
+              className: 'pin',
+              textContent: note.text,
+            });
+            pin.dataset.at = note.at;
+            const tick = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+            tick.classList.add('tick');
+            leads.append(tick);
+            return pin;
+          }),
+      );
+    };
+
+    /** Pose la phrase et les précisions à côté de leurs cibles, et tire les traits. */
+    /* ----- Couloir : l'étape en cours, posée face à son cadre ----- */
+
+    const path = root.querySelector<HTMLElement>('.path')!;
+    const trailLine = root.querySelector<SVGLineElement>('[data-trail-line]')!;
+    const trailDot = root.querySelector<SVGCircleElement>('[data-trail-dot]')!;
+    let milestone = -1;
+    const spot = { x: 0, y: 0, set: false };
+
+    const followFrame = () => {
+      if (milestone < 0 || !stage) {
+        spot.set = false;
+        return;
+      }
+      const width = root.clientWidth;
+      const height = window.innerHeight;
+      const wide = width >= 1024;
+      const margin = wide ? 64 : 20;
+      const size = path.getBoundingClientRect();
+      const frame = stage.locate(`cadre:${milestone}`);
+      // Le cadre est sur un mur ; le texte prend l'autre côté, à hauteur d'yeux.
+      const onRight = frame ? frame.x > width / 2 : milestone % 2 === 0;
+      const x = wide && !onRight ? width - margin - size.width : margin;
+      const y = wide ? (height - size.height) / 2 : height - size.height - margin;
+      const glide = spot.set ? 0.14 : 1;
+      spot.x += (x - spot.x) * glide;
+      spot.y += (y - spot.y) * glide;
+      spot.set = true;
+      path.style.transform = `translate(${spot.x.toFixed(1)}px, ${spot.y.toFixed(1)}px)`;
+      trailLine.style.display = trailDot.style.display = frame ? '' : 'none';
+      if (!frame) return;
+      trailLine.setAttribute(
+        'x1',
+        Math.min(spot.x + size.width, Math.max(spot.x, frame.x)).toFixed(1),
+      );
+      trailLine.setAttribute(
+        'y1',
+        Math.min(spot.y + size.height, Math.max(spot.y, frame.y)).toFixed(1),
+      );
+      trailLine.setAttribute('x2', frame.x.toFixed(1));
+      trailLine.setAttribute('y2', frame.y.toFixed(1));
+      trailDot.setAttribute('cx', frame.x.toFixed(1));
+      trailDot.setAttribute('cy', frame.y.toFixed(1));
+    };
+
+    const layout = () => {
+      follow = requestAnimationFrame(layout);
+      followFrame();
+      if (current < 0 || !stage) return;
+      const program = programs[current];
+      const left = 1 - (performance.now() - started) / LINE_MS;
+      clock.style.setProperty('--left', Math.max(0, left).toFixed(3));
+      if (left <= 0) showBeat(beat + 1);
+
+      const width = film.clientWidth;
+      const height = film.clientHeight;
+      const wide = width >= 1024;
+      const margin = wide ? 64 : 20;
+      const size = box.getBoundingClientRect();
+      const point = stage.locate(program.beats[beat].focus);
+      lead.style.display = dot.style.display = point ? '' : 'none';
+
+      // La phrase a sa place réservée : à gauche sur grand écran, en haut sur petit. La scène 3D
+      // est décalée d'autant (voir stage.ts), si bien que le texte ne couvre jamais la maquette.
+      const x = margin;
+      const y = wide ? (height - size.height) / 2 : 104;
+      const ease = place.set ? 0.12 : 1;
+      place.x += (x - place.x) * ease;
+      place.y += (y - place.y) * ease;
+      place.set = true;
+      box.style.transform = `translate(${place.x.toFixed(1)}px, ${place.y.toFixed(1)}px)`;
+
+      if (point) {
+        // Le trait part du bord de la phrase le plus proche de la cible.
+        const fromX = Math.min(place.x + size.width, Math.max(place.x, point.x));
+        const fromY = Math.min(place.y + size.height, Math.max(place.y, point.y));
+        lead.setAttribute('x1', fromX.toFixed(1));
+        lead.setAttribute('y1', fromY.toFixed(1));
+        lead.setAttribute('x2', point.x.toFixed(1));
+        lead.setAttribute('y2', point.y.toFixed(1));
+        dot.setAttribute('cx', point.x.toFixed(1));
+        dot.setAttribute('cy', point.y.toFixed(1));
+      }
+
+      const ticks = leads.querySelectorAll<SVGLineElement>('.tick');
+      [...pins.children].forEach((pin, index) => {
+        const target = stage?.locate((pin as HTMLElement).dataset.at ?? '');
+        const tick = ticks[index];
+        (pin as HTMLElement).style.display = tick.style.display = target ? '' : 'none';
+        if (!target) return;
+        const pinBox = pin.getBoundingClientRect();
+        // Au-dessus de sa cible, décalée d'un cran pour que deux précisions voisines ne se couvrent pas.
+        const px = Math.min(width - margin - pinBox.width, Math.max(margin, target.x + 24));
+        const py = Math.max(margin, target.y - 70 - index * (pinBox.height + 10));
+        (pin as HTMLElement).style.transform = `translate(${px.toFixed(1)}px, ${py.toFixed(1)}px)`;
+        tick.setAttribute('x1', target.x.toFixed(1));
+        tick.setAttribute('y1', target.y.toFixed(1));
+        tick.setAttribute('x2', (px + 10).toFixed(1));
+        tick.setAttribute('y2', (py + pinBox.height).toFixed(1));
+      });
+    };
+
+    const play = (index: number) => {
+      const already = film.hasAttribute('data-open');
+      current = (index + programs.length) % programs.length;
+      const program = programs[current];
+      root.toggleAttribute('data-playing', true);
+      stage?.tune(current);
+      const show = () => {
+        part('film-number').textContent = program.number;
+        part('film-title').textContent = program.title;
+        part('film-status').textContent = program.status;
+        open.hidden = !program.url;
+        if (program.url) open.href = program.url;
+        film.toggleAttribute('data-open', true);
+        place.set = false;
+        showBeat(0);
+      };
+      window.clearTimeout(opening);
+      if (already || !stage) show();
+      else opening = window.setTimeout(show, ZOOM_MS);
+    };
+
+    const close = () => {
+      if (current < 0) return;
+      current = -1;
+      window.clearTimeout(opening);
+      film.removeAttribute('data-open');
+      root.removeAttribute('data-playing');
+      stage?.tune(-1);
+      stage?.project(null);
+    };
+
+    root
+      .querySelectorAll('[data-channel]')
+      .forEach((button, index) => button.addEventListener('click', () => play(index)));
+    film
+      .querySelectorAll<HTMLElement>('[data-step]')
+      .forEach((button) =>
+        button.addEventListener('click', () => showBeat(beat + Number(button.dataset.step))),
+      );
+    film.querySelector('[data-remote="grid"]')?.addEventListener('click', close);
+    follow = requestAnimationFrame(layout);
+
+    /* ----- Scène 3D ----- */
+
+    // Les cadres, l'écran et les livres sont composés avec les polices du site.
+    await Promise.all([
+      document.fonts.load('400 96px "Instrument Serif"'),
+      document.fonts.load('400 32px "Geist Mono Variable"'),
+      document.fonts.load('400 32px "Instrument Sans Variable"'),
+    ]);
+    const { mountStage, timeline } = await import('../../scripts/stage');
+    const T = timeline(config.frames.length, config.volumes.length);
+    stage = mountStage(canvas, { ...config, onPick: play }, () => (root.dataset.state = 'ready'));
+    if (!stage) {
+      root.setAttribute('data-flat', '');
+      root.dataset.state = 'ready';
+      return;
+    }
+
+    /* ----- Défilement : quel acte, quel jalon, quel volume ----- */
+
+    onScroll = () => {
+      const unit =
+        window.innerHeight - parseFloat(getComputedStyle(root).getPropertyValue('--nav')) * 16;
+      const p = Math.max(
+        0,
+        (window.scrollY - (root.getBoundingClientRect().top + window.scrollY)) / unit,
+      );
+      stage?.setProgress(p);
+
+      const act =
+        p < 0.55
+          ? 'intro'
+          : p < T.seat + 0.2
+            ? 'walk'
+            : p < T.screen - 0.1
+              ? 'enter'
+              : p < T.rise
+                ? 'screen'
+                : 'books';
+      root.dataset.act = act;
+      if (act !== 'screen') close();
+      milestone =
+        act === 'walk'
+          ? Math.min(milestones.length - 1, Math.max(0, Math.floor((p - T.walk) / T.STEP)))
+          : -1;
+      only(milestones, milestone);
+      only(
+        papers,
+        p > T.books - 0.3 ? Math.min(papers.length - 1, Math.round((p - T.books) / T.BOOK)) : -1,
+      );
+    };
+    window.addEventListener('scroll', onScroll, { passive: true });
+    onScroll();
+  };
+
+  document.addEventListener('astro:page-load', init);
+  document.addEventListener('astro:before-swap', stop);
+</script>

@@ -2,11 +2,13 @@
   "titleFr": "Formation d'ingénieur en efficacité énergétique",
   "titleEn": "Engineering programme in energy efficiency",
   "school": "Conservatoire national des arts et métiers (CNAM)",
-  "locationFr": "France",
-  "locationEn": "France",
+  "locationFr": "Paris, France",
+  "locationEn": "Paris, France",
   "start": "2022",
   "end": "2025",
   "order": 1,
   "noteFr": "",
-  "noteEn": ""
+  "noteEn": "",
+  "storyFr": "À Paris, le CNAM : trois ans de formation d’ingénieur en efficacité énergétique, en alternance.",
+  "storyEn": "In Paris, CNAM: three years of engineering training in energy efficiency, as a work-study programme."
 }

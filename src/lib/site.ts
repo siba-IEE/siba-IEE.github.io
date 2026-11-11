@@ -12,20 +12,20 @@ export interface LocalizedText {
 export const SITE = {
   name: 'Siba Kalivogui',
   role: {
-    fr: 'Ingénieur énergéticien et chercheur, fondateur de Kuma Science',
-    en: 'Energy engineer and researcher, founder of Kuma Science',
+    fr: 'Ingénieur en efficacité énergétique, fondateur de Kuma Science',
+    en: 'Energy-efficiency engineer, founder of Kuma Science',
   } satisfies LocalizedText,
   shortRole: {
-    fr: 'Ingénieur énergéticien',
-    en: 'Energy engineer',
+    fr: 'Ingénieur en efficacité énergétique',
+    en: 'Energy-efficiency engineer',
   } satisfies LocalizedText,
   tagline: {
-    fr: 'Des données solaires fiables pour l’Afrique de l’Ouest francophone, et les outils pour les mettre au travail.',
-    en: 'Solar data you can actually rely on for French-speaking West Africa, and the tools to put it to work.',
+    fr: 'Je fiabilise la donnée énergétique de l’Afrique de l’Ouest : référentiels ouverts, méthode de correction des produits satellitaires, logiciels pour s’en servir.',
+    en: 'I make West Africa’s energy data dependable: open reference datasets, a method to correct satellite products, and the software to use them.',
   } satisfies LocalizedText,
   bio: {
-    fr: 'Ingénieur en efficacité énergétique et chercheur. J’ai fondé Kuma Science, à laquelle je me consacre aujourd’hui exclusivement, pour combler un manque criant de l’ingénierie solaire en Afrique de l’Ouest : des données fiables, et de quoi les exploiter. La Guinée est mon terrain pilote. Au quotidien, je construis des référentiels de données solaires qualifiées et les logiciels qui les rendent utiles, de la mesure brute jusqu’à l’application de terrain. J’ai aussi co-signé deux articles évalués par les pairs sur la décarbonation des communautés isolées du Nord canadien.',
-    en: 'An energy-efficiency engineer and researcher. I founded Kuma Science, which now has my exclusive focus, to fix what West African solar engineering lacks most: dependable data, and the means to use it. Guinea is my pilot ground. Day to day, I build qualified solar-data references and the software that makes them useful, from raw measurement to the field app. I’ve also co-authored two peer-reviewed papers on decarbonizing off-grid communities in northern Canada.',
+    fr: 'Ingénieur en efficacité énergétique, formé au CNAM. J’ai fondé Kuma Science, qui produit les données solaires et énergétiques de référence de la Guinée. Je travaille entre Montréal et Conakry.',
+    en: 'Energy-efficiency engineer, trained at CNAM. I founded Kuma Science, which produces Guinea’s reference solar and energy data. I work between Montréal and Conakry.',
   } satisfies LocalizedText,
   email: 'doctasiba10@gmail.com',
   orcid: '0009-0002-8292-1905',

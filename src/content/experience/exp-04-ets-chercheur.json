@@ -1,6 +1,6 @@
 {
-  "roleFr": "Assistant de recherche",
-  "roleEn": "Research assistant",
+  "roleFr": "Stagiaire ingénieur-chercheur",
+  "roleEn": "Research engineering intern",
   "org": "École de technologie supérieure (ÉTS)",
   "locationFr": "Montréal, Canada",
   "locationEn": "Montréal, Canada",
@@ -8,6 +8,8 @@
   "end": "",
   "current": false,
   "order": 4,
-  "descFr": "Collecte et analyse des données d'exploitation de bâtiments du Nord québécois ; étude du contexte environnemental et du cadre réglementaire de la politique énergétique nordique.",
-  "descEn": "Collecting and analysing building-operation data in Northern Québec; study of the environmental context and regulatory framework of northern energy policy."
+  "descFr": "Collecte et analyse des données d’exploitation des réseaux isolés du Nord-du-Québec et revue de leur cadre réglementaire, travaux repris dans deux articles.",
+  "descEn": "Collected and analysed operating data from the isolated grids of Nord-du-Québec and reviewed their regulatory framework; the work fed into two papers.",
+  "storyFr": "Un stage me fait traverser l’Atlantique. À l’ÉTS de Montréal, j’analyse les données des réseaux électriques isolés du Nord-du-Québec ; deux articles en sortent.",
+  "storyEn": "An internship takes me across the Atlantic. At ÉTS in Montreal, I analyse data from the isolated power grids of Northern Quebec; two articles come out of it."
 }

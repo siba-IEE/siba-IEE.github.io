@@ -1,166 +1,76 @@
 ---
-import ThemeToggle from '../ui/ThemeToggle.astro';
-import OrcidIcon from '../ui/OrcidIcon.astro';
-import LinkedInIcon from '../ui/LinkedInIcon.astro';
+/**
+ * Seuls éléments fixes de la page, dans le coin de la scène : les profils LinkedIn et ORCID,
+ * et le changement de langue.
+ */
 import { SITE, orcidUrl } from '../../lib/site';
-import {
-  getLangFromUrl,
-  useTranslations,
-  localizePath,
-  alternatePath,
-  type UiKey,
-  type Lang,
-} from '../../lib/i18n';
+import { getLangFromUrl, alternatePath, type Lang } from '../../lib/i18n';
 
 const lang = getLangFromUrl(Astro.url);
-const t = useTranslations(lang);
-const path = Astro.url.pathname.replace(/\/$/, '') || '/';
-
 const other: Lang = lang === 'fr' ? 'en' : 'fr';
-const switchHref = alternatePath(Astro.url.pathname, other);
-
-const items: { key: UiKey; href: string }[] = [
-  { key: 'nav.about', href: localizePath('/a-propos', lang) },
-  { key: 'nav.research', href: localizePath('/travaux', lang) },
-  { key: 'nav.projects', href: localizePath('/projets', lang) },
-  { key: 'nav.services', href: localizePath('/services', lang) },
-  { key: 'nav.contact', href: localizePath('/contact', lang) },
-];
-
-const isActive = (href: string) => path === href || path.startsWith(`${href}/`);
 ---
 
-{/* En haut : encre (épouse l'en-tête de page). Au scroll : surface + flou. */}
-<header
-  id="site-nav"
-  data-scrolled="false"
-  class="group/nav sticky top-0 z-40 border-b border-transparent bg-brand-900 transition-colors duration-300 data-[scrolled=true]:border-border/70 data-[scrolled=true]:bg-surface/85 supports-[backdrop-filter]:data-[scrolled=true]:bg-surface/70 data-[scrolled=true]:backdrop-blur-md"
->
-  <nav class="shell flex h-16 items-center gap-4" aria-label="Principale">
-    <a href={localizePath('/', lang)} class="inline-flex items-center" aria-label="Accueil">
-      <span
-        class="font-display text-xl font-bold tracking-tight text-white transition-colors group-data-[scrolled=true]/nav:text-text sm:text-2xl lg:text-[1.75rem]"
-      >
-        Siba Kalivogui
-      </span>
-    </a>
+<nav aria-label={lang === 'fr' ? 'Profils et langue' : 'Profiles and language'}>
+  <a href={SITE.linkedin} target="_blank" rel="me noopener" aria-label="LinkedIn" title="LinkedIn">
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <path
+        d="M6.94 5a2 2 0 1 1-4 0 2 2 0 0 1 4 0ZM7 8.48H3V21h4V8.48Zm6.32 0H9.34V21h3.94v-6.57c0-3.66 4.77-4 4.77 0V21H22v-7.93c0-6.17-7.06-5.94-8.72-2.91l.04-1.68Z"
+      ></path>
+    </svg>
+  </a>
+  <a href={orcidUrl} target="_blank" rel="me noopener" aria-label="ORCID" title="ORCID">
+    <svg viewBox="0 0 256 256" aria-hidden="true">
+      <path
+        d="M86.3 186.2H70.9V79.1h15.4v107.1zM108.9 79.1h41.6c39.6 0 57 28.3 57 53.6 0 27.5-21.5 53.6-56.8 53.6h-41.8V79.1zm15.4 93.3h24.5c34.9 0 42.9-26.5 42.9-39.7 0-21.5-13.7-39.7-43.7-39.7h-23.7v79.4zM88.7 56.8c0 5.5-4.5 10.1-10.1 10.1-5.6 0-10.1-4.6-10.1-10.1 0-5.6 4.5-10.1 10.1-10.1 5.6 0 10.1 4.6 10.1 10.1z"
+      ></path>
+    </svg>
+  </a>
+  <a
+    href={alternatePath(Astro.url.pathname, other)}
+    hreflang={other}
+    aria-label={other === 'en' ? 'English' : 'Français'}
+  >
+    {other.toUpperCase()}
+  </a>
+</nav>
 
-    <div class="ml-auto flex items-center gap-2 sm:gap-3">
-      <div class="hidden items-center gap-1 md:flex">
-        {
-          items.map((item) => (
-            <a
-              href={item.href}
-              aria-current={isActive(item.href) ? 'page' : undefined}
-              class:list={[
-                'rounded-lg px-3 py-2 text-sm transition-colors',
-                isActive(item.href)
-                  ? 'font-medium text-white group-data-[scrolled=true]/nav:text-text'
-                  : 'text-white/70 hover:text-white group-data-[scrolled=true]/nav:text-text-muted group-data-[scrolled=true]/nav:hover:text-text',
-              ]}
-            >
-              {t(item.key)}
-            </a>
-          ))
-        }
-      </div>
+<style>
+  nav {
+    position: fixed;
+    top: 1.25rem;
+    right: 1.25rem;
+    z-index: 40;
+    display: flex;
+    gap: 0.35rem;
+  }
 
-      <div class="flex items-center gap-1.5">
-        <a
-          href={orcidUrl}
-          target="_blank"
-          rel="me noopener"
-          aria-label="ORCID"
-          class="hidden size-9 items-center justify-center rounded-lg transition-colors hover:bg-white/10 group-data-[scrolled=true]/nav:hover:bg-surface-2 md:inline-flex"
-        >
-          <OrcidIcon class="size-5" />
-        </a>
-        <a
-          href={SITE.linkedin}
-          target="_blank"
-          rel="me noopener"
-          aria-label="LinkedIn"
-          class="hidden size-9 items-center justify-center rounded-lg transition-colors hover:bg-white/10 group-data-[scrolled=true]/nav:hover:bg-surface-2 md:inline-flex"
-        >
-          <LinkedInIcon class="size-5" />
-        </a>
-        <span
-          class="mx-0.5 hidden h-5 w-px bg-white/25 transition-colors group-data-[scrolled=true]/nav:bg-border md:block"
-          aria-hidden="true"
-        >
-        </span>
-        <a
-          href={switchHref}
-          hreflang={other}
-          aria-label={t('lang.switch')}
-          class="inline-flex h-9 items-center justify-center rounded-lg border border-white/25 px-3 text-sm font-medium text-white/90 transition-colors hover:bg-white/10 group-data-[scrolled=true]/nav:border-border group-data-[scrolled=true]/nav:text-text-muted group-data-[scrolled=true]/nav:hover:bg-surface-2 group-data-[scrolled=true]/nav:hover:text-text"
-        >
-          {other.toUpperCase()}
-        </a>
-        <ThemeToggle />
-        <button
-          type="button"
-          id="nav-toggle"
-          class="inline-flex size-9 items-center justify-center rounded-lg border border-white/25 text-white transition-colors hover:bg-white/10 group-data-[scrolled=true]/nav:border-border group-data-[scrolled=true]/nav:text-text-muted group-data-[scrolled=true]/nav:hover:bg-surface-2 md:hidden"
-          aria-label="Menu"
-          aria-expanded="false"
-          aria-controls="nav-mobile"
-        >
-          <svg class="size-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true">
-            <path d="M4 7h16M4 12h16M4 17h16" stroke-linecap="round"></path>
-          </svg>
-        </button>
-      </div>
-    </div>
-  </nav>
+  a {
+    display: grid;
+    place-items: center;
+    width: 2.1rem;
+    height: 2.1rem;
+    border-radius: 50%;
+    background: rgb(11 12 14 / 60%);
+    backdrop-filter: blur(8px);
+    color: #fff;
+    font-size: 0.8rem;
+    transition: background 0.2s ease;
+  }
 
-  <div id="nav-mobile" class="hidden border-t border-border bg-surface px-5 py-2 md:hidden">
-    {
-      items.map((item) => (
-        <a
-          href={item.href}
-          aria-current={isActive(item.href) ? 'page' : undefined}
-          class:list={[
-            'block rounded-lg px-3 py-2.5 text-sm transition-colors hover:bg-surface-2',
-            isActive(item.href) ? 'font-medium text-text' : 'text-text-muted hover:text-text',
-          ]}
-        >
-          {t(item.key)}
-        </a>
-      ))
+  a:hover {
+    background: rgb(11 12 14 / 90%);
+  }
+
+  svg {
+    width: 1rem;
+    height: 1rem;
+    fill: currentcolor;
+  }
+
+  @media (min-width: 1024px) {
+    nav {
+      top: 2rem;
+      right: 4rem;
     }
-  </div>
-</header>
-
-<script>
-  // État de la nav : encre en haut, surface dès qu'on scrolle (ou menu ouvert).
-  // Délégation sur document : survit aux transitions de page (View Transitions).
-  const evalNav = () => {
-    const nav = document.getElementById('site-nav');
-    if (!nav) return;
-    const menuOpen = document.getElementById('nav-mobile')?.classList.contains('hidden') === false;
-    nav.dataset.scrolled = String(menuOpen || window.scrollY > 16);
-  };
-
-  evalNav();
-  window.addEventListener('scroll', evalNav, { passive: true });
-  document.addEventListener('astro:page-load', evalNav);
-  document.addEventListener('astro:after-swap', evalNav);
-
-  document.addEventListener('click', (event) => {
-    const target = event.target as HTMLElement | null;
-    const toggle = target?.closest('#nav-toggle');
-    if (toggle) {
-      const panel = document.getElementById('nav-mobile');
-      const open = panel?.classList.toggle('hidden') === false;
-      toggle.setAttribute('aria-expanded', String(open));
-      evalNav();
-      return;
-    }
-    if (target?.closest('#nav-mobile a')) {
-      document.getElementById('nav-mobile')?.classList.add('hidden');
-      document.getElementById('nav-toggle')?.setAttribute('aria-expanded', 'false');
-      evalNav();
-    }
-  });
-</script>
+  }
+</style>

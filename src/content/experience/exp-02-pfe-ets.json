@@ -10,6 +10,6 @@
   "order": 2,
   "descFr": "Simulation de scénarios de flexibilité énergétique d’un bâtiment pour réduire ses émissions de gaz à effet de serre (EnergyPlus, OpenStudio, Python).",
   "descEn": "Simulation of energy-flexibility scenarios for a building to cut its greenhouse-gas emissions (EnergyPlus, OpenStudio, Python).",
-  "storyFr": "Je retourne à l’ÉTS pour mon projet de fin d’études : je simule des scénarios de flexibilité énergétique d’un bâtiment, pour réduire ses émissions.",
-  "storyEn": "I return to ÉTS for my final-year project: I simulate energy flexibility scenarios for a building, to cut its emissions."
+  "storyFr": "Retour à Montréal pour le projet de fin d’études. La question : comment un bâtiment peut-il consommer autrement pour émettre moins ? Je la traite par la simulation.",
+  "storyEn": "Back to Montreal for the final-year project. The question: how can a building consume differently to emit less? I tackle it through simulation."
 }

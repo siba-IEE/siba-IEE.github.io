@@ -31,10 +31,7 @@ const dates = (start: string, end: string, current = false) =>
           getExperience().map((item) => (
             <li data-reveal>
               <span class="when">{dates(item.start, item.end, item.current)}</span>
-              <span class="what">
-                {isFr ? item.roleFr : item.roleEn}
-                <small>{isFr ? item.descFr : item.descEn}</small>
-              </span>
+              <span class="what">{isFr ? item.roleFr : item.roleEn}</span>
               <span class="where">
                 {item.org}, {isFr ? item.locationFr : item.locationEn}
               </span>

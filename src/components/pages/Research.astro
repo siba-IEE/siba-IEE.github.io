@@ -3,12 +3,13 @@ import { marked } from 'marked';
 import katex from 'katex';
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import { getLangFromUrl } from '../../lib/i18n';
-import { getResearch } from '../../lib/content';
+import { getResearch, getPublications } from '../../lib/content';
 import 'katex/dist/katex.min.css';
 
 const lang = getLangFromUrl(Astro.url);
 const isFr = lang === 'fr';
 const works = getResearch();
+const publications = getPublications();
 
 // KaTeX est rendu au build, avant le markdown : sinon CommonMark déséchappe les commandes
 // LaTeX (\, \; \{ \}) et casse les formules. Les maths sont remplacées par des jetons
@@ -83,11 +84,7 @@ const labels = isFr
       return (
         <section
           id={`travail-${index + 1}`}
-          class:list={[
-            'block scroll-mt-16',
-            index === 0 && 'first',
-            index === works.length - 1 && 'last',
-          ]}
+          class:list={['block scroll-mt-16', index === 0 && 'first', false]}
         >
           <div class="shell">
             <h2 class="work-title" data-reveal>
@@ -136,4 +133,31 @@ const labels = isFr
       );
     })
   }
+
+  <section class="block last">
+    <div class="shell">
+      <h2 class="label">Publications</h2>
+      <ul class="rows">
+        {
+          publications.map((pub) => (
+            <li data-reveal>
+              <span class="when">{pub.year}</span>
+              <span class="what">
+                <a
+                  href={pub.url ?? `https://doi.org/${pub.doi}`}
+                  target="_blank"
+                  rel="noopener"
+                  class="group"
+                >
+                  <span class="draw">{pub.title}</span>
+                </a>
+                <small>{[pub.authors.join(', '), pub.venue].filter(Boolean).join('. ')}</small>
+              </span>
+              <span class="where doi">{pub.doi?.toLowerCase()}</span>
+            </li>
+          ))
+        }
+      </ul>
+    </div>
+  </section>
 </BaseLayout>

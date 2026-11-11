@@ -9,17 +9,8 @@
   "repo": null,
   "summaryFr": "Site public de Kuma Science : données, méthodes et outils pour l’ingénierie énergétique en Afrique francophone.",
   "summaryEn": "Kuma Science’s public site: data, methods and tools for energy engineering in French-speaking Africa.",
-  "stack": [
-    "Astro",
-    "Supabase",
-    "Cloudflare",
-    "TypeScript"
-  ],
-  "tags": [
-    "Plateforme",
-    "Énergie",
-    "Afrique francophone"
-  ],
+  "stack": ["Astro", "Supabase", "Cloudflare", "TypeScript"],
+  "tags": ["Plateforme", "Énergie", "Afrique francophone"],
   "image": "/images/projets/kuma-science.webp",
   "bodyFr": "Le site de Kuma Science publie en accès libre des données techniques, des pages de méthode et des outils pour l’ingénierie énergétique en Afrique francophone. Il comprend un média éditorial, le catalogue des séries issues de Kuma Data Core et une boutique d’outils.\n\nIl est construit avec Astro, utilise Supabase pour les comptes et est hébergé sur Cloudflare. Les erreurs sont suivies avec Sentry, et le code est couvert par des tests et une intégration continue.",
   "bodyEn": "The Kuma Science site publishes open technical data, method pages and tools for energy engineering in French-speaking Africa. It includes an editorial section, the catalogue of series from Kuma Data Core and a tools shop.\n\nIt is built with Astro, uses Supabase for accounts and is hosted on Cloudflare. Errors are tracked with Sentry, and the code is covered by tests and continuous integration.",

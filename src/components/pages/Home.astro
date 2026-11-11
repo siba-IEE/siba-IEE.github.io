@@ -1,91 +1,25 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import Hero from '../home/Hero.astro';
-import Story from '../home/Story.astro';
-import { SITE, orcidUrl } from '../../lib/site';
+import { SITE } from '../../lib/site';
 import { getLangFromUrl, localizePath } from '../../lib/i18n';
-import {
-  getProfile,
-  getProjects,
-  getPublications,
-  getExperience,
-  getResearch,
-} from '../../lib/content';
+import { getProfile, getProjects } from '../../lib/content';
 
 const lang = getLangFromUrl(Astro.url);
 const isFr = lang === 'fr';
 
 const profile = getProfile();
-const bio = (isFr ? profile.bioFr : profile.bioEn) || SITE.bio[lang];
 const tagline = (isFr ? profile.taglineFr : profile.taglineEn) || SITE.tagline[lang];
-
-const projects = getProjects();
-const live = projects.filter((p) => p.status === 'live');
-const building = projects.filter((p) => p.status === 'wip');
-const openResearch = getResearch().filter((w) => w.status === 'wip');
-const publications = getPublications();
-const experience = getExperience();
-
-const since = isFr ? 'Depuis' : 'Since';
-const dates = (start: string, end: string, current: boolean) =>
-  current ? `${since} ${start}` : end ? `${start}–${end}` : start;
-
-const typeLabels: Record<string, { fr: string; en: string }> = {
-  'journal-article': { fr: 'article', en: 'article' },
-  preprint: { fr: 'prépublication', en: 'preprint' },
-  'data-set': { fr: 'jeu de données', en: 'dataset' },
-  software: { fr: 'logiciel', en: 'software' },
-};
-const typeLabel = (type: string) => typeLabels[type]?.[lang] ?? type.replace(/[-_]/g, ' ');
+const live = getProjects().filter((project) => project.status === 'live');
 
 const t = isFr
-  ? {
-      works: 'Réalisations en production',
-      allProjects: 'Tous les projets',
-      about: 'Parcours',
-      aboutMore: 'Formation et compétences',
-      pubs: 'Publications',
-      orcid: 'Profil ORCID',
-      wip: 'En cours',
-      contact: 'Contact',
-      contactLede:
-        'Pour un programme de données énergétiques, une étude de ressource solaire ou un appui technique à un projet en Guinée. Je réponds en français ou en anglais.',
-      services: 'Prestations et tarifs',
-    }
-  : {
-      works: 'Work in production',
-      allProjects: 'All projects',
-      about: 'Background',
-      aboutMore: 'Education and skills',
-      pubs: 'Publications',
-      orcid: 'ORCID profile',
-      wip: 'In progress',
-      contact: 'Contact',
-      contactLede:
-        'For an energy-data programme, a solar resource study or technical support for a project in Guinea. I reply in French or English.',
-      services: 'Services and prices',
-    };
-
-const upcoming = [
-  ...openResearch.map((w) => ({
-    title: isFr ? w.titleFr : w.titleEn,
-    text: isFr ? w.summaryFr : w.summaryEn,
-    href: localizePath('/travaux', lang),
-  })),
-  ...building.map((p) => ({
-    title: p.title,
-    text: isFr ? p.summaryFr : p.summaryEn,
-    href: `${localizePath('/projets', lang)}#${p.slug}`,
-  })),
-];
+  ? { works: 'Réalisations', allProjects: 'Tous les projets', contact: 'Contact' }
+  : { works: 'Work', allProjects: 'All projects', contact: 'Contact' };
 ---
 
 <BaseLayout description={tagline.slice(0, 158)}>
   <Hero />
 
-  <Story />
-
-  {/* Réalisations : la capture d'écran de chaque système en ligne */}
   <section id="production" class="block scroll-mt-16">
     <div class="shell">
       <h2 class="label" data-reveal>{t.works}</h2>
@@ -94,18 +28,18 @@ const upcoming = [
           live.map((project) => (
             <li data-reveal>
               <a
+                class="work"
                 href={project.url ?? `${localizePath('/projets', lang)}#${project.slug}`}
                 target="_blank"
                 rel="noopener"
               >
                 {project.image && (
                   <span class="shot">
-                    <img src={project.image} alt="" width="1200" height="750" loading="lazy" />
+                    <img src={project.image} alt="" width="1400" height="650" loading="lazy" />
                   </span>
                 )}
                 <span class="name">{project.title}</span>
                 <span class="desc">{isFr ? project.summaryFr : project.summaryEn}</span>
-                <span class="host">{project.links?.[0]?.label}</span>
               </a>
             </li>
           ))
@@ -115,103 +49,10 @@ const upcoming = [
     </div>
   </section>
 
-  {/* Parcours */}
-  <section class="block">
-    <div class="shell">
-      <h2 class="label" data-reveal>{t.about}</h2>
-      <div class="bio" data-reveal>
-        <img src="/images/portrait.jpg" alt={SITE.name} width="1080" height="1049" loading="lazy" />
-        <p>{bio}</p>
-      </div>
-      <ul class="rows after-bio">
-        {
-          experience.map((item, i) => (
-            <li data-reveal style={`--reveal-delay:${i * 50}ms`}>
-              <span class="when">{dates(item.start, item.end, item.current)}</span>
-              <span class="what">{isFr ? item.roleFr : item.roleEn}</span>
-              <span class="where">
-                {item.org}, {isFr ? item.locationFr : item.locationEn}
-              </span>
-            </li>
-          ))
-        }
-      </ul>
-      <a href={localizePath('/a-propos', lang)} class="more">{t.aboutMore}</a>
-    </div>
-  </section>
-
-  {/* Publications */}
-  <section class="block">
-    <div class="shell">
-      <h2 class="label" data-reveal>{t.pubs}</h2>
-      <ul class="rows">
-        {
-          publications.map((pub, i) => (
-            <li data-reveal style={`--reveal-delay:${i * 50}ms`}>
-              <span class="when">
-                {pub.year}, {typeLabel(pub.type)}
-              </span>
-              <span class="what">
-                <a
-                  href={pub.url ?? (pub.doi ? `https://doi.org/${pub.doi}` : '#')}
-                  target="_blank"
-                  rel="noopener"
-                  class="group"
-                >
-                  <span class="draw">{pub.title}</span>
-                </a>
-                <small>
-                  {pub.authors.map((author, a) => (
-                    <>
-                      {a > 0 && ', '}
-                      {author.includes('Kalivogui') ? <b>{author}</b> : author}
-                    </>
-                  ))}
-                  {pub.authors.length > 0 && pub.venue && '. '}
-                  {pub.venue}
-                </small>
-              </span>
-              <span class="where doi">{pub.doi?.toLowerCase()}</span>
-            </li>
-          ))
-        }
-      </ul>
-      <a href={orcidUrl} target="_blank" rel="me noopener" class="more">{t.orcid}</a>
-    </div>
-  </section>
-
-  {/* En cours */}
-  {
-    upcoming.length > 0 && (
-      <section class="block">
-        <div class="shell">
-          <h2 class="label" data-reveal>
-            {t.wip}
-          </h2>
-          <ul class="rows wip">
-            {upcoming.map((item, i) => (
-              <li data-reveal style={`--reveal-delay:${i * 50}ms`}>
-                <span class="what">
-                  <a href={item.href} class="group">
-                    <span class="draw">{item.title}</span>
-                  </a>
-                </span>
-                <span class="where">{item.text}</span>
-              </li>
-            ))}
-          </ul>
-        </div>
-      </section>
-    )
-  }
-
-  {/* Contact */}
   <section class="contact">
     <div class="shell">
       <h2 class="label" data-reveal>{t.contact}</h2>
       <a href={`mailto:${SITE.email}`} class="mail" data-reveal>{SITE.email}</a>
-      <p data-reveal>{t.contactLede}</p>
-      <a href={localizePath('/services', lang)} class="more" data-reveal>{t.services}</a>
     </div>
   </section>
 </BaseLayout>

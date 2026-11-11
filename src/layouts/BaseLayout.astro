@@ -82,7 +82,9 @@ const alternates: { hreflang: string; href: string }[] = [
 
     <script is:inline type="application/ld+json" set:html={structuredData} />
 
-    {/* Thème appliqué avant le premier rendu et après chaque transition ; classe .js pour activer les révélations. */}
+    {
+      /* Thème appliqué avant le premier rendu et après chaque transition ; classe .js pour activer les révélations. */
+    }
     <script is:inline>
       (() => {
         document.documentElement.classList.add('js');

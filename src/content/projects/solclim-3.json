@@ -9,15 +9,8 @@
   "repo": null,
   "summaryFr": "Logiciel de dimensionnement photovoltaïque et de stockage pour bureaux d’études. Les calculs sont vérifiés contre pvlib.",
   "summaryEn": "PV and storage sizing software for design offices. The calculations are verified against pvlib.",
-  "stack": [
-    "pvlib",
-    "Tests automatisés"
-  ],
-  "tags": [
-    "Outil",
-    "Solaire",
-    "Dimensionnement"
-  ],
+  "stack": ["pvlib", "Tests automatisés"],
+  "tags": ["Outil", "Solaire", "Dimensionnement"],
   "bodyFr": "SolClim-3 dimensionne des installations photovoltaïques et leur stockage pour les bureaux d’études.\n\nLes calculs sont vérifiés contre pvlib, la bibliothèque de référence du domaine, et couverts par 800 tests automatisés.",
   "bodyEn": "SolClim-3 sizes photovoltaic systems and their storage for design offices.\n\nThe calculations are verified against pvlib, the field’s reference library, and covered by 800 automated tests.",
   "links": [

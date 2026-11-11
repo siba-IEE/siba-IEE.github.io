@@ -19,16 +19,8 @@
       "url": "https://github.com/siba-IEE/rds-cote-divoire"
     }
   ],
-  "stack": [
-    "CSV",
-    "CC BY 4.0",
-    "Zenodo"
-  ],
-  "tags": [
-    "Données",
-    "Solaire",
-    "Côte d’Ivoire"
-  ],
+  "stack": ["CSV", "CC BY 4.0", "Zenodo"],
+  "tags": ["Données", "Solaire", "Côte d’Ivoire"],
   "bodyFr": "Le référentiel couvre 142 localités, soit les 31 régions et les 111 départements, de 1991 à 2025 selon la source, aux pas mensuel et journalier. Il contient 37,6 millions de valeurs sous licence CC BY 4.0.\n\nIl fournit le rayonnement (GHI, DNI, DHI), la température, l’humidité, le vent, la pluie et les particules, à partir de NASA POWER, ERA5, CAMS, SARAH-3, GPM IMERG et CHIRPS. Toutes les séries sont au niveau de confiance B, car aucune mesure au sol n’est encore intégrée. Les séries sont produites par la version ivoirienne de Kuma Data Core, et une décision publiée documente chaque lot.",
   "bodyEn": "The reference covers 142 localities, that is the 31 regions and the 111 departments, from 1991 to 2025 depending on the source, at monthly and daily steps. It holds 37.6 million values under the CC BY 4.0 licence.\n\nIt provides radiation (GHI, DNI, DHI), temperature, humidity, wind, rainfall and particulates, from NASA POWER, ERA5, CAMS, SARAH-3, GPM IMERG and CHIRPS. All series are at confidence level B, because no ground measurement has been integrated yet. The series are produced by the Ivorian version of Kuma Data Core, and a published decision record documents each batch.",
   "image": "/images/projets/rds-cote-divoire.webp"

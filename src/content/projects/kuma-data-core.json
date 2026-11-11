@@ -9,19 +9,8 @@
   "repo": "https://github.com/siba-IEE/kuma-data-core",
   "summaryFr": "Moteur de données qui produit les référentiels : ingestion de plusieurs sources, niveau de confiance A, B ou C par valeur, versionnement sans écrasement, API publique.",
   "summaryEn": "The data engine that produces the references: multi-source ingestion, an A, B or C confidence level per value, versioning without overwriting, public API.",
-  "stack": [
-    "Python",
-    "FastAPI",
-    "PostgreSQL",
-    "Alembic",
-    "Docker",
-    "GitHub Actions"
-  ],
-  "tags": [
-    "Données",
-    "Infrastructure",
-    "Solaire"
-  ],
+  "stack": ["Python", "FastAPI", "PostgreSQL", "Alembic", "Docker", "GitHub Actions"],
+  "tags": ["Données", "Infrastructure", "Solaire"],
   "image": "/images/projets/kuma-data-core.webp",
   "bodyFr": "Kuma Data Core enregistre chaque valeur avec sa source, sa méthode, son niveau de confiance (A, B ou C), ses dates de validité et son statut éditorial. Une correction crée une nouvelle version et l’ancienne est conservée. Des triggers PostgreSQL tracent chaque écriture dans une table d’audit.\n\nLe moteur ingère NASA POWER, SARAH-3, CAMS, ERA5-Land et les mesures au sol. Il calcule des grandeurs d’ingénierie à partir de modèles publiés : fraction diffuse, rayonnement dans le plan des modules, productible avec correction thermique, P50 et P90, salissure. Une API FastAPI sert les données. Une instance publique est en ligne pour la Guinée sur api.kumascience.com. Le même moteur est déployé pour la Côte d’Ivoire (142 localités) et le Burkina Faso (47 provinces et 351 communes). Le code est sous licence AGPL.",
   "bodyEn": "Kuma Data Core stores every value with its source, method, confidence level (A, B or C), validity dates and editorial status. A correction creates a new version and the old one is kept. PostgreSQL triggers trace every write to an audit table.\n\nThe engine ingests NASA POWER, SARAH-3, CAMS, ERA5-Land and ground measurements. It computes engineering quantities from published models: diffuse fraction, plane-of-array irradiance, yield with thermal correction, P50 and P90, soiling. A FastAPI API serves the data. A public instance is online for Guinea at api.kumascience.com. The same engine is deployed for Côte d’Ivoire (142 localities) and Burkina Faso (47 provinces and 351 communes). The code is under the AGPL licence.",

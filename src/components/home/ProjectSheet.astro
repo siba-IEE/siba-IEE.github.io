@@ -1,0 +1,386 @@
+---
+/**
+ * Fiche de projet en fenêtre modale : une feuille centrée sur ordinateur, un tiroir qui
+ * monte du bas sur mobile. Elle s'ouvre depuis tout élément portant `data-sheet-open`
+ * avec l'identifiant du projet, et se ferme par le bouton, la touche Échap ou un clic
+ * hors de la feuille. L'élément <dialog> natif gère le focus et le blocage de la page.
+ */
+import { marked } from 'marked';
+import { getLangFromUrl } from '../../lib/i18n';
+import { kindLabels, type Project } from '../../lib/content';
+
+interface Props {
+  projects: Project[];
+}
+
+const { projects } = Astro.props;
+const lang = getLangFromUrl(Astro.url);
+const isFr = lang === 'fr';
+const t = isFr
+  ? { close: 'Fermer', open: 'Ouvrir le projet', built: 'Construit avec', links: 'Adresses' }
+  : { close: 'Close', open: 'Open the project', built: 'Built with', links: 'Addresses' };
+---
+
+<dialog class="sheet" data-sheet aria-labelledby="sheet-title">
+  <div class="surface">
+    <span class="handle" aria-hidden="true"></span>
+    <button type="button" class="close" data-sheet-close aria-label={t.close}>
+      <svg viewBox="0 0 16 16" aria-hidden="true"><path d="m3.5 3.5 9 9m0-9-9 9"></path></svg>
+    </button>
+
+    {
+      projects.map((project) => (
+        <article data-sheet-project={project.slug} hidden>
+          {project.image && (
+            <img src={project.image} alt="" width="1400" height="650" loading="lazy" />
+          )}
+          <div class="body">
+            <header>
+              <p class="kind">{kindLabels[project.kind][lang]}</p>
+              <h2>{project.title}</h2>
+              <p class="summary">{isFr ? project.summaryFr : project.summaryEn}</p>
+              {project.url && (
+                <a class="cta" href={project.url} target="_blank" rel="noopener">
+                  {t.open}
+                  <svg viewBox="0 0 16 16" aria-hidden="true">
+                    <path d="M4 12 12 4M6 4h6v6" />
+                  </svg>
+                </a>
+              )}
+            </header>
+            <div class="detail">
+              <div class="prose" set:html={marked.parse(isFr ? project.bodyFr : project.bodyEn)} />
+              <dl>
+                {project.stack.length > 0 && (
+                  <div>
+                    <dt>{t.built}</dt>
+                    <dd>{project.stack.join(', ')}</dd>
+                  </div>
+                )}
+                {project.links && (
+                  <div>
+                    <dt>{t.links}</dt>
+                    <dd>
+                      {project.links.map((link) => (
+                        <a href={link.url} target="_blank" rel="noopener">
+                          {link.label}
+                        </a>
+                      ))}
+                    </dd>
+                  </div>
+                )}
+              </dl>
+            </div>
+          </div>
+        </article>
+      ))
+    }
+  </div>
+</dialog>
+
+<style>
+  .sheet {
+    --ease: cubic-bezier(0.32, 0.72, 0, 1);
+
+    width: 100%;
+    max-width: none;
+    height: 100%;
+    max-height: none;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    border: 0;
+    background: none;
+    color: var(--text);
+  }
+
+  .sheet::backdrop {
+    background: rgb(0 0 0 / 0%);
+    backdrop-filter: blur(0);
+    transition:
+      background 0.45s ease,
+      backdrop-filter 0.45s ease;
+  }
+
+  .sheet[data-state='open']::backdrop {
+    background: rgb(0 0 0 / 55%);
+    backdrop-filter: blur(14px);
+  }
+
+  /* Mobile : un tiroir qui monte du bas */
+  .surface {
+    position: absolute;
+    inset: auto 0 0;
+    max-height: 92svh;
+    overflow: hidden auto;
+    overscroll-behavior: contain;
+    border-radius: 1.25rem 1.25rem 0 0;
+    background: var(--panel);
+    transform: translateY(100%);
+    transition: transform 0.55s var(--ease);
+  }
+
+  .sheet[data-state='open'] .surface {
+    transform: none;
+  }
+
+  .handle {
+    position: absolute;
+    top: 0.5rem;
+    left: 50%;
+    z-index: 2;
+    width: 2.5rem;
+    height: 0.3rem;
+    border-radius: 1rem;
+    background: rgb(255 255 255 / 80%);
+    box-shadow: 0 0 0 1px rgb(0 0 0 / 15%);
+    transform: translateX(-50%);
+  }
+
+  .close {
+    position: sticky;
+    top: 0.9rem;
+    z-index: 2;
+    float: right;
+    display: grid;
+    place-items: center;
+    width: 2.25rem;
+    height: 2.25rem;
+    margin: 0.9rem 0.9rem -3.15rem 0;
+    border-radius: 50%;
+    background: rgb(20 20 20 / 78%);
+    color: #fff;
+    cursor: pointer;
+    transition: transform 0.25s ease;
+  }
+
+  .close:hover {
+    transform: scale(1.08);
+  }
+
+  .close svg,
+  .cta svg {
+    width: 0.85rem;
+    height: 0.85rem;
+    fill: none;
+    stroke: currentcolor;
+    stroke-width: 1.6;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  article[hidden] {
+    display: none;
+  }
+
+  article img {
+    display: block;
+    width: 100%;
+    height: auto;
+    aspect-ratio: 2 / 1;
+    object-fit: cover;
+    object-position: left top;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .body {
+    display: grid;
+    gap: 2rem;
+    padding: 1.5rem 1.25rem 2.5rem;
+  }
+
+  .kind {
+    margin: 0 0 0.6rem;
+    font-size: 0.85rem;
+    color: var(--text-subtle);
+  }
+
+  h2 {
+    margin: 0;
+    font-size: clamp(2.2rem, 5vw, 4rem);
+    font-weight: 500;
+    line-height: 0.98;
+    letter-spacing: -0.05em;
+    color: var(--heading);
+  }
+
+  .summary {
+    margin: 1rem 0 0;
+    font-size: clamp(1.05rem, 1.5vw, 1.3rem);
+    line-height: 1.3;
+    letter-spacing: -0.02em;
+    color: var(--heading);
+    text-wrap: pretty;
+  }
+
+  .cta {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.6rem;
+    margin-top: 1.5rem;
+    padding: 0.85rem 1.3rem;
+    border-radius: 2rem;
+    background: var(--heading);
+    color: var(--panel);
+    font-size: 0.95rem;
+    font-weight: 500;
+    transition:
+      background 0.25s ease,
+      color 0.25s ease;
+  }
+
+  .cta:hover {
+    background: var(--color-accent-400);
+    color: #111;
+  }
+
+  .cta svg {
+    transition: transform 0.3s var(--ease);
+  }
+
+  .cta:hover svg {
+    transform: translate(2px, -2px);
+  }
+
+  .prose {
+    font-size: 0.98rem;
+  }
+
+  dl {
+    display: grid;
+    gap: 1rem;
+    margin: 1.5rem 0 0;
+    padding-top: 1.25rem;
+    border-top: 1px solid var(--border);
+    font-size: 0.85rem;
+  }
+
+  dt {
+    color: var(--text-subtle);
+  }
+
+  dd {
+    margin: 0.2rem 0 0;
+    color: var(--heading);
+  }
+
+  dd a {
+    display: block;
+    font-family: var(--font-mono);
+    font-size: 0.76rem;
+    line-height: 1.8;
+    overflow-wrap: anywhere;
+  }
+
+  dd a:hover {
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+
+  /* Le contenu arrive juste après la feuille. */
+  .sheet[data-state='open'] .body > * {
+    animation: sheet-in 0.7s var(--ease) 0.15s both;
+  }
+
+  .sheet[data-state='open'] .body > :nth-child(2) {
+    animation-delay: 0.25s;
+  }
+
+  @keyframes sheet-in {
+    from {
+      opacity: 0;
+      transform: translateY(1.2rem);
+    }
+  }
+
+  /* Ordinateur : une feuille centrée, titre à gauche, explication à droite */
+  @media (min-width: 900px) {
+    .surface {
+      inset: 50% auto auto 50%;
+      width: min(68rem, calc(100vw - 6rem));
+      max-height: calc(100svh - 5rem);
+      border-radius: 1.75rem;
+      opacity: 0;
+      transform: translate(-50%, -46%) scale(0.96);
+      transition:
+        transform 0.55s var(--ease),
+        opacity 0.3s ease;
+    }
+
+    .sheet[data-state='open'] .surface {
+      opacity: 1;
+      transform: translate(-50%, -50%);
+    }
+
+    .handle {
+      display: none;
+    }
+
+    /* La capture reste une bande : le titre et le bouton doivent tenir à l'écran sans défiler. */
+    article img {
+      height: min(40svh, 24rem);
+      aspect-ratio: auto;
+    }
+
+    .body {
+      grid-template-columns: minmax(0, 5fr) minmax(0, 6fr);
+      gap: 4rem;
+      padding: 2.5rem 3rem 3rem;
+    }
+
+    header {
+      position: sticky;
+      top: 2rem;
+      align-self: start;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .surface,
+    .sheet::backdrop {
+      transition: none;
+    }
+  }
+</style>
+
+<script>
+  const CLOSE_MS = 450;
+
+  const init = () => {
+    const sheet = document.querySelector<HTMLDialogElement>('[data-sheet]');
+    if (!sheet || sheet.dataset.bound) return;
+    sheet.dataset.bound = 'true';
+    const articles = [...sheet.querySelectorAll<HTMLElement>('[data-sheet-project]')];
+    const surface = sheet.querySelector<HTMLElement>('.surface');
+
+    const open = (slug: string) => {
+      const article = articles.find((item) => item.dataset.sheetProject === slug);
+      if (!article) return;
+      articles.forEach((item) => (item.hidden = item !== article));
+      sheet.showModal();
+      if (surface) surface.scrollTop = 0;
+      // L'état « ouvert » est posé à l'image suivante, pour que la transition parte de l'état fermé.
+      requestAnimationFrame(() => (sheet.dataset.state = 'open'));
+    };
+
+    const close = () => {
+      delete sheet.dataset.state;
+      window.setTimeout(() => sheet.close(), CLOSE_MS);
+    };
+
+    document.addEventListener('click', (event) => {
+      const target = event.target as Element | null;
+      const trigger = target?.closest<HTMLElement | SVGElement>('[data-sheet-open]');
+      if (trigger?.dataset.sheetOpen) open(trigger.dataset.sheetOpen);
+      // Un clic sur le fond (le <dialog> lui-même, hors de la feuille) ferme.
+      else if (target === sheet || target?.closest('[data-sheet-close]')) close();
+    });
+    // Échap : on joue la fermeture animée plutôt que la fermeture immédiate du navigateur.
+    sheet.addEventListener('cancel', (event) => {
+      event.preventDefault();
+      close();
+    });
+  };
+
+  document.addEventListener('astro:page-load', init);
+</script>

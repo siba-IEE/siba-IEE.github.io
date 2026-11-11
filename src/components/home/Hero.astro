@@ -10,6 +10,7 @@ import { SITE } from '../../lib/site';
 import { getLangFromUrl, localizePath } from '../../lib/i18n';
 import { getProfile, getProjects } from '../../lib/content';
 import { STATIONS } from '../../data/stations';
+import ProjectSheet from './ProjectSheet.astro';
 
 const lang = getLangFromUrl(Astro.url);
 const isFr = lang === 'fr';
@@ -35,14 +36,14 @@ const captions = isFr
 const ui = isFr
   ? {
       scroll: 'Défiler',
-      pick: 'Choisir un projet',
-      open: 'Ouvrir',
+      pick: 'Cliquer sur un projet pour l’ouvrir',
+      open: 'En savoir plus',
       steps: ['Ouverture', 'Stations', 'Biais', 'Guinée', 'Projets'],
     }
   : {
       scroll: 'Scroll',
-      pick: 'Pick a project',
-      open: 'Open',
+      pick: 'Click a project to open it',
+      open: 'Learn more',
       steps: ['Opening', 'Stations', 'Bias', 'Guinea', 'Projects'],
     };
 const allProjects = isFr ? 'Tous les projets' : 'All projects';
@@ -83,6 +84,7 @@ const credit = isFr
             <g
               class="pin"
               data-pin={project.slug}
+              data-sheet-open={project.slug}
               data-lat={project.geo!.lat}
               data-lon={project.geo!.lon}
             >
@@ -131,6 +133,7 @@ const credit = isFr
               <button
                 type="button"
                 data-project={project.slug}
+                data-sheet-open={project.slug}
                 data-geo={JSON.stringify(project.geo)}
               >
                 {project.title}
@@ -144,12 +147,11 @@ const credit = isFr
       </ul>
       {
         projects.map((project) => (
-          <a
+          <button
+            type="button"
             class="card"
-            href={project.url ?? '#'}
-            target="_blank"
-            rel="noopener"
             data-card={project.slug}
+            data-sheet-open={project.slug}
           >
             {project.image && (
               <img src={project.image} alt="" width="1400" height="650" loading="lazy" />
@@ -159,7 +161,7 @@ const credit = isFr
               {project.links?.[0]?.label}
               <b>{ui.open}</b>
             </small>
-          </a>
+          </button>
         ))
       }
     </div>
@@ -184,6 +186,8 @@ const credit = isFr
     {[0, 1, 2, 3, 4].map(() => <div />)}
   </div>
 </section>
+
+<ProjectSheet projects={projects} />
 
 <style>
   /* L'ouverture est une photographie : elle reste sombre dans les deux thèmes. */
@@ -418,7 +422,7 @@ const credit = isFr
     list-style: none;
   }
 
-  .projects button {
+  .projects li button {
     display: block;
     padding: 0.1em 0;
     font: inherit;
@@ -435,8 +439,8 @@ const credit = isFr
       transform 0.5s cubic-bezier(0.22, 1, 0.36, 1);
   }
 
-  .projects button:hover,
-  .projects button[aria-pressed='true'] {
+  .projects li button:hover,
+  .projects li button[aria-pressed='true'] {
     color: #fff;
     transform: translateX(0.35em);
   }
@@ -736,11 +740,11 @@ const credit = isFr
   }
 
   /* Sous le projet affiché, un trait se remplit jusqu'au passage au suivant. */
-  .projects button {
+  .projects li button {
     position: relative;
   }
 
-  .projects button::after {
+  .projects li button::after {
     content: '';
     position: absolute;
     inset: auto 0 0;
@@ -750,11 +754,11 @@ const credit = isFr
     transform-origin: left;
   }
 
-  .projects[data-auto] button[aria-pressed='true']::after {
+  .projects[data-auto] li button[aria-pressed='true']::after {
     animation: fill var(--auto, 5s) linear forwards;
   }
 
-  .projects:not([data-auto]) button[aria-pressed='true']::after {
+  .projects:not([data-auto]) li button[aria-pressed='true']::after {
     transform: none;
   }
 
@@ -773,6 +777,12 @@ const credit = isFr
     clip-path: inset(0);
   }
 
+  .card {
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+  }
+
   .card small {
     display: flex;
     justify-content: space-between;
@@ -786,7 +796,7 @@ const credit = isFr
   }
 
   .card b::after {
-    content: ' ↗';
+    content: ' +';
   }
 
   @media (min-width: 1024px) {
@@ -901,7 +911,9 @@ const credit = isFr
       .querySelectorAll<SVGElement>('[data-pin]')
       .forEach((pin) => pin.addEventListener('click', () => takeOver(pin.dataset.pin ?? null)));
     timer = window.setInterval(() => {
-      if (!auto || journey.dataset.step !== String(VIEW_COUNT - 1)) return;
+      // Pas de changement de projet pendant qu'une fiche est ouverte.
+      const busy = document.querySelector('dialog[open]');
+      if (!auto || busy || journey.dataset.step !== String(VIEW_COUNT - 1)) return;
       const index = buttons.findIndex((button) => button.dataset.project === selected);
       select(buttons[(index + 1) % buttons.length].dataset.project ?? null);
     }, AUTO_MS);

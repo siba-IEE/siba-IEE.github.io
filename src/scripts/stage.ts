@@ -1,21 +1,23 @@
 /**
- * Scène de la page d'accueil (three.js) : un seul décor, un personnage, trois actes pilotés
- * par le défilement.
+ * Scène de la page d'accueil (three.js), pilotée par le défilement.
  *
- *   1. Il marche vers le lecteur pendant que son parcours défile à côté.
- *   2. Il s'assoit devant un projecteur ; l'écran (du HTML, posé derrière le canvas) montre
- *      ses réalisations comme des chaînes.
- *   3. Il se relève en hologramme à côté d'une pile de volumes : la recherche.
+ *   1. Le personnage fait face au lecteur, puis se retourne et remonte un couloir, de dos.
+ *      Chaque cadre accroché au mur est une étape de son parcours.
+ *   2. Il entre dans le salon, contourne le fauteuil, s'assoit et allume la télévision.
+ *      Chaque réalisation est une chaîne ; en choisir une rapproche la caméra de l'écran.
+ *   3. La caméra descend vers la table basse, où sont empilées les publications.
  *
- * Le personnage est un avatar Avaturn (squelette à la convention Mixamo). Son animation
- * d'attente vient du fichier ; la marche et la pose assise sont calculées ici, os par os,
- * par-dessus cette animation.
+ * Le personnage est un avatar Avaturn. Son attente vient du fichier ; sa marche est une
+ * capture de mouvement recalée sur son squelette (public/models/walk.json) ; la pose assise
+ * est calculée os par os.
  */
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { MeshoptDecoder } from 'three/addons/libs/meshopt_decoder.module.js';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
+import { buildRoom, GAP, type Frame } from './room';
 import { createStack, type Volume } from './stack';
+import { createTelevision, type Channel } from './tv';
 
 /* ---------- Découpage du défilement ---------- */
 
@@ -26,25 +28,40 @@ import { createStack, type Volume } from './stack';
 export function timeline(milestones: number, volumes: number) {
   const STEP = 0.7;
   const BOOK = 0.6;
+  /** Fin de l'ouverture : il s'est retourné et part. */
   const walk = 1;
+  /** Il passe le seuil du salon. */
   const seat = walk + milestones * STEP;
-  const screen = seat + 1;
-  const rise = screen + 1.2;
-  const books = rise + 1;
+  /** Il est assis, la télévision est allumée. */
+  const screen = seat + 1.9;
+  /** La caméra quitte l'écran pour la table basse. */
+  const rise = screen + 1.3;
+  const books = rise + 0.8;
   const end = books + (volumes - 1) * BOOK;
   return { STEP, BOOK, walk, seat, screen, rise, books, end };
+}
+
+export interface StageOptions {
+  avatar: string;
+  walk: string;
+  frames: Frame[];
+  volumes: Volume[];
+  channels: Channel[];
+  /** Invitation affichée en tête de la mosaïque. */
+  hint: string;
+  /** Le lecteur a choisi une chaîne sur l'écran. */
+  onPick: (index: number) => void;
 }
 
 export interface Stage {
   /** Position de défilement, en hauteurs d'écran depuis le haut de la scène. */
   setProgress: (progress: number) => void;
+  /** Rapproche la caméra de l'écran sur la chaîne donnée ; -1 pour revenir au fauteuil. */
+  tune: (index: number) => void;
   destroy: () => void;
 }
 
 /* ---------- Outils ---------- */
-
-const BACKGROUND = 0x070b16;
-const CYAN = 0x4fd8ff;
 
 const clamp01 = (value: number) => Math.min(1, Math.max(0, value));
 const smooth = (from: number, to: number, value: number) => {
@@ -53,116 +70,17 @@ const smooth = (from: number, to: number, value: number) => {
 };
 const vec = (x: number, y: number, z: number) => new THREE.Vector3(x, y, z);
 
-/** Sol : une grille fine qui s'efface au loin, et qui défile sous les pas. */
-function buildFloor() {
-  const canvas = document.createElement('canvas');
-  canvas.width = 256;
-  canvas.height = 256;
-  const context = canvas.getContext('2d')!;
-  context.strokeStyle = 'rgba(79, 216, 255, 0.55)';
-  context.lineWidth = 2;
-  context.strokeRect(0, 0, 256, 256);
-  const map = new THREE.CanvasTexture(canvas);
-  map.wrapS = THREE.RepeatWrapping;
-  map.wrapT = THREE.RepeatWrapping;
-  map.repeat.set(60, 60);
-  map.anisotropy = 8;
-  const floor = new THREE.Mesh(
-    new THREE.PlaneGeometry(90, 90),
-    new THREE.MeshBasicMaterial({ map, transparent: true, opacity: 0.5, depthWrite: false }),
-  );
-  floor.rotation.x = -Math.PI / 2;
-  return { floor, map };
+/** Longueur parcourue pendant un cycle de marche (deux pas), en mètres. */
+const STRIDE = 1.5;
+/** Recul et abaissement du bassin pour s'asseoir dans le fauteuil, en mètres. */
+const SIT = { back: 0.34, down: 0.5 };
+
+interface WalkData {
+  duration: number;
+  times: number[];
+  tracks: Record<string, number[]>;
+  hips: number[];
 }
-
-/** Ombre de contact : un disque sombre et flou sous le personnage. */
-function buildShadow() {
-  const canvas = document.createElement('canvas');
-  canvas.width = 128;
-  canvas.height = 128;
-  const context = canvas.getContext('2d')!;
-  const gradient = context.createRadialGradient(64, 64, 4, 64, 64, 64);
-  gradient.addColorStop(0, 'rgba(0, 0, 0, 0.75)');
-  gradient.addColorStop(1, 'rgba(0, 0, 0, 0)');
-  context.fillStyle = gradient;
-  context.fillRect(0, 0, 128, 128);
-  const shadow = new THREE.Mesh(
-    new THREE.PlaneGeometry(1.5, 1.5),
-    new THREE.MeshBasicMaterial({
-      map: new THREE.CanvasTexture(canvas),
-      transparent: true,
-      depthWrite: false,
-    }),
-  );
-  shadow.rotation.x = -Math.PI / 2;
-  shadow.position.y = 0.005;
-  return shadow;
-}
-
-/** Tabouret, projecteur sur son pied, et faisceau. */
-function buildCinema() {
-  const group = new THREE.Group();
-  const dark = new THREE.MeshStandardMaterial({ color: 0x14181f, roughness: 0.55, metalness: 0.3 });
-  const seat = new THREE.Mesh(new THREE.CylinderGeometry(0.26, 0.22, 0.47, 40), dark);
-  seat.position.set(0, 0.235, -0.38);
-  group.add(seat);
-
-  const projector = new THREE.Group();
-  const body = new THREE.Mesh(new THREE.BoxGeometry(0.34, 0.16, 0.42), dark);
-  const lens = new THREE.Mesh(
-    new THREE.CylinderGeometry(0.06, 0.07, 0.1, 24),
-    new THREE.MeshStandardMaterial({ color: 0xffffff, emissive: 0xbfeaff, emissiveIntensity: 2 }),
-  );
-  lens.rotation.x = Math.PI / 2;
-  lens.position.z = 0.24;
-  const stand = new THREE.Mesh(new THREE.CylinderGeometry(0.015, 0.015, 1.05, 12), dark);
-  stand.position.y = -0.6;
-  const foot = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.2, 0.02, 32), dark);
-  foot.position.y = -1.12;
-  projector.add(body, lens, stand, foot);
-  projector.position.set(0.7, 1.13, 0.2);
-  group.add(projector);
-
-  // Faisceau : un cône de lumière additive, de l'objectif vers l'écran.
-  const beamMaterial = new THREE.MeshBasicMaterial({
-    color: 0xbfeaff,
-    transparent: true,
-    opacity: 0,
-    blending: THREE.AdditiveBlending,
-    depthWrite: false,
-    side: THREE.DoubleSide,
-  });
-  const beam = new THREE.Mesh(new THREE.ConeGeometry(2.6, 7, 40, 1, true), beamMaterial);
-  beam.rotation.x = -Math.PI / 2;
-  beam.position.set(0.7, 1.5, 3.95);
-  beam.rotation.z = 0;
-  group.add(beam);
-  return { group, beamMaterial };
-}
-
-/** Matériau d'hologramme : bleu lumineux, translucide, strié de lignes qui montent. */
-function hologramMaterial(time: { value: number }) {
-  const material = new THREE.MeshBasicMaterial({
-    color: CYAN,
-    transparent: true,
-    opacity: 0.3,
-    blending: THREE.AdditiveBlending,
-    depthWrite: false,
-    side: THREE.DoubleSide,
-  });
-  material.onBeforeCompile = (shader) => {
-    shader.uniforms.uTime = time;
-    shader.fragmentShader = shader.fragmentShader
-      .replace('void main() {', 'uniform float uTime;\nvoid main() {')
-      .replace(
-        '#include <dithering_fragment>',
-        '#include <dithering_fragment>\n  gl_FragColor.rgb *= 0.55 + 0.75 * step(0.5, fract(gl_FragCoord.y * 0.22 - uTime * 1.5));',
-      );
-  };
-  return material;
-}
-
-/* ---------- Personnage ---------- */
 
 interface Bones {
   hips: THREE.Object3D;
@@ -174,7 +92,7 @@ interface Bones {
   rightArm: THREE.Object3D;
   leftForeArm: THREE.Object3D;
   rightForeArm: THREE.Object3D;
-  spine: THREE.Object3D;
+  head: THREE.Object3D;
 }
 
 const BONE_NAMES: Record<keyof Bones, string> = {
@@ -187,184 +105,234 @@ const BONE_NAMES: Record<keyof Bones, string> = {
   rightArm: 'RightArm',
   leftForeArm: 'LeftForeArm',
   rightForeArm: 'RightForeArm',
-  spine: 'Spine',
+  head: 'Head',
 };
 
 /**
- * Pose calculée, ajoutée à l'animation d'attente. Sur ce squelette : tourner une cuisse
- * autour de X vers le négatif la porte en avant, tourner un tibia autour de X vers le
- * positif plie le genou, et un bras part en avant autour de Z (positif à gauche, négatif à droite).
+ * Pose assise, ajoutée à l'animation d'attente. Sur ce squelette : tourner une cuisse autour
+ * de X vers le négatif la porte en avant, tourner un tibia autour de X vers le positif plie
+ * le genou, et un bras part en avant autour de Z (positif à gauche, négatif à droite).
+ * `remote` lève l'avant-bras droit, télécommande en main ; `down` incline la tête.
  */
-/** Recul du siège par rapport au personnage debout, en mètres. */
-const SEAT_BACK = 0.3;
-
-function pose(bones: Bones, walk: number, phase: number, sit: number) {
-  const swing = Math.sin(phase);
-  const lift = Math.cos(phase);
-  // Marche : cuisses en opposition, le genou se plie quand la jambe revient vers l'avant.
-  bones.leftUpLeg.rotateX(walk * -0.5 * swing - sit * 1.5);
-  bones.rightUpLeg.rotateX(walk * 0.5 * swing - sit * 1.5);
-  bones.leftLeg.rotateX(walk * (0.15 + 0.8 * Math.max(0, lift)) + sit * 1.5);
-  bones.rightLeg.rotateX(walk * (0.15 + 0.8 * Math.max(0, -lift)) + sit * 1.5);
-  // Bras : opposés aux jambes en marchant, mains posées sur les cuisses une fois assis.
-  bones.leftArm.rotateZ(walk * -0.42 * swing + sit * 0.3);
-  bones.rightArm.rotateZ(walk * -0.42 * swing - sit * 0.3);
-  bones.leftForeArm.rotateZ(walk * 0.3 + sit * 0.85);
-  bones.rightForeArm.rotateZ(-walk * 0.3 - sit * 0.85);
-  bones.spine.rotateY(walk * 0.07 * swing);
-  bones.hips.position.y += walk * 0.02 * Math.abs(lift) - sit * 0.42;
-  // Il recule le bassin pour trouver le siège, placé derrière lui.
-  bones.hips.position.z -= sit * SEAT_BACK;
+function pose(bones: Bones, sit: number, remote: number, down: number) {
+  bones.leftUpLeg.rotateX(-sit * 1.5);
+  bones.rightUpLeg.rotateX(-sit * 1.5);
+  bones.leftLeg.rotateX(sit * 1.5);
+  bones.rightLeg.rotateX(sit * 1.5);
+  bones.leftArm.rotateZ(sit * 0.3);
+  bones.rightArm.rotateZ(-sit * 0.3 - remote * 0.35);
+  bones.leftForeArm.rotateZ(sit * 0.85);
+  bones.rightForeArm.rotateZ(-sit * 0.85 - remote * 0.55);
+  bones.head.rotateX(down * 0.32);
+  bones.hips.position.y -= sit * SIT.down;
+  bones.hips.position.z -= sit * SIT.back;
 }
 
 /* ---------- La scène ---------- */
 
 export function mountStage(
   canvas: HTMLCanvasElement,
-  options: { avatar: string; milestones: number; volumes: Volume[] },
+  options: StageOptions,
   onReady: () => void,
 ): Stage | null {
   let renderer: THREE.WebGLRenderer;
   try {
-    renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
+    renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
   } catch {
     return null;
   }
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.75));
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
-  renderer.toneMappingExposure = 0.9;
+  renderer.toneMappingExposure = 1.05;
+  renderer.shadowMap.enabled = true;
+  renderer.shadowMap.type = THREE.PCFShadowMap;
 
-  const T = timeline(options.milestones, options.volumes.length);
+  const T = timeline(options.frames.length, options.volumes.length);
   const scene = new THREE.Scene();
-  scene.fog = new THREE.Fog(BACKGROUND, 7, 26);
+  scene.background = new THREE.Color(0x0b0c0e);
   const pmrem = new THREE.PMREMGenerator(renderer);
-  const environment = pmrem.fromScene(new RoomEnvironment(), 0.04);
-  scene.environment = environment.texture;
-  scene.environmentIntensity = 0.55;
-  const key = new THREE.DirectionalLight(0xfff2e0, 2.2);
-  key.position.set(2.5, 4, 4);
-  const rim = new THREE.DirectionalLight(CYAN, 2.6);
-  rim.position.set(-3, 2.5, -4);
-  scene.add(key, rim);
+  const environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
+  scene.environment = environment;
+  scene.environmentIntensity = 0.42;
+  const camera = new THREE.PerspectiveCamera(36, 1, 0.1, 80);
 
-  const camera = new THREE.PerspectiveCamera(30, 1, 0.1, 80);
-  const { floor, map: floorMap } = buildFloor();
-  const shadow = buildShadow();
-  const cinema = buildCinema();
-  cinema.group.visible = false;
-  scene.add(floor, shadow, cinema.group);
+  const room = buildRoom(options.frames);
+  scene.add(room.group);
+  const tv = createTelevision(options.channels, options.hint);
+  room.setScreenTexture(tv.texture);
 
-  // Socle lumineux de l'hologramme.
-  const pad = new THREE.Mesh(
-    new THREE.CylinderGeometry(0.62, 0.62, 0.04, 64, 1, true),
-    new THREE.MeshBasicMaterial({
-      color: CYAN,
-      transparent: true,
-      opacity: 0,
-      blending: THREE.AdditiveBlending,
-      side: THREE.DoubleSide,
-    }),
-  );
-  pad.position.y = 0.02;
-  scene.add(pad);
-
+  // La pile de publications, à l'échelle d'un livre, posée sur la table basse.
   const stack = createStack(options.volumes);
-  stack.group.scale.setScalar(0.3);
-  stack.group.visible = false;
+  stack.group.scale.setScalar(0.047);
+  stack.group.position.set(room.table.x + 0.14, room.table.y, room.table.z);
+  stack.group.rotation.y = 0.3;
+  stack.group.traverse((object) => {
+    object.castShadow = true;
+    object.receiveShadow = true;
+  });
   scene.add(stack.group);
+
+  /* ----- Trajet : le couloir en ligne droite, puis une courbe autour du fauteuil ----- */
+
+  const corridor = options.frames.length * GAP;
+  const D = room.doorZ;
+  const curve = new THREE.CatmullRomCurve3(
+    [
+      vec(0, 0, -corridor),
+      vec(0, 0, D),
+      vec(-0.6, 0, D - 1.7),
+      vec(-1.0, 0, D - 3.1),
+      vec(-0.98, 0, D - 4.3),
+      vec(-0.55, 0, room.seat.z - 0.12),
+      room.seat.clone(),
+    ],
+    false,
+    'centripetal',
+  );
+  const bend = curve.getLength();
+  const point = vec(0, 0, 0);
+  const tangent = vec(0, 0, -1);
+  /** Position et cap du personnage après `distance` mètres de marche. */
+  const along = (distance: number) => {
+    if (distance <= corridor) {
+      point.set(0, 0, -distance);
+      tangent.set(0, 0, -1);
+    } else {
+      const u = clamp01((distance - corridor) / bend);
+      curve.getPointAt(u, point);
+      curve.getTangentAt(u, tangent);
+    }
+    return Math.atan2(tangent.x, tangent.z);
+  };
 
   /* ----- Personnage ----- */
 
-  const time = { value: 0 };
-  const hologram = hologramMaterial(time);
-  const skins: { mesh: THREE.Mesh; solid: THREE.Material | THREE.Material[] }[] = [];
   let mixer: THREE.AnimationMixer | null = null;
+  let walkAction: THREE.AnimationAction | null = null;
+  let idleAction: THREE.AnimationAction | null = null;
   let bones: Bones | null = null;
   let avatar: THREE.Object3D | null = null;
-  let ghost = false;
+  let disposed = false;
 
   const loader = new GLTFLoader();
   loader.setMeshoptDecoder(MeshoptDecoder);
-  loader.load(options.avatar, (gltf) => {
-    avatar = gltf.scene;
-    avatar.traverse((object) => {
-      if (object instanceof THREE.Mesh) {
-        object.frustumCulled = false;
-        skins.push({ mesh: object, solid: object.material });
-      }
-    });
-    const find = (name: string) => avatar!.getObjectByName(name);
-    const found = Object.fromEntries(
-      Object.entries(BONE_NAMES).map(([key, name]) => [key, find(name)]),
+  const loadAvatar = new Promise<{ scene: THREE.Group; animations: THREE.AnimationClip[] }>(
+    (resolve, reject) => loader.load(options.avatar, resolve, undefined, reject),
+  );
+  const loadWalk = fetch(options.walk).then((response) => response.json() as Promise<WalkData>);
+  Promise.all([loadAvatar, loadWalk])
+    .then(([gltf, data]) => {
+      if (disposed) return;
+      avatar = gltf.scene;
+      avatar.traverse((object) => {
+        if (object instanceof THREE.Mesh) {
+          object.frustumCulled = false;
+          object.castShadow = true;
+        }
+      });
+      const found = Object.fromEntries(
+        Object.entries(BONE_NAMES).map(([key, name]) => [key, avatar!.getObjectByName(name)]),
+      );
+      if (Object.values(found).every(Boolean)) bones = found as unknown as Bones;
+
+      mixer = new THREE.AnimationMixer(avatar);
+      if (gltf.animations[0]) idleAction = mixer.clipAction(gltf.animations[0]).play();
+      const tracks: THREE.KeyframeTrack[] = Object.entries(data.tracks).map(
+        ([name, values]) =>
+          new THREE.QuaternionKeyframeTrack(`${name}.quaternion`, data.times, values),
+      );
+      tracks.push(new THREE.VectorKeyframeTrack('Hips.position', data.times, data.hips));
+      // La marche n'avance pas seule : son instant est réglé sur la distance parcourue.
+      walkAction = mixer.clipAction(new THREE.AnimationClip('walk', data.duration, tracks)).play();
+      walkAction.timeScale = 0;
+      walkAction.setEffectiveWeight(0);
+      scene.add(avatar);
+      onReady();
+    })
+    .catch(() => onReady());
+
+  /* ----- Écran : survol et choix d'une chaîne ----- */
+
+  const raycaster = new THREE.Raycaster();
+  const pointer = new THREE.Vector2();
+  let watching = false;
+  /** Rapprochement de la caméra vers l'écran, de 0 à 1, et sa cible. */
+  let zoom = 0;
+  let zoomTarget = 0;
+
+  const channelAt = (event: PointerEvent | MouseEvent) => {
+    if (!watching || zoomTarget > 0) return -1;
+    const box = canvas.getBoundingClientRect();
+    pointer.set(
+      ((event.clientX - box.left) / box.width) * 2 - 1,
+      -((event.clientY - box.top) / box.height) * 2 + 1,
     );
-    if (Object.values(found).every(Boolean)) bones = found as unknown as Bones;
-    mixer = new THREE.AnimationMixer(avatar);
-    if (gltf.animations[0]) mixer.clipAction(gltf.animations[0]).play();
-    scene.add(avatar);
-    onReady();
-  });
-
-  const setGhost = (on: boolean) => {
-    if (on === ghost) return;
-    ghost = on;
-    skins.forEach(({ mesh, solid }) => (mesh.material = on ? hologram : solid));
+    raycaster.setFromCamera(pointer, camera);
+    const [hit] = raycaster.intersectObject(room.tv.screen);
+    return hit?.uv ? tv.hit(hit.uv.x, hit.uv.y) : -1;
   };
-
-  /* ----- Caméra : une position par acte ----- */
-
-  const views = {
-    intro: { position: vec(0.9, 1.5, 4.7), target: vec(0.78, 1.18, 0) },
-    walk: { position: vec(2.3, 1.35, 5.5), target: vec(1.2, 1.0, 0) },
-    screen: { position: vec(-0.9, 1.6, -3.6), target: vec(-1.1, 1.3, 2.5) },
-    books: { position: vec(1.2, 1.45, 6.6), target: vec(1.45, 1.05, 0) },
+  const onMove = (event: PointerEvent) => {
+    const index = channelAt(event);
+    tv.setHover(index);
+    canvas.style.cursor = index >= 0 ? 'pointer' : '';
   };
+  const onClick = (event: MouseEvent) => {
+    const index = channelAt(event);
+    if (index >= 0) options.onPick(index);
+  };
+  canvas.addEventListener('pointermove', onMove);
+  canvas.addEventListener('click', onClick);
+
+  /* ----- Caméra ----- */
+
   const position = vec(0, 0, 0);
   const target = vec(0, 0, 0);
-  const angleOf = (v: THREE.Vector3) => (Math.atan2(v.x, v.z) + Math.PI * 2) % (Math.PI * 2);
-  /**
-   * Passe d'une vue à l'autre. Avec `orbit`, la caméra tourne autour du personnage au lieu de
-   * couper en ligne droite, ce qui la ferait le traverser.
-   */
-  const blend = (
-    from: keyof typeof views,
-    to: keyof typeof views,
+  const fromPosition = vec(0, 0, 0);
+  const fromTarget = vec(0, 0, 0);
+  let fov = 36;
+  let portrait = false;
+  /** Mélange la vue courante vers une autre. */
+  const toward = (
+    x: number,
+    y: number,
+    z: number,
+    lx: number,
+    ly: number,
+    lz: number,
+    toFov: number,
     amount: number,
-    orbit = false,
   ) => {
-    const a = views[from].position;
-    const b = views[to].position;
-    target.lerpVectors(views[from].target, views[to].target, amount);
-    if (!orbit) {
-      position.lerpVectors(a, b, amount);
-      return;
-    }
-    const angle = THREE.MathUtils.lerp(angleOf(a), angleOf(b), amount);
-    const radius = THREE.MathUtils.lerp(Math.hypot(a.x, a.z), Math.hypot(b.x, b.z), amount);
-    position.set(
-      Math.sin(angle) * radius,
-      THREE.MathUtils.lerp(a.y, b.y, amount),
-      Math.cos(angle) * radius,
-    );
+    position.lerp(fromPosition.set(x, y, z), amount);
+    target.lerp(fromTarget.set(lx, ly, lz), amount);
+    fov += (toFov - fov) * amount;
   };
+  /** Focale verticale, en degrés, pour que l'écran vu à `distance` occupe la part `fill` de la largeur. */
+  const fovFor = (fill: number, distance: number) =>
+    THREE.MathUtils.radToDeg(
+      2 * Math.atan(room.tv.width / 2 / (Math.abs(distance) * fill * camera.aspect)),
+    );
 
   /* ----- Boucle ----- */
 
+  let goal = 0;
   let progress = 0;
   let previousProgress = 0;
   let walkWeight = 0;
-  let phase = 0;
+  let cycle = 0;
+  let previousDistance = 0;
+  /** 1 quand le lecteur remonte la page : le personnage revient sur ses pas, de face. */
+  let back = 0;
+  /** Côté du couloir que la caméra regarde, lissé. */
+  let lean = 1;
   let previous = performance.now();
   let frame = 0;
   let visible = true;
-  let portrait = false;
   const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
   const resize = () => {
     renderer.setSize(canvas.clientWidth, canvas.clientHeight, false);
     camera.aspect = canvas.clientWidth / Math.max(1, canvas.clientHeight);
     portrait = camera.aspect < 0.9;
-    camera.fov = portrait ? 48 : 30;
-    camera.updateProjectionMatrix();
   };
 
   const tick = (now: number) => {
@@ -372,63 +340,136 @@ export function mountStage(
     if (!visible) return;
     const delta = Math.min((now - previous) / 1000, 0.05);
     previous = now;
-    time.value += delta;
+    // Le défilement est lissé : la marche et la caméra ne saccadent pas avec la molette.
+    progress += (goal - progress) * (reduced ? 1 : 1 - Math.exp(-delta * 6));
     const p = progress;
-
-    // Il marche tant que le lecteur fait défiler la partie « parcours ».
-    const moving = Math.abs(p - previousProgress) > 0.0006 && p > T.walk - 0.3 && p < T.seat + 0.25;
-    const direction = p >= previousProgress ? 1 : -1;
+    const speed = (p - previousProgress) / Math.max(delta, 0.001);
     previousProgress = p;
-    walkWeight += ((moving && !reduced ? 1 : 0) - walkWeight) * Math.min(1, delta * 6);
-    phase += delta * 9.5 * direction;
-    floorMap.offset.y = -THREE.MathUtils.clamp(p - T.walk, 0, T.seat - T.walk) * 2.6;
 
-    const sit = smooth(T.seat + 0.3, T.seat + 0.9, p) * (1 - smooth(T.rise, T.rise + 0.45, p));
-    const cinemaAmount =
-      smooth(T.seat + 0.1, T.seat + 0.6, p) * (1 - smooth(T.rise + 0.2, T.rise + 0.6, p));
-    // Le quadrillage s'efface devant l'écran, qu'il rayerait sinon.
-    (floor.material as THREE.MeshBasicMaterial).opacity = 0.5 - 0.42 * cinemaAmount;
-    cinema.group.visible = cinemaAmount > 0.01;
-    cinema.group.scale.setScalar(0.6 + 0.4 * cinemaAmount);
-    cinema.beamMaterial.opacity =
-      0.07 * smooth(T.seat + 0.7, T.screen, p) * (1 - smooth(T.rise - 0.1, T.rise + 0.2, p));
+    /* Personnage : où il est, vers où il regarde, s'il marche. */
+    const distance =
+      p <= T.seat
+        ? clamp01((p - T.walk) / (T.seat - T.walk)) * corridor
+        : corridor + clamp01((p - T.seat) / 1.05) * bend;
+    let heading = along(distance);
+    // Ouverture : il fait face au lecteur, puis se retourne.
+    const turn = smooth(0.4, 0.95, p);
+    heading = THREE.MathUtils.lerp(0, heading, turn);
+    // Devant le fauteuil, il pivote dos au siège, face à l'écran.
+    const pivot = smooth(T.seat + 0.95, T.seat + 1.2, p);
+    heading = THREE.MathUtils.lerp(heading, Math.PI, pivot);
 
-    const research = smooth(T.rise + 0.5, T.rise + 0.8, p);
-    setGhost(research > 0.5);
-    (pad.material as THREE.MeshBasicMaterial).opacity =
-      research * (0.5 + 0.2 * Math.sin(time.value * 3));
-    shadow.visible = research < 0.5;
-    pad.position.x = portrait ? (research > 0.5 ? -0.25 : 0) : research * 1.05;
-    stack.group.visible = p > T.rise + 0.3;
-    stack.update((p - T.books) / T.BOOK, smooth(T.rise + 0.4, T.books, p));
-    stack.group.position.set(portrait ? 0 : 2.75, portrait ? 2.45 : 1.2, portrait ? -0.6 : 0);
+    const walking = p > 0.4 && p < T.seat + 1.2;
+    const moving = walking && Math.abs(speed) > 0.012;
+    walkWeight += ((moving ? 1 : 0) - walkWeight) * Math.min(1, delta * (moving ? 7 : 4));
+    back +=
+      ((moving && speed < 0 && p > T.walk && p < T.seat + 0.95 ? 1 : 0) - back) *
+      Math.min(1, delta * 5);
+    const travelled = Math.abs(distance - previousDistance);
+    previousDistance = distance;
+    // Pendant qu'il pivote sur place, il piétine au rythme du temps.
+    cycle += travelled / STRIDE + (moving && travelled < 0.0005 ? delta * 0.9 : 0);
+
+    const sit = smooth(T.seat + 1.2, T.seat + 1.55, p);
+    const remote =
+      smooth(T.seat + 1.5, T.seat + 1.65, p) * (1 - smooth(T.seat + 1.8, T.seat + 2.0, p));
+    const power =
+      smooth(T.seat + 1.65, T.seat + 1.85, p) * (1 - smooth(T.rise + 0.05, T.rise + 0.35, p));
+    const reading = smooth(T.rise + 0.1, T.books - 0.1, p);
 
     if (avatar) {
-      // En hologramme, il flotte légèrement et se tient de trois quarts vers la pile.
-      avatar.position.set(
-        portrait ? (research > 0.5 ? -0.25 : 0) : research * 1.05,
-        research * 0.04 * Math.sin(time.value * 1.6),
-        0,
-      );
-      avatar.rotation.y = research * (portrait ? 0 : 0.5);
-      avatar.scale.setScalar(portrait && research > 0.5 ? 0.55 : 1);
+      avatar.position.copy(point);
+      avatar.rotation.y = heading + back * Math.PI;
     }
-    mixer?.update(delta);
-    if (bones) pose(bones, walkWeight * (1 - sit), phase, sit);
+    if (mixer && walkAction && idleAction) {
+      const weight = walkWeight * (1 - sit);
+      walkAction.setEffectiveWeight(weight);
+      idleAction.setEffectiveWeight(1 - weight);
+      walkAction.time = (cycle % 1) * walkAction.getClip().duration;
+      mixer.update(delta);
+    }
+    if (bones) pose(bones, sit, remote, reading);
 
-    // Caméra : intro, marche, écran, recherche.
-    if (p < T.seat) blend('intro', 'walk', smooth(0.35, T.walk + 0.2, p));
-    else if (p < T.rise) blend('walk', 'screen', smooth(T.seat, T.screen - 0.1, p), true);
-    else blend('screen', 'books', smooth(T.rise, T.books - 0.2, p), true);
-    if (portrait) {
-      // Écran étroit : le personnage au centre, en haut ; le texte occupe le bas.
-      const onScreen = p >= T.seat && p < T.rise + 0.5;
-      position.x *= onScreen ? 0.7 : 0.25;
-      target.x = onScreen ? 0.1 : 0;
-      // Devant l'écran, il descend dans le cadre pour laisser l'image et ses commandes libres.
-      target.y += onScreen ? 0.55 : -0.42;
-      position.z *= onScreen ? 1.3 : 1.15;
+    /* Décor : lumière d'accompagnement, télévision, pile de livres. */
+    room.follow(point);
+    room.setCinema(power * 0.9 + zoom * 0.1);
+    tv.setPower(power);
+    watching = power > 0.95 && p < T.rise;
+    if (!watching) {
+      tv.setHover(-1);
+      canvas.style.cursor = '';
     }
+    stack.update((p - T.books) / T.BOOK, 1);
+
+    /* Caméra. */
+    const index = Math.min(options.frames.length - 1, Math.max(0, Math.floor(distance / GAP)));
+    lean += (room.frame(index).side - lean) * Math.min(1, delta * 2.2);
+    const wide = portrait ? 0.3 : 1;
+    // Ouverture, de face.
+    position.set(portrait ? 0.2 : -0.85, 1.45, portrait ? 5.2 : 3.7);
+    target.set(portrait ? 0 : -1.05, portrait ? 0.85 : 1.15, 0);
+    fov = portrait ? 46 : 34;
+    // Dans son dos, légèrement décalée du côté opposé au cadre en cours.
+    toward(
+      -lean * 0.72 * wide,
+      1.62,
+      point.z + (portrait ? 3.9 : 2.9),
+      point.x * 0.5 + lean * 0.85 * wide,
+      portrait ? 0.95 : 1.22,
+      point.z - 2.5,
+      portrait ? 52 : 38,
+      smooth(0.35, T.walk, p),
+    );
+    // Vue d'ensemble du salon quand il entre.
+    toward(
+      portrait ? 0.5 : 1.55,
+      1.6,
+      D - (portrait ? 0.4 : 1.3),
+      portrait ? -0.1 : -0.25,
+      portrait ? 0.7 : 1.0,
+      room.tv.center.z,
+      portrait ? 56 : 40,
+      smooth(T.seat - 0.25, T.seat + 0.75, p),
+    );
+    // Par-dessus son épaule, vers l'écran : la focale se règle pour que l'écran occupe
+    // une part fixe de la largeur.
+    const { center } = room.tv;
+    const eye = portrait ? vec(0, 1.6, room.seat.z + 1.5) : vec(0.45, 1.5, room.seat.z + 1.45);
+    const tvFov = fovFor(portrait ? 0.92 : 0.62, center.z - eye.z);
+    toward(
+      eye.x,
+      eye.y,
+      eye.z,
+      center.x - (portrait ? 0 : 0.1),
+      center.y - (portrait ? 0.5 : 0),
+      center.z,
+      tvFov,
+      smooth(T.seat + 1.35, T.screen, p),
+    );
+    // Vers la table basse et la pile de publications.
+    toward(
+      room.table.x + (portrait ? 0.25 : 0.62),
+      room.table.y + (portrait ? 0.75 : 0.42),
+      room.table.z + (portrait ? 1.15 : 0.82),
+      room.table.x + (portrait ? 0.14 : 0.2),
+      room.table.y + (portrait ? -0.05 : 0.08),
+      room.table.z,
+      portrait ? 44 : 30,
+      smooth(T.rise, T.books - 0.15, p),
+    );
+    // Chaîne choisie : l'écran vient remplir l'image.
+    zoom += (zoomTarget - zoom) * Math.min(1, delta * 3.2);
+    if (zoom > 0.001) {
+      // Assez près pour que l'écran déborde l'image, en largeur comme en hauteur.
+      const half = Math.tan(THREE.MathUtils.degToRad(tvFov) / 2);
+      const full =
+        Math.min(room.tv.height / 2 / half, room.tv.width / 2 / (half * camera.aspect)) * 0.98;
+      const eased = zoom * zoom * (3 - 2 * zoom);
+      toward(center.x, center.y, center.z + full, center.x, center.y, center.z, tvFov, eased);
+    }
+
+    camera.fov = fov;
+    camera.updateProjectionMatrix();
     camera.position.copy(position);
     camera.lookAt(target);
     renderer.render(scene, camera);
@@ -442,18 +483,24 @@ export function mountStage(
 
   return {
     setProgress: (value) => {
-      progress = value;
+      goal = value;
+    },
+    tune: (index) => {
+      zoomTarget = index >= 0 ? 1 : 0;
+      tv.setProgram(index);
     },
     destroy: () => {
+      disposed = true;
       cancelAnimationFrame(frame);
       observer.disconnect();
       window.removeEventListener('resize', resize);
+      canvas.removeEventListener('pointermove', onMove);
+      canvas.removeEventListener('click', onClick);
       stack.dispose();
+      tv.dispose();
+      room.dispose();
       environment.dispose();
       pmrem.dispose();
-      scene.traverse((object) => {
-        if (object instanceof THREE.Mesh) object.geometry.dispose();
-      });
       renderer.dispose();
     },
   };

@@ -1,0 +1,166 @@
+---
+/**
+ * Décor « territoire » : le contour du pays posé à plat dans l'espace, ses localités qui
+ * se lèvent une à une, et un satellite qui passe au-dessus.
+ */
+import outlines from '../../data/outlines.json';
+
+interface Props {
+  country: 'gn' | 'ci';
+}
+
+const land = outlines[Astro.props.country];
+// Hauteur de chaque repère : une valeur stable, sans hasard, tirée de sa position.
+const pins = land.dots.map(([x, y], index) => ({
+  left: (x / land.width) * 100,
+  top: (y / land.height) * 100,
+  height: 14 + Math.abs(Math.sin(x * 12.9898 + y * 78.233)) * 30,
+  delay: 0.5 + index * 0.035,
+}));
+---
+
+<div class="territory">
+  <div
+    class="plate"
+    style={`aspect-ratio:${land.width}/${land.height};--ratio:${(land.width / land.height).toFixed(3)}`}
+  >
+    <svg viewBox={`-4 -4 ${land.width + 8} ${land.height + 8}`} aria-hidden="true">
+      <path class="depth" d={land.path}></path>
+      <path class="land" d={land.path} pathLength="1"></path>
+      {land.dots.map(([x, y]) => <circle cx={x} cy={y} r="0.7" />)}
+    </svg>
+    {
+      pins.map((pin) => (
+        <i
+          style={`left:${pin.left.toFixed(1)}%;top:${pin.top.toFixed(1)}%;--h:${pin.height.toFixed(0)};--d:${pin.delay.toFixed(2)}s`}
+        />
+      ))
+    }
+  </div>
+  <svg class="satellite" viewBox="0 0 120 60" aria-hidden="true">
+    <path d="M8 22h30v16H8zM82 22h30v16H82zM18 22v16M28 22v16M92 22v16M102 22v16"></path>
+    <path d="M38 30h10M72 30h10"></path>
+    <rect x="48" y="18" width="24" height="24" rx="3"></rect>
+    <path d="M60 42v8M54 54a6 6 0 0 1 12 0"></path>
+  </svg>
+  <span class="beam"></span>
+</div>
+
+<style>
+  .territory {
+    position: relative;
+    display: grid;
+    place-items: center;
+    width: 100%;
+    height: 100%;
+    perspective: 900px;
+  }
+
+  .plate {
+    position: relative;
+    width: min(74%, 46rem, 52vh * var(--ratio));
+    transform: rotateX(58deg) rotateZ(-14deg);
+    transform-style: preserve-3d;
+    animation: sway 14s ease-in-out infinite alternate;
+  }
+
+  @keyframes sway {
+    to {
+      transform: rotateX(54deg) rotateZ(10deg);
+    }
+  }
+
+  svg {
+    display: block;
+    overflow: visible;
+  }
+
+  .depth {
+    fill: #05070b;
+    transform: translate(1.5px, 3px);
+  }
+
+  .land {
+    fill: #12303a;
+    stroke: #7fdcff;
+    stroke-width: 0.6;
+    stroke-dasharray: 1;
+    animation: trace 2.2s cubic-bezier(0.65, 0, 0.35, 1) both;
+  }
+
+  @keyframes trace {
+    from {
+      stroke-dashoffset: 1;
+      fill-opacity: 0;
+    }
+  }
+
+  circle {
+    fill: rgb(255 255 255 / 45%);
+  }
+
+  /* Chaque repère est un trait dressé à la verticale du plan, coiffé d'un point. */
+  i {
+    position: absolute;
+    width: 2px;
+    height: calc(var(--h) * 1px);
+    margin: calc(var(--h) * -1px) 0 0 -1px;
+    background: linear-gradient(#7fdcff, rgb(127 220 255 / 0%));
+    transform: rotateX(-90deg);
+    transform-origin: 50% 100%;
+    animation: rise 0.9s cubic-bezier(0.22, 1, 0.36, 1) var(--d) both;
+  }
+
+  i::before {
+    content: '';
+    position: absolute;
+    top: -3px;
+    left: -2px;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #fff;
+    box-shadow: 0 0 10px #7fdcff;
+  }
+
+  @keyframes rise {
+    from {
+      height: 0;
+      margin-top: 0;
+      opacity: 0;
+    }
+  }
+
+  .satellite {
+    position: absolute;
+    top: 2%;
+    left: 28%;
+    width: clamp(4rem, 9vw, 7rem);
+    fill: none;
+    stroke: #fff;
+    stroke-width: 1.6;
+    stroke-linejoin: round;
+    animation: orbit 16s ease-in-out infinite alternate;
+  }
+
+  @keyframes orbit {
+    to {
+      translate: 30vw 3vh;
+      rotate: 8deg;
+    }
+  }
+
+  .beam {
+    position: absolute;
+    inset: 16% 30% 40%;
+    background: linear-gradient(rgb(127 220 255 / 22%), rgb(127 220 255 / 0%));
+    clip-path: polygon(48% 0, 52% 0, 100% 100%, 0 100%);
+    animation: pulse 3.2s ease-in-out infinite;
+  }
+
+  @keyframes pulse {
+    50% {
+      opacity: 0.35;
+    }
+  }
+</style>

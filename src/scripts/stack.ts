@@ -17,7 +17,7 @@ export interface Volume {
 const LENGTH = 6.4;
 const THICKNESS = 0.78;
 const WIDTH = 4.3;
-const GAP = 0.1;
+const GAP = 0.02;
 
 const SERIF = '"Instrument Serif", Georgia, serif';
 const MONO = '"Geist Mono Variable", ui-monospace, monospace';
@@ -167,18 +167,17 @@ export function createStack(volumes: Volume[]): Stack {
   return {
     group,
     update: (progress, arrival) => {
+      // La pile repose sur la table, premier volume au-dessus. Le volume en cours se tire
+      // vers le lecteur et se soulève légèrement.
       books.forEach((book, index) => {
-        const offset = index - progress;
-        // 1 pour le volume en cours, 0 pour ses voisins.
-        const focus = ease(clamp01(1 - Math.abs(offset)));
-        const spread = Math.sign(offset) * ease(clamp01(Math.abs(offset))) * 0.6;
-        const drop = (1 - ease(clamp01(arrival * 1.8 - index * 0.1))) * 14;
+        const focus = ease(clamp01(1 - Math.abs(index - progress)));
+        const drop = (1 - ease(clamp01(arrival * 1.8 - (books.length - 1 - index) * 0.1))) * 14;
         book.position.set(
           book.userData.shift * (1 - focus),
-          -(offset * (THICKNESS + GAP) + spread) + drop,
-          focus * 0.9,
+          (books.length - 1 - index) * (THICKNESS + GAP) + THICKNESS / 2 + drop,
+          focus * 2.1,
         );
-        book.rotation.set(focus * 0.3, book.userData.skew * (1 - focus), 0);
+        book.rotation.set(focus * 0.1, book.userData.skew * (1 - focus), 0);
       });
     },
     dispose: () => {

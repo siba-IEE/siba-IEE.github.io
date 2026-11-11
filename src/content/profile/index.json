@@ -5,5 +5,7 @@
   "taglineEn": "I make West Africa’s energy data dependable: open reference datasets, a method to correct satellite products, and the software to use them.",
   "bioFr": "Ingénieur en efficacité énergétique, formé au CNAM. J’ai fondé Kuma Science, qui produit les données solaires et énergétiques de référence de la Guinée. Je travaille entre Montréal et Conakry.",
   "bioEn": "Energy-efficiency engineer, trained at CNAM. I founded Kuma Science, which produces Guinea’s reference solar and energy data. I work between Montréal and Conakry.",
-  "photo": "/images/portrait.jpg"
+  "photo": "/images/portrait.jpg",
+  "backgroundFr": "Avant Kuma Science : plus de deux ans d’audit énergétique et de bilans carbone chez un bailleur social en France, et un stage de recherche à l’ÉTS de Montréal, qui a donné deux articles sur les réseaux isolés du Nord canadien.",
+  "backgroundEn": "Before Kuma Science: more than two years of energy audits and carbon assessments for a social-housing landlord in France, and a research internship at ÉTS Montréal, which led to two papers on the isolated grids of northern Canada."
 }

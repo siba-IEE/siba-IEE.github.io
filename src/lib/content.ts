@@ -17,6 +17,9 @@ export interface Profile {
   taglineEn: string;
   bioFr: string;
   bioEn: string;
+  /** Second paragraphe de la page À propos : ce qui précède Kuma Science. */
+  backgroundFr: string;
+  backgroundEn: string;
   photo: string | null;
 }
 

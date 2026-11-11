@@ -24,6 +24,8 @@ interface Props {
   image?: string;
   ogType?: 'website' | 'article' | 'profile';
   jsonLd?: object | object[];
+  /** L'accueil est une scène unique : il se passe de pied de page. */
+  footer?: boolean;
 }
 
 const lang = getLangFromUrl(Astro.url);
@@ -35,6 +37,7 @@ const {
   image = '/og.png?v=4',
   ogType = 'website',
   jsonLd,
+  footer = true,
 } = Astro.props;
 const pageTitle = title ? `${title} – ${SITE.name}` : `${SITE.name} – ${SITE.shortRole[lang]}`;
 const canonical = new URL(Astro.url.pathname, SITE.url).href;
@@ -119,7 +122,7 @@ const alternates: { hreflang: string; href: string }[] = [
     <main id="main" class="flex-1">
       <slot />
     </main>
-    <Footer />
+    {footer && <Footer />}
 
     <script>
       const initReveal = () => {

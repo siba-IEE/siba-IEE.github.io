@@ -12,13 +12,6 @@ const profile = getProfile();
 const tagline = (isFr ? profile.taglineFr : profile.taglineEn) || SITE.tagline[lang];
 ---
 
-<BaseLayout description={tagline.slice(0, 158)}>
+<BaseLayout description={tagline.slice(0, 158)} footer={false}>
   <Hero />
-
-  <section class="contact">
-    <div class="shell">
-      <h2 class="label" data-reveal>Contact</h2>
-      <a href={`mailto:${SITE.email}`} class="mail" data-reveal>{SITE.email}</a>
-    </div>
-  </section>
 </BaseLayout>

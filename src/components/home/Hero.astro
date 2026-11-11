@@ -32,6 +32,19 @@ const captions = isFr
       'The satellite overestimates that radiation, more and more towards the south.',
       'The correction was applied to 340 localities in Guinea.',
     ];
+const ui = isFr
+  ? {
+      scroll: 'Défiler',
+      pick: 'Choisir un projet',
+      open: 'Ouvrir',
+      steps: ['Ouverture', 'Stations', 'Biais', 'Guinée', 'Projets'],
+    }
+  : {
+      scroll: 'Scroll',
+      pick: 'Pick a project',
+      open: 'Open',
+      steps: ['Opening', 'Stations', 'Bias', 'Guinea', 'Projects'],
+    };
 const allProjects = isFr ? 'Tous les projets' : 'All projects';
 const more = isFr ? 'Méthode et résultats' : 'Method and results';
 const alt = isFr ? 'L’Afrique de l’Ouest vue de l’espace.' : 'West Africa seen from space.';
@@ -59,8 +72,8 @@ const credit = isFr
       <canvas aria-hidden="true"></canvas>
       <svg class="markers" aria-hidden="true">
         {
-          STATIONS.map((station) => (
-            <g class="station" data-lat={station.lat} data-lon={station.lon}>
+          STATIONS.map((station, index) => (
+            <g class="station" data-lat={station.lat} data-lon={station.lon} style={`--i:${index}`}>
               <circle r="3" />
             </g>
           ))
@@ -110,6 +123,7 @@ const credit = isFr
       /* Projets : la liste en bas à gauche, la fiche du projet choisi en haut à droite, le globe entre les deux */
     }
     <div class="projects">
+      <p class="hint">{ui.pick}</p>
       <ul>
         {
           projects.map((project) => (
@@ -141,11 +155,27 @@ const credit = isFr
               <img src={project.image} alt="" width="1400" height="650" loading="lazy" />
             )}
             <span>{isFr ? project.summaryFr : project.summaryEn}</span>
-            <small>{project.links?.[0]?.label}</small>
+            <small>
+              {project.links?.[0]?.label}
+              <b>{ui.open}</b>
+            </small>
           </a>
         ))
       }
     </div>
+    {/* Couche de repères : où l'on est dans le parcours, et l'invitation à défiler */}
+    <ol class="rail">
+      {
+        ui.steps.map((label, index) => (
+          <li>
+            <button type="button" data-goto={index} aria-label={label}>
+              <span>{label}</span>
+            </button>
+          </li>
+        ))
+      }
+    </ol>
+    <p class="cue" aria-hidden="true">{ui.scroll}</p>
     <p class="credit">{credit}</p>
   </div>
 
@@ -514,6 +544,266 @@ const credit = isFr
   :global(html:not(.js)) .track {
     display: none;
   }
+
+  /* ---------- Couche de repères ---------- */
+
+  /* Les épingles se cliquent ; le reste des repères laisse passer le pointeur. */
+  .markers {
+    pointer-events: none;
+  }
+
+  .journey[data-step='4'] .pin {
+    pointer-events: auto;
+    cursor: pointer;
+  }
+
+  .markers .station circle {
+    transform: scale(0);
+    transition: transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+    transition-delay: calc(var(--i) * 28ms);
+  }
+
+  .journey:not([data-step='0'], [data-step='4']) .station circle {
+    transform: none;
+  }
+
+  /* Une onde part de chaque épingle tant qu'aucun projet n'est choisi à cet endroit. */
+  .markers .pin .ring {
+    opacity: 0.9;
+    transform: none;
+    animation: ping 2.4s cubic-bezier(0.22, 1, 0.36, 1) infinite;
+  }
+
+  .markers .pin[data-active] .ring {
+    animation: none;
+    stroke-width: 2;
+  }
+
+  @keyframes ping {
+    from {
+      opacity: 0.9;
+      transform: scale(0.4);
+    }
+
+    to {
+      opacity: 0;
+      transform: scale(1.8);
+    }
+  }
+
+  /* Rail : une graduation par vue, à droite */
+  .rail {
+    position: absolute;
+    top: 50%;
+    right: 0.5rem;
+    display: grid;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    transform: translateY(-50%);
+  }
+
+  .rail button {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 0.6rem;
+    width: 100%;
+    padding: 0.55rem 0.5rem;
+    color: #fff;
+    font-size: 0.72rem;
+    cursor: pointer;
+  }
+
+  .rail button::after {
+    content: '';
+    width: 0.9rem;
+    height: 1.5px;
+    background: rgb(255 255 255 / 45%);
+    transition:
+      width 0.4s cubic-bezier(0.22, 1, 0.36, 1),
+      background 0.2s ease;
+  }
+
+  .rail span {
+    opacity: 0;
+    transform: translateX(0.4rem);
+    transition:
+      opacity 0.25s ease,
+      transform 0.3s ease;
+    text-shadow: 0 0 12px rgb(0 0 0 / 80%);
+  }
+
+  .rail button:hover span,
+  .rail button:focus-visible span,
+  .rail button[aria-current='step'] span {
+    opacity: 1;
+    transform: none;
+  }
+
+  .rail button[aria-current='step']::after {
+    width: 2rem;
+    background: #fff;
+  }
+
+  /* Invitation à défiler, sous le nom */
+  .cue {
+    position: absolute;
+    bottom: 2.75rem;
+    left: 50%;
+    display: grid;
+    justify-items: center;
+    gap: 0.5rem;
+    margin: 0;
+    font-size: 0.72rem;
+    color: #fff;
+    transform: translateX(-50%);
+    transition: opacity 0.4s ease;
+  }
+
+  .cue::after {
+    content: '';
+    width: 1.5px;
+    height: 2.5rem;
+    background: #fff;
+    transform-origin: top;
+    animation: drip 1.8s cubic-bezier(0.65, 0, 0.35, 1) infinite;
+  }
+
+  .journey:not([data-step='0']) .cue {
+    opacity: 0;
+  }
+
+  @keyframes drip {
+    0% {
+      transform: scaleY(0);
+    }
+
+    50% {
+      transform: scaleY(1);
+      transform-origin: top;
+    }
+
+    51% {
+      transform-origin: bottom;
+    }
+
+    100% {
+      transform: scaleY(0);
+      transform-origin: bottom;
+    }
+  }
+
+  /* Le nom arrive lettre par lettre serrée, puis se détend. */
+  @media (prefers-reduced-motion: no-preference) {
+    :global(.js) .title h1 {
+      animation: name-in 1.6s cubic-bezier(0.22, 1, 0.36, 1) both !important;
+    }
+
+    :global(.js) .title p {
+      animation: fade-up 1s cubic-bezier(0.22, 1, 0.36, 1) 0.5s both;
+    }
+  }
+
+  @keyframes name-in {
+    from {
+      opacity: 0;
+      letter-spacing: -0.12em;
+      transform: scale(1.12);
+    }
+  }
+
+  @keyframes fade-up {
+    from {
+      opacity: 0;
+      transform: translateY(0.8rem);
+    }
+  }
+
+  /* Projets : consigne, défilement automatique et fiche */
+  .hint {
+    position: absolute;
+    inset: auto auto 3.25rem 1.25rem;
+    margin: 0;
+    font-size: 0.78rem;
+    color: rgb(255 255 255 / 70%);
+    transform: translateY(calc(-1 * var(--list-h, 16rem) - 1rem));
+  }
+
+  .projects ul {
+    display: grid;
+    justify-items: start;
+  }
+
+  /* Sous le projet affiché, un trait se remplit jusqu'au passage au suivant. */
+  .projects button {
+    position: relative;
+  }
+
+  .projects button::after {
+    content: '';
+    position: absolute;
+    inset: auto 0 0;
+    height: 2px;
+    background: #f50;
+    transform: scaleX(0);
+    transform-origin: left;
+  }
+
+  .projects[data-auto] button[aria-pressed='true']::after {
+    animation: fill var(--auto, 5s) linear forwards;
+  }
+
+  .projects:not([data-auto]) button[aria-pressed='true']::after {
+    transform: none;
+  }
+
+  @keyframes fill {
+    to {
+      transform: scaleX(1);
+    }
+  }
+
+  .card img {
+    clip-path: inset(0 0 100% 0);
+    transition: clip-path 0.8s cubic-bezier(0.22, 1, 0.36, 1) 0.1s;
+  }
+
+  .card[data-open] img {
+    clip-path: inset(0);
+  }
+
+  .card small {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+  }
+
+  .card b {
+    font-family: var(--font-sans);
+    font-weight: 500;
+    color: #fff;
+  }
+
+  .card b::after {
+    content: ' ↗';
+  }
+
+  @media (min-width: 1024px) {
+    .rail {
+      right: 1.5rem;
+    }
+
+    .hint {
+      inset: auto auto 4rem 4rem;
+    }
+  }
+
+  @media (max-width: 1023px) {
+    .rail span {
+      display: none;
+    }
+  }
 </style>
 
 <script>
@@ -522,6 +812,7 @@ const credit = isFr
   let globe: Globe | null = null;
   let onScroll: (() => void) | null = null;
   let selected: string | null = null;
+  let timer = 0;
 
   const stop = () => {
     globe?.destroy();
@@ -529,6 +820,7 @@ const credit = isFr
     if (onScroll) window.removeEventListener('scroll', onScroll);
     onScroll = null;
     selected = null;
+    window.clearInterval(timer);
   };
 
   const init = () => {
@@ -537,6 +829,21 @@ const credit = isFr
     const root = journey?.querySelector<HTMLElement>('[data-globe]');
     if (!journey || !root) return;
     globe = mountGlobe(root);
+
+    // Rail : chaque graduation mène à sa vue.
+    const rail = [...journey.querySelectorAll<HTMLButtonElement>('[data-goto]')];
+    rail.forEach((button) =>
+      button.addEventListener('click', () => {
+        // La scène se fige sous la barre de navigation : on vise ce point, pas le haut de la section.
+        const stage = journey.querySelector<HTMLElement>('.stage');
+        const offset = stage ? parseFloat(getComputedStyle(stage).top) || 0 : 0;
+        const top = journey.getBoundingClientRect().top + window.scrollY - offset;
+        window.scrollTo({
+          top: top + (Number(button.dataset.goto) * journey.offsetHeight) / VIEW_COUNT,
+          behavior: 'smooth',
+        });
+      }),
+    );
 
     // Une hauteur d'écran de défilement fait passer d'une vue à la suivante.
     onScroll = () => {
@@ -547,7 +854,12 @@ const credit = isFr
         Math.max(0, (stage - window.innerHeight) / viewHeight),
       );
       globe?.setProgress(progress);
-      journey.dataset.step = String(Math.round(progress));
+      const step = String(Math.round(progress));
+      if (journey.dataset.step !== step) {
+        journey.dataset.step = step;
+        rail.forEach((button) => button.toggleAttribute('aria-current', false));
+        rail.find((button) => button.dataset.goto === step)?.setAttribute('aria-current', 'step');
+      }
     };
     // Projets : choisir un nom tourne le globe vers son pays et ouvre sa fiche.
     const buttons = [...journey.querySelectorAll<HTMLButtonElement>('[data-project]')];
@@ -571,8 +883,31 @@ const credit = isFr
       const chosen = buttons.find((button) => button.dataset.project === slug);
       globe?.focus(chosen ? (JSON.parse(chosen.dataset.geo ?? 'null') as Place | null) : null);
     };
+    // Tant que le visiteur n'a rien choisi, les projets défilent d'eux-mêmes : on voit
+    // tout de suite ce que fait la liste.
+    const panel = journey.querySelector<HTMLElement>('.projects');
+    const list = panel?.querySelector('ul');
+    if (panel && list) panel.style.setProperty('--list-h', `${list.offsetHeight}px`);
+    const AUTO_MS = 5000;
+    panel?.style.setProperty('--auto', `${AUTO_MS}ms`);
+    let auto = true;
+    panel?.toggleAttribute('data-auto', true);
+    const takeOver = (slug: string | null) => {
+      auto = false;
+      panel?.removeAttribute('data-auto');
+      select(slug);
+    };
+    journey
+      .querySelectorAll<SVGElement>('[data-pin]')
+      .forEach((pin) => pin.addEventListener('click', () => takeOver(pin.dataset.pin ?? null)));
+    timer = window.setInterval(() => {
+      if (!auto || journey.dataset.step !== String(VIEW_COUNT - 1)) return;
+      const index = buttons.findIndex((button) => button.dataset.project === selected);
+      select(buttons[(index + 1) % buttons.length].dataset.project ?? null);
+    }, AUTO_MS);
+
     buttons.forEach((button) => {
-      const choose = () => select(button.dataset.project ?? null);
+      const choose = () => takeOver(button.dataset.project ?? null);
       button.addEventListener('pointerenter', choose);
       button.addEventListener('focus', choose);
       button.addEventListener('click', choose);
@@ -584,6 +919,7 @@ const credit = isFr
     onScroll = () => {
       follow();
       if (journey.dataset.step !== lastStep) select(null);
+      else if (selected === null && auto) select(buttons[0]?.dataset.project ?? null);
     };
     window.addEventListener('scroll', onScroll, { passive: true });
     onScroll();

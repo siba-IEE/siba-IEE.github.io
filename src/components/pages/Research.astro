@@ -1,11 +1,11 @@
 ---
 /**
- * Page Travaux : une maquette 3D qui raconte les travaux étape par étape, puis la figure
+ * Page Travaux : un film 3D qui raconte les travaux plan par plan, puis la figure
  * interactive de la prépublication (d'après les articles de la revue Distill) et les publications.
  */
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import BiasFigure from '../research/BiasFigure.astro';
-import Diorama from '../research/Diorama.astro';
+import Film from '../research/Film.astro';
 import { SITE } from '../../lib/site';
 import { getLangFromUrl } from '../../lib/i18n';
 import { getResearch, getPublications } from '../../lib/content';
@@ -23,7 +23,7 @@ const t = isFr
 ---
 
 <BaseLayout title={t.title} description={isFr ? paper.summaryFr : paper.summaryEn}>
-  <Diorama />
+  <Film />
 
   <article class="block">
     <div class="shell">

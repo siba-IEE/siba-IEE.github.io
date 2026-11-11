@@ -1,0 +1,616 @@
+---
+/**
+ * Film 3D de la page Travaux et son lecteur : lecture et pause, barre de progression par
+ * chapitre, sous-titres. L'image vient de src/scripts/film.ts ; les textes sont ici.
+ * Sans WebGL ou sans JavaScript, les chapitres se lisent à la suite.
+ */
+import { getLangFromUrl } from '../../lib/i18n';
+
+const lang = getLangFromUrl(Astro.url);
+const isFr = lang === 'fr';
+
+interface Chapter {
+  title: string;
+  /** Deux sous-titres par plan : le premier de 1 à 6 s, le second de 6,5 à 11,5 s. */
+  lines: [string, string];
+}
+
+const chapters: Chapter[] = isFr
+  ? [
+      {
+        title: 'Mesurer au sol',
+        lines: [
+          'En Afrique de l’Ouest, 31 stations ont mesuré le rayonnement solaire au sol.',
+          'Deux années chacune, dans 13 pays.',
+        ],
+      },
+      {
+        title: 'Le satellite',
+        lines: [
+          'Partout ailleurs, on dépend des estimations par satellite.',
+          'Le produit CAMS surestime le rayonnement annuel de 6,6 % en moyenne, davantage vers le sud.',
+        ],
+      },
+      {
+        title: 'Corriger sur place',
+        lines: [
+          'Avec un an de mesure sur le site, on corrige l’estimation du satellite.',
+          'L’erreur passe de 6,6 % à 1,1 % l’année suivante.',
+        ],
+      },
+      {
+        title: 'Corriger sans station',
+        lines: [
+          'La plupart des sites n’ont pas de station : la correction vient alors des autres.',
+          'Suivre la tendance nord-sud laisse 1,8 % d’erreur. Copier la station la plus proche, 2,9 %.',
+        ],
+      },
+      {
+        title: 'Dimensionner',
+        lines: [
+          'La méthode a corrigé les séries de 340 localités de Guinée.',
+          'Elles servent à dimensionner des installations solaires.',
+        ],
+      },
+      {
+        title: 'En cours : la maille',
+        lines: [
+          'Kindia et Mamou sont à 92 km l’une de l’autre. NASA POWER leur donne exactement la même série.',
+          'Elles partagent une maille. Reste à vérifier que les produits à maille fine les séparent.',
+        ],
+      },
+    ]
+  : [
+      {
+        title: 'Measuring on the ground',
+        lines: [
+          'In West Africa, 31 stations measured solar radiation on the ground.',
+          'Two years each, in 13 countries.',
+        ],
+      },
+      {
+        title: 'The satellite',
+        lines: [
+          'Everywhere else, we depend on satellite estimates.',
+          'The CAMS product overestimates annual irradiation by 6.6% on average, more so towards the south.',
+        ],
+      },
+      {
+        title: 'Correcting on site',
+        lines: [
+          'With one year of measurement on site, the satellite estimate can be corrected.',
+          'The error goes from 6.6% to 1.1% the following year.',
+        ],
+      },
+      {
+        title: 'Correcting without a station',
+        lines: [
+          'Most sites have no station: the correction then comes from the others.',
+          'Following the north–south trend leaves 1.8% of error. Copying the nearest station, 2.9%.',
+        ],
+      },
+      {
+        title: 'Sizing',
+        lines: [
+          'The method corrected the series of 340 localities in Guinea.',
+          'They are used to size solar installations.',
+        ],
+      },
+      {
+        title: 'In progress: the grid cell',
+        lines: [
+          'Kindia and Mamou are 92 km apart. NASA POWER gives them exactly the same series.',
+          'They share a grid cell. What remains is to check that fine-grid products separate them.',
+        ],
+      },
+    ];
+
+const ui = isFr
+  ? {
+      title: 'Travaux',
+      play: 'Lire',
+      pause: 'Pause',
+      credit: 'Satellite : modèle NASA. Terre : NASA Blue Marble. Sol : Poly Haven.',
+    }
+  : {
+      title: 'Research',
+      play: 'Play',
+      pause: 'Pause',
+      credit: 'Satellite: NASA model. Earth: NASA Blue Marble. Ground: Poly Haven.',
+    };
+
+const assets = {
+  groundColor: '/images/film/sol-couleur.webp',
+  groundNormal: '/images/film/sol-relief.webp',
+  groundRoughness: '/images/film/sol-rugosite.webp',
+  earth: '/images/terre/jour.webp',
+  satellite: '/models/satellite.glb',
+  draco: '/draco/',
+};
+---
+
+<section
+  class="film"
+  data-film
+  data-assets={JSON.stringify(assets)}
+  data-labels={JSON.stringify(['Kindia', 'Mamou'])}
+  data-state="loading"
+>
+  <canvas aria-hidden="true"></canvas>
+  <div class="fade" data-fade aria-hidden="true"></div>
+
+  <header>
+    <h1>{ui.title}</h1>
+    <p data-chapter-title>{chapters[0].title}</p>
+  </header>
+
+  <ol class="captions">
+    {
+      chapters.map((chapter, index) => (
+        <li data-chapter={index}>
+          <h2>{chapter.title}</h2>
+          {chapter.lines.map((line, n) => (
+            <p data-cue={`${index}-${n}`}>{line}</p>
+          ))}
+        </li>
+      ))
+    }
+  </ol>
+
+  <button type="button" class="big" data-toggle aria-label={ui.play}>
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5v13l11-6.5z"></path></svg>
+  </button>
+
+  <div class="bar">
+    <button
+      type="button"
+      data-toggle
+      aria-label={ui.play}
+      data-label-play={ui.play}
+      data-label-pause={ui.pause}
+    >
+      <svg class="icon-play" viewBox="0 0 24 24" aria-hidden="true"
+        ><path d="M8 5.5v13l11-6.5z"></path></svg
+      >
+      <svg class="icon-pause" viewBox="0 0 24 24" aria-hidden="true"
+        ><path d="M7 5h3.5v14H7zM13.5 5H17v14h-3.5z"></path></svg
+      >
+    </button>
+    <div class="track" data-track>
+      {
+        chapters.map((chapter, index) => (
+          <span class="segment" title={chapter.title}>
+            <i data-fill={index} />
+          </span>
+        ))
+      }
+    </div>
+    <span class="time" data-time>0:00</span>
+  </div>
+  <p class="credit">{ui.credit}</p>
+</section>
+
+<style>
+  /* Un écran de cinéma : noir, dans les deux thèmes. */
+  .film {
+    --nav: 4rem;
+
+    position: relative;
+    height: calc(100svh - var(--nav));
+    min-height: 34rem;
+    overflow: hidden;
+    background: #050505;
+    color: #fff;
+  }
+
+  canvas,
+  .fade {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+  }
+
+  .fade {
+    background: #050505;
+    pointer-events: none;
+  }
+
+  /* Bandeau sombre en bas, pour que sous-titres et commandes restent lisibles sur toute image. */
+  .film::after {
+    content: '';
+    position: absolute;
+    inset: auto 0 0;
+    height: 45%;
+    background: linear-gradient(to top, rgb(0 0 0 / 70%), transparent);
+    pointer-events: none;
+  }
+
+  header,
+  .captions,
+  .bar,
+  .credit,
+  .big {
+    z-index: 1;
+  }
+
+  header {
+    position: absolute;
+    top: 1.25rem;
+    left: 1.25rem;
+    display: flex;
+    gap: 1.5rem;
+    font-size: 0.85rem;
+    text-shadow: 0 0 12px rgb(0 0 0 / 60%);
+  }
+
+  h1,
+  header p {
+    margin: 0;
+    font-size: inherit;
+    font-weight: 400;
+    letter-spacing: 0;
+    color: #fff;
+  }
+
+  h1 {
+    color: rgb(255 255 255 / 60%);
+    animation: none !important;
+  }
+
+  /* Sous-titres */
+  .captions {
+    position: absolute;
+    inset: auto 1.25rem 5.25rem;
+    display: grid;
+    justify-items: center;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    text-align: center;
+    pointer-events: none;
+  }
+
+  .captions li,
+  .captions p {
+    grid-area: 1 / 1;
+  }
+
+  .captions li {
+    display: grid;
+    justify-items: center;
+  }
+
+  .captions h2 {
+    display: none;
+  }
+
+  .captions p {
+    max-width: 44rem;
+    margin: 0;
+    font-size: clamp(1.15rem, 2.3vw, 1.9rem);
+    font-weight: 500;
+    line-height: 1.2;
+    letter-spacing: -0.03em;
+    text-shadow: 0 1px 18px rgb(0 0 0 / 75%);
+    text-wrap: balance;
+    opacity: 0;
+    transform: translateY(0.6rem);
+    transition:
+      opacity 0.5s ease,
+      transform 0.7s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  .captions p[data-on] {
+    opacity: 1;
+    transform: none;
+  }
+
+  /* Bouton central : visible tant que le film est à l'arrêt. */
+  .big {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    display: grid;
+    place-items: center;
+    width: 5rem;
+    height: 5rem;
+    border-radius: 50%;
+    background: rgb(255 255 255 / 92%);
+    color: #050505;
+    cursor: pointer;
+    translate: -50% -50%;
+    transition:
+      opacity 0.3s ease,
+      scale 0.3s ease;
+  }
+
+  .big:hover {
+    scale: 1.06;
+  }
+
+  .big svg {
+    width: 1.8rem;
+    height: 1.8rem;
+    fill: currentcolor;
+    translate: 2px 0;
+  }
+
+  .film[data-state='playing'] .big,
+  .film[data-state='loading'] .big {
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  /* Chargement : un trait qui pulse au centre. */
+  .film[data-state='loading']::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    z-index: 1;
+    width: 6rem;
+    height: 1.5px;
+    background: #fff;
+    translate: -50% 0;
+    animation: load 1.2s ease-in-out infinite;
+  }
+
+  @keyframes load {
+    0%,
+    100% {
+      scale: 0.2 1;
+      opacity: 0.4;
+    }
+
+    50% {
+      scale: 1 1;
+      opacity: 1;
+    }
+  }
+
+  /* Barre de lecture */
+  .bar {
+    position: absolute;
+    inset: auto 1.25rem 2.25rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+  }
+
+  .bar button {
+    display: grid;
+    place-items: center;
+    width: 2.25rem;
+    height: 2.25rem;
+    color: #fff;
+    cursor: pointer;
+  }
+
+  .bar svg {
+    width: 1.4rem;
+    height: 1.4rem;
+    fill: currentcolor;
+  }
+
+  .icon-pause,
+  .film[data-state='playing'] .icon-play {
+    display: none;
+  }
+
+  .film[data-state='playing'] .icon-pause {
+    display: block;
+  }
+
+  .track {
+    display: flex;
+    flex: 1;
+    gap: 4px;
+    padding-block: 0.75rem;
+    cursor: pointer;
+    touch-action: none;
+  }
+
+  .segment {
+    flex: 1;
+    height: 3px;
+    overflow: hidden;
+    background: rgb(255 255 255 / 28%);
+    transition: height 0.2s ease;
+  }
+
+  .track:hover .segment {
+    height: 5px;
+  }
+
+  .segment i {
+    display: block;
+    height: 100%;
+    background: #fff;
+    transform: scaleX(0);
+    transform-origin: left;
+  }
+
+  .time {
+    min-width: 2.6rem;
+    font-family: var(--font-mono);
+    font-size: 0.78rem;
+    font-variant-numeric: tabular-nums;
+    text-align: right;
+  }
+
+  .credit {
+    position: absolute;
+    inset: auto 1.25rem 0.9rem;
+    margin: 0;
+    font-size: 0.7rem;
+    color: rgb(255 255 255 / 50%);
+  }
+
+  @media (min-width: 1024px) {
+    header {
+      top: 2rem;
+      left: 4rem;
+    }
+
+    .captions {
+      inset: auto 4rem 6rem;
+    }
+
+    .bar {
+      inset: auto 4rem 2.5rem;
+    }
+
+    .credit {
+      inset: auto 4rem 1rem;
+    }
+  }
+
+  /* Sans JavaScript : pas de film, les chapitres à la suite. */
+  :global(html:not(.js)) .film {
+    height: auto;
+    padding: 4rem 1.25rem;
+  }
+
+  :global(html:not(.js)) canvas,
+  :global(html:not(.js)) .fade,
+  :global(html:not(.js)) .big,
+  :global(html:not(.js)) .bar,
+  :global(html:not(.js)) .film::before {
+    display: none;
+  }
+
+  :global(html:not(.js)) header,
+  :global(html:not(.js)) .captions {
+    position: static;
+    display: block;
+    text-align: left;
+  }
+
+  :global(html:not(.js)) .captions li {
+    display: block;
+    margin-top: 2rem;
+  }
+
+  :global(html:not(.js)) .captions h2 {
+    display: block;
+    font-size: 1rem;
+    color: #fff;
+  }
+
+  :global(html:not(.js)) .captions p {
+    margin-top: 0.5rem;
+    opacity: 1;
+    transform: none;
+  }
+</style>
+
+<script>
+  import type { Film, FilmAssets } from '../../scripts/film';
+
+  let film: Film | null = null;
+  let observer: IntersectionObserver | null = null;
+
+  const stop = () => {
+    film?.destroy();
+    film = null;
+    observer?.disconnect();
+    observer = null;
+  };
+
+  const init = async () => {
+    stop();
+    const root = document.querySelector<HTMLElement>('[data-film]');
+    const canvas = root?.querySelector('canvas');
+    if (!root || !canvas) return;
+
+    const fade = root.querySelector<HTMLElement>('[data-fade]')!;
+    const title = root.querySelector<HTMLElement>('[data-chapter-title]')!;
+    const time = root.querySelector<HTMLElement>('[data-time]')!;
+    const track = root.querySelector<HTMLElement>('[data-track]')!;
+    const fills = [...root.querySelectorAll<HTMLElement>('[data-fill]')];
+    const cues = [...root.querySelectorAll<HTMLElement>('[data-cue]')];
+    const titles = [...root.querySelectorAll<HTMLElement>('.captions h2')].map(
+      (heading) => heading.textContent ?? '',
+    );
+    const toggles = [...root.querySelectorAll<HTMLButtonElement>('[data-toggle]')];
+
+    // three.js n'est chargé que sur cette page, une fois celle-ci affichée.
+    const { mountFilm, CHAPTER_SECONDS } = await import('../../scripts/film');
+
+    const onFrame = (seconds: number, chapter: number, fadeAmount: number) => {
+      const local = seconds - chapter * CHAPTER_SECONDS;
+      fade.style.opacity = fadeAmount.toFixed(3);
+      title.textContent = titles[chapter];
+      time.textContent = `${Math.floor(seconds / 60)}:${String(Math.floor(seconds % 60)).padStart(2, '0')}`;
+      fills.forEach((fill, index) => {
+        const progress = index < chapter ? 1 : index > chapter ? 0 : local / CHAPTER_SECONDS;
+        fill.style.transform = `scaleX(${progress.toFixed(4)})`;
+      });
+      // Premier sous-titre de 1 à 6 s, second de 6,5 à 11,5 s.
+      const line = local >= 1 && local < 6 ? 0 : local >= 6.5 && local < 11.5 ? 1 : -1;
+      cues.forEach((cue) =>
+        cue.toggleAttribute('data-on', cue.dataset.cue === `${chapter}-${line}`),
+      );
+      if (film && !film.playing && root.dataset.state === 'playing') setState('paused');
+    };
+
+    const setState = (state: 'loading' | 'paused' | 'playing') => {
+      root.dataset.state = state;
+      const bar = toggles[1];
+      const label = (state === 'playing' ? bar.dataset.labelPause : bar.dataset.labelPlay) ?? '';
+      toggles.forEach((button) => button.setAttribute('aria-label', label));
+    };
+
+    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const assets = JSON.parse(root.dataset.assets ?? '{}') as FilmAssets;
+    const labels = JSON.parse(root.dataset.labels ?? '[]') as string[];
+    film = mountFilm(canvas, assets, labels, onFrame, () => {
+      // Prêt : la lecture démarre seule, sauf si le visiteur a demandé moins d'animation.
+      if (root.dataset.state !== 'loading') return;
+      setState('paused');
+      if (!reduced) play();
+    });
+    if (!film) {
+      root.classList.add('no-webgl');
+      return;
+    }
+
+    const play = () => {
+      film?.play();
+      setState('playing');
+    };
+    const pause = () => {
+      film?.pause();
+      setState('paused');
+    };
+    toggles.forEach((button) =>
+      button.addEventListener('click', () => (film?.playing ? pause() : play())),
+    );
+    canvas.addEventListener('click', () => (film?.playing ? pause() : play()));
+
+    // Cliquer ou glisser sur la barre déplace la lecture.
+    const scrub = (event: PointerEvent) => {
+      const rect = track.getBoundingClientRect();
+      film?.seek(
+        Math.min(1, Math.max(0, (event.clientX - rect.left) / rect.width)) * (film?.duration ?? 0),
+      );
+    };
+    track.addEventListener('pointerdown', (event) => {
+      track.setPointerCapture(event.pointerId);
+      scrub(event);
+    });
+    track.addEventListener('pointermove', (event) => {
+      if (event.buttons > 0) scrub(event);
+    });
+
+    // Hors de l'écran, le film se met en pause.
+    observer = new IntersectionObserver(([entry]) => {
+      if (!entry.isIntersecting && film?.playing) pause();
+    });
+    observer.observe(root);
+  };
+
+  document.addEventListener('astro:page-load', init);
+  document.addEventListener('astro:before-swap', stop);
+</script>

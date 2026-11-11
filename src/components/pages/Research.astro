@@ -74,14 +74,14 @@ const labels = {
 
 <BaseLayout title={pageTitle} description={pageLede}>
   {/* En-tête encre : titre + accroche + accès aux travaux */}
-  <section class="relative overflow-hidden bg-brand-900 text-white">
+  <section class="relative overflow-hidden border-b border-border bg-surface">
     <div class="shell relative py-16 sm:py-20">
       <h1
-        class="max-w-3xl font-display text-4xl font-medium tracking-tight text-balance text-white sm:text-5xl"
+        class="max-w-3xl font-display text-4xl font-medium tracking-tight text-balance text-heading sm:text-5xl"
       >
         {pageTitle}
       </h1>
-      <p class="mt-5 max-w-2xl text-lg text-white/80 text-pretty">{pageLede}</p>
+      <p class="mt-5 max-w-2xl text-lg text-text-muted text-pretty">{pageLede}</p>
 
       {
         works.length > 1 && (
@@ -89,7 +89,7 @@ const labels = {
             {works.map((w, i) => (
               <a
                 href={`#travail-${i + 1}`}
-                class="group inline-flex items-center gap-2 rounded-sm bg-white/10 px-4 py-2.5 text-sm font-medium ring-1 ring-white/15 transition-colors hover:bg-white/20"
+                class="group inline-flex items-center gap-2 rounded-sm bg-panel px-4 py-2.5 text-sm font-medium ring-1 ring-border transition-colors hover:bg-accent-400 hover:text-black"
               >
                 <span class="font-mono text-xs text-accent-400">
                   {String(i + 1).padStart(2, '0')}
@@ -156,9 +156,8 @@ const labels = {
             <div class="grid gap-x-10 gap-y-8 lg:grid-cols-12 lg:items-start">
               <div class="lg:col-span-7 xl:col-span-8">
                 <div class="flex flex-wrap items-center gap-3">
-                  <span class="font-mono text-sm font-medium text-link">{wnum}</span>
                   <span class="h-4 w-px bg-border" aria-hidden="true" />
-                  <span class="rounded-sm bg-surface-3 px-2.5 py-0.5 text-[0.65rem] font-medium tracking-wide text-text-subtle uppercase">
+                  <span class="rounded-sm bg-surface-3 px-2.5 py-0.5 text-[0.65rem] font-medium text-text-subtle">
                     {statusLabels[w.status][lang]}
                   </span>
                 </div>
@@ -177,9 +176,7 @@ const labels = {
               {metrics.length > 0 && (
                 <div class="lg:col-span-4 lg:col-start-9 xl:col-span-3 xl:col-start-10">
                   <div class:list={['rounded-sm p-5 ring-1 ring-border', cardBg]}>
-                    <p class="text-[0.7rem] font-semibold tracking-[0.15em] text-text-subtle uppercase">
-                      {labels.atGlance}
-                    </p>
+                    <p class="text-sm text-text-subtle">{labels.atGlance}</p>
                     <dl class="mt-4 grid grid-cols-2 gap-x-4 gap-y-5">
                       {metrics.map((m) => (
                         <div>
@@ -202,10 +199,7 @@ const labels = {
               {/* 01 : Problématique + thèse en marge */}
               <div id={anchor('problem')} class="scroll-mt-24">
                 <div class="flex items-baseline gap-3">
-                  <span class="font-mono text-sm font-medium text-link">01</span>
-                  <h3 class="text-xs font-semibold tracking-[0.16em] text-link uppercase">
-                    {labels.problem}
-                  </h3>
+                  <h3 class="text-2xl font-medium tracking-tight text-heading">{labels.problem}</h3>
                 </div>
                 <div class="mt-6 grid gap-x-12 gap-y-8 lg:grid-cols-12 lg:items-start">
                   <div
@@ -240,8 +234,7 @@ const labels = {
               {/* 02 : Hypothèses en cartes */}
               <div id={anchor('hypotheses')} class="scroll-mt-24">
                 <div class="flex items-baseline gap-3">
-                  <span class="font-mono text-sm font-medium text-link">02</span>
-                  <h3 class="text-xs font-semibold tracking-[0.16em] text-link uppercase">
+                  <h3 class="text-2xl font-medium tracking-tight text-heading">
                     {labels.hypotheses}
                   </h3>
                 </div>
@@ -264,10 +257,7 @@ const labels = {
               {/* 03 : Méthode : texte + figure/formule côte à côte */}
               <div id={anchor('method')} class="scroll-mt-24">
                 <div class="flex items-baseline gap-3">
-                  <span class="font-mono text-sm font-medium text-link">03</span>
-                  <h3 class="text-xs font-semibold tracking-[0.16em] text-link uppercase">
-                    {labels.method}
-                  </h3>
+                  <h3 class="text-2xl font-medium tracking-tight text-heading">{labels.method}</h3>
                 </div>
                 <div class="mt-6 grid gap-x-12 gap-y-8 lg:grid-cols-12 lg:items-start">
                   <div
@@ -298,9 +288,7 @@ const labels = {
                         </figure>
                       ) : (
                         <div class:list={['rounded-sm p-6 ring-1 ring-border', cardBg]} data-reveal>
-                          <p class="text-[0.7rem] font-semibold tracking-[0.15em] text-text-subtle uppercase">
-                            {labels.indicators}
-                          </p>
+                          <p class="text-sm text-text-subtle">{labels.indicators}</p>
                           <div class="prose-r mt-3 text-text" set:html={md(methodDisplay!)} />
                         </div>
                       )}
@@ -312,8 +300,7 @@ const labels = {
               {/* 04 : Résultats : narration + planche maîtresse, puis figures en pied */}
               <div id={anchor('results')} class="scroll-mt-24">
                 <div class="flex items-baseline gap-3">
-                  <span class="font-mono text-sm font-medium text-link">04</span>
-                  <h3 class="text-xs font-semibold tracking-[0.16em] text-link uppercase">
+                  <h3 class="text-2xl font-medium tracking-tight text-heading">
                     {figs.length > 0 ? labels.resultsFigs : labels.results}
                   </h3>
                 </div>
@@ -349,9 +336,7 @@ const labels = {
                           class:list={['rounded-sm p-6 ring-1 ring-border sm:p-8', cardBg]}
                           data-reveal
                         >
-                          <p class="text-[0.7rem] font-semibold tracking-[0.15em] text-text-subtle uppercase">
-                            {labels.result}
-                          </p>
+                          <p class="text-sm text-text-subtle">{labels.result}</p>
                           <div class="prose-r mt-3 text-text" set:html={md(resultsDisplay!)} />
                         </div>
                       )}
@@ -379,8 +364,7 @@ const labels = {
               {/* 05 : Questions ouvertes en deux colonnes */}
               <div id={anchor('questions')} class="scroll-mt-24">
                 <div class="flex items-baseline gap-3">
-                  <span class="font-mono text-sm font-medium text-link">05</span>
-                  <h3 class="text-xs font-semibold tracking-[0.16em] text-link uppercase">
+                  <h3 class="text-2xl font-medium tracking-tight text-heading">
                     {labels.questions}
                   </h3>
                 </div>

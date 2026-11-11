@@ -34,7 +34,7 @@ const isActive = (href: string) => path === href || path.startsWith(`${href}/`);
 <header
   id="site-nav"
   data-scrolled="false"
-  class="sticky top-0 z-40 border-b border-heading bg-surface"
+  class="sticky top-0 z-40 border-b border-border bg-surface"
 >
   <nav class="shell flex h-16 items-center gap-4" aria-label="Principale">
     <a href={localizePath('/', lang)} class="inline-flex items-center" aria-label="Accueil">
@@ -53,7 +53,7 @@ const isActive = (href: string) => path === href || path.startsWith(`${href}/`);
               class:list={[
                 'px-3 py-2 text-sm transition-colors',
                 isActive(item.href)
-                  ? 'text-heading underline decoration-accent-500 decoration-2 underline-offset-8'
+                  ? 'text-heading underline decoration-heading decoration-2 underline-offset-8'
                   : 'text-text-muted hover:text-heading',
               ]}
             >

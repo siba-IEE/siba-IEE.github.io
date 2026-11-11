@@ -1,7 +1,6 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import Story from '../home/Story.astro';
-import OrcidIcon from '../ui/OrcidIcon.astro';
 import { SITE, orcidUrl } from '../../lib/site';
 import { getLangFromUrl, localizePath } from '../../lib/i18n';
 import {
@@ -31,72 +30,80 @@ const dates = (start: string, end: string, current: boolean) =>
   current ? `${since} ${start}` : end ? `${start}–${end}` : start;
 
 const typeLabels: Record<string, { fr: string; en: string }> = {
-  'journal-article': { fr: 'Article', en: 'Article' },
-  preprint: { fr: 'Prépublication', en: 'Preprint' },
-  'data-set': { fr: 'Jeu de données', en: 'Dataset' },
-  software: { fr: 'Logiciel', en: 'Software' },
+  'journal-article': { fr: 'article', en: 'article' },
+  preprint: { fr: 'prépublication', en: 'preprint' },
+  'data-set': { fr: 'jeu de données', en: 'dataset' },
+  software: { fr: 'logiciel', en: 'software' },
 };
 const typeLabel = (type: string) => typeLabels[type]?.[lang] ?? type.replace(/[-_]/g, ' ');
 
-const host = (url: string) => new URL(url).hostname;
 // Seuls les services que j'héberge sont sondés depuis le navigateur du visiteur.
-const pingable = (url: string) => host(url).endsWith('kumascience.com');
+const pingable = (url: string) => new URL(url).hostname.endsWith('kumascience.com');
+
+// La phrase d'ouverture, coupée à la main : une ligne sur deux est en retrait.
+const statement = isFr
+  ? [
+      [{ text: 'Siba Kalivogui', strong: true }],
+      [{ text: 'est ingénieur en' }],
+      [{ text: 'efficacité énergétique.' }],
+      [{ text: 'Il produit les données' }],
+      [{ text: 'solaires et énergétiques' }],
+      [{ text: 'de la Guinée chez ' }, { text: 'Kuma Science', strong: true }],
+    ]
+  : [
+      [{ text: 'Siba Kalivogui', strong: true }],
+      [{ text: 'is an energy-efficiency' }],
+      [{ text: 'engineer. He produces' }],
+      [{ text: 'the solar and energy' }],
+      [{ text: 'data of Guinea' }],
+      [{ text: 'at ' }, { text: 'Kuma Science', strong: true }],
+    ];
 
 const t = isFr
   ? {
-      prodKicker: 'En production',
-      prodTitle: 'Systèmes en ligne',
-      prodLede: `${live.length} systèmes sont en ligne et maintenus. Les adresses, les DOI et les dépôts sont indiqués pour chacun.`,
+      sunDay: '{city}, {time}. Soleil à {elev}° de hauteur, {ghi} W/m² par ciel clair.',
+      sunNight: '{city}, {time}. Nuit.',
+      toMap: 'Résultats de la prépublication',
+      works: 'En production',
       allProjects: 'Tous les projets',
       pingOk: 'a répondu en',
-      aboutKicker: 'Parcours',
-      aboutTitle: 'Montréal et Conakry',
-      aboutMore: 'Parcours détaillé, formation et compétences',
+      about: 'Parcours',
+      aboutMore: 'Formation et compétences',
       photoAlt: `${SITE.name} à son poste de travail`,
-      pubKicker: 'Publications',
-      pubTitle: 'Articles, jeux de données et logiciel',
+      pubs: 'Publications',
       orcid: 'Profil ORCID',
-      wipKicker: 'En cours',
-      wipTitle: 'Travaux et outils en développement',
-      research: 'Recherche',
-      tool: 'Outil',
-      contactTitle: 'Contact',
+      wip: 'En cours',
+      contact: 'Contact',
       contactLede:
-        'Pour un programme de données énergétiques, une étude de ressource solaire ou un appui technique à un projet en Guinée, écrivez-moi par courriel. Je réponds en français ou en anglais.',
+        'Pour un programme de données énergétiques, une étude de ressource solaire ou un appui technique à un projet en Guinée. Je réponds en français ou en anglais.',
       services: 'Prestations et tarifs',
     }
   : {
-      prodKicker: 'In production',
-      prodTitle: 'Systems online',
-      prodLede: `${live.length} systems are online and maintained. Addresses, DOIs and repositories are given for each.`,
+      sunDay: '{city}, {time}. Sun {elev}° above the horizon, {ghi} W/m² under clear sky.',
+      sunNight: '{city}, {time}. Night.',
+      toMap: 'Results of the preprint',
+      works: 'In production',
       allProjects: 'All projects',
       pingOk: 'responded in',
-      aboutKicker: 'Background',
-      aboutTitle: 'Montréal and Conakry',
-      aboutMore: 'Detailed background, education and skills',
+      about: 'Background',
+      aboutMore: 'Education and skills',
       photoAlt: `${SITE.name} at work`,
-      pubKicker: 'Publications',
-      pubTitle: 'Papers, datasets and software',
+      pubs: 'Publications',
       orcid: 'ORCID profile',
-      wipKicker: 'In progress',
-      wipTitle: 'Research and tools under development',
-      research: 'Research',
-      tool: 'Tool',
-      contactTitle: 'Contact',
+      wip: 'In progress',
+      contact: 'Contact',
       contactLede:
-        'For an energy-data programme, a solar resource study or technical support for a project in Guinea, write to me by email. I reply in French or English.',
+        'For an energy-data programme, a solar resource study or technical support for a project in Guinea. I reply in French or English.',
       services: 'Services and prices',
     };
 
 const upcoming = [
   ...openResearch.map((w) => ({
-    kind: t.research,
     title: isFr ? w.titleFr : w.titleEn,
     text: isFr ? w.summaryFr : w.summaryEn,
     href: localizePath('/travaux', lang),
   })),
   ...building.map((p) => ({
-    kind: t.tool,
     title: p.title,
     text: isFr ? p.summaryFr : p.summaryEn,
     href: `${localizePath('/projets', lang)}#${p.slug}`,
@@ -105,236 +112,182 @@ const upcoming = [
 ---
 
 <BaseLayout description={tagline.slice(0, 158)}>
+  {
+    /* Ouverture : une phrase et un disque. Le disque est le soleil de Conakry, à sa hauteur réelle. */
+  }
+  <section
+    class="hero"
+    data-hero
+    data-locale={isFr ? 'fr-FR' : 'en-US'}
+    data-day={t.sunDay}
+    data-night={t.sunNight}
+  >
+    <div class="sun" data-sun aria-hidden="true"><i></i></div>
+    <h1 class="statement">
+      {
+        statement.map((line, i) => (
+          <span class:list={['line', i % 2 === 1 && 'in']} style={`--i:${i}`}>
+            <span>
+              {line.map((part) => (part.strong ? <strong>{part.text}</strong> : part.text))}
+            </span>
+          </span>
+        ))
+      }
+    </h1>
+    <div class="hero-foot">
+      <p class="readout">
+        <span data-city="Conakry" data-lat="9.51" data-lon="-13.71" data-tz="Africa/Conakry"></span>
+        <span data-city="Montréal" data-lat="45.5" data-lon="-73.57" data-tz="America/Toronto"
+        ></span>
+      </p>
+      <a class="down" href="#etape-1">
+        <svg viewBox="0 0 16 16" aria-hidden="true"
+          ><path d="M8 2v11M3.5 8.5 8 13l4.5-4.5"></path></svg
+        >
+        {t.toMap}
+      </a>
+    </div>
+  </section>
+
   <Story />
 
-  {/* En production : un registre, pas une galerie de cartes */}
-  <section id="production" class="scroll-mt-16 bg-surface">
-    <div class="shell pt-20 pb-10 sm:pt-32 sm:pb-16">
-      <header class="grid gap-6 lg:grid-cols-12 lg:items-end">
-        <div class="lg:col-span-7" data-reveal>
-          <p class="eyebrow">{t.prodKicker}</p>
-          <h2 class="display mt-4">{t.prodTitle}</h2>
-        </div>
-        <p
-          class="max-w-md text-lg text-text-muted text-pretty lg:col-span-4 lg:col-start-9"
-          data-reveal
-        >
-          {t.prodLede}
-        </p>
-      </header>
-
-      <ol class="mt-12 border-t border-heading sm:mt-20">
+  {/* En production : les noms, en très grand. Le détail suit le nom survolé ou touché. */}
+  <section id="production" class="works scroll-mt-16" data-works>
+    <div class="shell">
+      <h2 class="label" data-reveal>{t.works}</h2>
+      <p class="names" data-reveal>
         {
           live.map((project, i) => (
-            <li class="ledger-row group border-b border-border" data-reveal>
-              <div class="grid gap-x-8 gap-y-5 py-8 sm:py-10 lg:grid-cols-12">
-                <div class="lg:col-span-5">
-                  <div class="flex items-baseline gap-4">
-                    <span class="font-mono text-xs text-text-subtle">
-                      {String(i + 1).padStart(2, '0')}
-                    </span>
-                    <h3 class="font-display text-3xl font-normal text-heading sm:text-[2.6rem] sm:leading-none">
-                      <a
-                        href={project.url ?? `${localizePath('/projets', lang)}#${project.slug}`}
-                        target={project.url ? '_blank' : undefined}
-                        rel={project.url ? 'noopener' : undefined}
-                        class="ledger-title"
-                      >
-                        {project.title}
-                      </a>
-                    </h3>
-                  </div>
-                  <p class="mt-4 max-w-md text-text-muted text-pretty sm:pl-9">
-                    {isFr ? project.summaryFr : project.summaryEn}
-                  </p>
-                </div>
-
-                {project.facts && (
-                  <dl class="grid grid-cols-3 gap-x-5 gap-y-4 sm:pl-9 lg:col-span-4 lg:pl-0">
-                    {project.facts.map((fact) => (
-                      <div class={project.facts!.length < 3 ? 'col-span-3 sm:col-span-1' : ''}>
-                        <dd class="font-display text-2xl leading-none text-heading sm:text-[1.7rem]">
-                          {fact.value}
-                        </dd>
-                        <dt class="mt-2 text-xs leading-snug text-text-subtle">
-                          {isFr ? fact.labelFr : fact.labelEn}
-                        </dt>
-                      </div>
-                    ))}
-                  </dl>
-                )}
-
-                <ul class="space-y-2 font-mono text-[0.8rem] sm:pl-9 lg:col-span-3 lg:pl-0">
-                  {(project.links ?? []).map((link) => (
-                    <li>
-                      <a
-                        href={link.url}
-                        target="_blank"
-                        rel="noopener"
-                        class="ledger-link"
-                        data-ping={pingable(link.url) ? link.url : undefined}
-                      >
-                        <span class="break-all">{link.label}</span>
-                        <svg viewBox="0 0 12 12" aria-hidden="true">
-                          <path d="M3 9 9 3M4.5 3H9v4.5" />
-                        </svg>
-                      </a>
-                      {pingable(link.url) && (
-                        <span class="ping" data-ping-out data-label={t.pingOk} />
-                      )}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            </li>
+            <>
+              <button type="button" data-work={i} aria-pressed={i === 0 ? 'true' : 'false'}>
+                {project.title}
+              </button>
+              {i < live.length - 1 ? ', ' : '.'}
+            </>
           ))
         }
-      </ol>
+      </p>
 
-      <a href={localizePath('/projets', lang)} class="arrow-link mt-8">{t.allProjects}</a>
+      <div class="details">
+        {
+          live.map((project, i) => (
+            <article class="detail" data-detail={i} hidden={i !== 0}>
+              <p class="summary">{isFr ? project.summaryFr : project.summaryEn}</p>
+              <dl>
+                {(project.facts ?? []).map((fact) => (
+                  <div>
+                    <dd>{fact.value}</dd>
+                    <dt>{isFr ? fact.labelFr : fact.labelEn}</dt>
+                  </div>
+                ))}
+              </dl>
+              <ul>
+                {(project.links ?? []).map((link) => (
+                  <li>
+                    <a
+                      href={link.url}
+                      target="_blank"
+                      rel="noopener"
+                      data-ping={pingable(link.url) ? link.url : undefined}
+                    >
+                      <span class="draw">{link.label}</span>
+                    </a>
+                    {pingable(link.url) && (
+                      <span class="ping" data-ping-out data-label={t.pingOk} />
+                    )}
+                  </li>
+                ))}
+              </ul>
+            </article>
+          ))
+        }
+      </div>
+      <a href={localizePath('/projets', lang)} class="more">{t.allProjects}</a>
     </div>
   </section>
 
-  {/* Parcours : texte courant, portrait en marge, puis le tableau des postes */}
-  <section class="bg-surface">
-    <div class="shell py-16 sm:py-28">
-      <div data-reveal>
-        <p class="eyebrow">{t.aboutKicker}</p>
-        <h2 class="display mt-4">{t.aboutTitle}</h2>
-      </div>
-
-      <div class="bio mt-10" data-reveal>
-        <figure class="portrait">
-          <img src="/images/ph.jpeg" alt={t.photoAlt} width="920" height="2048" loading="lazy" />
-          <figcaption>
-            <a
-              href={orcidUrl}
-              target="_blank"
-              rel="me noopener"
-              class="inline-flex items-center gap-1.5 hover:text-text"
-            >
-              <OrcidIcon class="size-3.5" />
-              {SITE.orcid}
-            </a>
-          </figcaption>
-        </figure>
+  {/* Parcours */}
+  <section class="block">
+    <div class="shell">
+      <h2 class="label" data-reveal>{t.about}</h2>
+      <div class="bio" data-reveal>
+        <img src="/images/ph.jpeg" alt={t.photoAlt} width="920" height="2048" loading="lazy" />
         <p>{bio}</p>
       </div>
-
-      <table class="career mt-14" data-reveal>
-        <tbody>
-          {
-            experience.map((item) => (
-              <tr>
-                <th scope="row">{dates(item.start, item.end, item.current)}</th>
-                <td class="role">{isFr ? item.roleFr : item.roleEn}</td>
-                <td>{item.org}</td>
-                <td class="place">{isFr ? item.locationFr : item.locationEn}</td>
-              </tr>
-            ))
-          }
-        </tbody>
-      </table>
-      <a href={localizePath('/a-propos', lang)} class="arrow-link mt-8">{t.aboutMore}</a>
-    </div>
-  </section>
-
-  {/* Publications : une bibliographie */}
-  <section class="border-t border-border bg-surface-2">
-    <div class="shell py-16 sm:py-28">
-      <header class="flex flex-wrap items-end justify-between gap-6" data-reveal>
-        <div>
-          <p class="eyebrow">{t.pubKicker}</p>
-          <h2 class="display mt-4">{t.pubTitle}</h2>
-        </div>
-        <a
-          href={orcidUrl}
-          target="_blank"
-          rel="me noopener"
-          class="inline-flex items-center gap-2 text-sm text-link hover:underline"
-        >
-          <OrcidIcon class="size-4" />
-          {t.orcid}
-        </a>
-      </header>
-
-      <ol class="mt-12 border-t border-heading">
+      <ul class="rows after-bio">
         {
-          publications.map((pub) => (
-            <li
-              class="grid gap-x-8 gap-y-2 border-b border-border py-6 lg:grid-cols-12"
-              data-reveal
-            >
-              <p class="font-mono text-xs text-text-subtle lg:col-span-2 lg:pt-1.5">
-                {pub.year}
-                <span class="mx-2 text-border">/</span>
-                {typeLabel(pub.type)}
-              </p>
-              <div class="lg:col-span-7">
-                <h3 class="font-display text-xl leading-snug font-normal text-heading text-pretty sm:text-2xl">
-                  {pub.url ? (
-                    <a href={pub.url} target="_blank" rel="noopener" class="cite-title">
-                      {pub.title}
-                    </a>
-                  ) : (
-                    pub.title
-                  )}
-                </h3>
-                <p class="mt-2 text-sm leading-relaxed text-text-muted text-pretty">
-                  {pub.authors.length > 0 && (
-                    <>
-                      {pub.authors.map((author, a) => (
-                        <>
-                          {a > 0 && ', '}
-                          {author.includes('Kalivogui') ? (
-                            <strong class="font-semibold text-text">{author}</strong>
-                          ) : (
-                            author
-                          )}
-                        </>
-                      ))}
-                      {'. '}
-                    </>
-                  )}
-                  {pub.venue && <em>{pub.venue}</em>}
-                </p>
-              </div>
-              {pub.doi && (
-                <a
-                  href={`https://doi.org/${pub.doi}`}
-                  target="_blank"
-                  rel="noopener"
-                  class="font-mono text-xs text-link hover:underline lg:col-span-3 lg:pt-1.5 lg:text-right"
-                >
-                  doi:{pub.doi.toLowerCase()}
-                </a>
-              )}
+          experience.map((item, i) => (
+            <li data-reveal style={`--reveal-delay:${i * 50}ms`}>
+              <span class="when">{dates(item.start, item.end, item.current)}</span>
+              <span class="what">{isFr ? item.roleFr : item.roleEn}</span>
+              <span class="where">
+                {item.org}, {isFr ? item.locationFr : item.locationEn}
+              </span>
             </li>
           ))
         }
-      </ol>
+      </ul>
+      <a href={localizePath('/a-propos', lang)} class="more">{t.aboutMore}</a>
     </div>
   </section>
 
-  {/* En chantier */}
+  {/* Publications */}
+  <section class="block">
+    <div class="shell">
+      <h2 class="label" data-reveal>{t.pubs}</h2>
+      <ul class="rows">
+        {
+          publications.map((pub, i) => (
+            <li data-reveal style={`--reveal-delay:${i * 50}ms`}>
+              <span class="when">
+                {pub.year}, {typeLabel(pub.type)}
+              </span>
+              <span class="what">
+                <a
+                  href={pub.url ?? (pub.doi ? `https://doi.org/${pub.doi}` : '#')}
+                  target="_blank"
+                  rel="noopener"
+                  class="group"
+                >
+                  <span class="draw">{pub.title}</span>
+                </a>
+                <small>
+                  {pub.authors.map((author, a) => (
+                    <>
+                      {a > 0 && ', '}
+                      {author.includes('Kalivogui') ? <b>{author}</b> : author}
+                    </>
+                  ))}
+                  {pub.authors.length > 0 && pub.venue && '. '}
+                  {pub.venue}
+                </small>
+              </span>
+              <span class="where doi">{pub.doi?.toLowerCase()}</span>
+            </li>
+          ))
+        }
+      </ul>
+      <a href={orcidUrl} target="_blank" rel="me noopener" class="more">{t.orcid}</a>
+    </div>
+  </section>
+
+  {/* En cours */}
   {
     upcoming.length > 0 && (
-      <section class="border-t border-border bg-surface">
-        <div class="shell py-16 sm:py-24">
-          <div data-reveal>
-            <p class="eyebrow">{t.wipKicker}</p>
-            <h2 class="display mt-4">{t.wipTitle}</h2>
-          </div>
-          <ul class="mt-10 grid gap-x-10 gap-y-8 border-t border-border pt-8 md:grid-cols-3">
-            {upcoming.map((item) => (
-              <li data-reveal>
-                <p class="font-mono text-xs text-text-subtle">{item.kind}</p>
-                <h3 class="mt-2 font-display text-2xl font-normal text-heading">
-                  <a href={item.href} class="cite-title">
-                    {item.title}
+      <section class="block">
+        <div class="shell">
+          <h2 class="label" data-reveal>
+            {t.wip}
+          </h2>
+          <ul class="rows wip">
+            {upcoming.map((item, i) => (
+              <li data-reveal style={`--reveal-delay:${i * 50}ms`}>
+                <span class="what">
+                  <a href={item.href} class="group">
+                    <span class="draw">{item.title}</span>
                   </a>
-                </h3>
-                <p class="mt-2 text-sm leading-relaxed text-text-muted text-pretty">{item.text}</p>
+                </span>
+                <span class="where">{item.text}</span>
               </li>
             ))}
           </ul>
@@ -344,88 +297,370 @@ const upcoming = [
   }
 
   {/* Contact */}
-  <section class="bg-brand-900 text-white">
-    <div class="shell py-20 sm:py-32">
-      <p class="eyebrow !text-white/60" data-reveal>{t.contactTitle}</p>
-      <a href={`mailto:${SITE.email}`} class="mail mt-6 block" data-reveal>{SITE.email}</a>
-      <div class="mt-10 grid gap-8 lg:grid-cols-12 lg:items-end" data-reveal>
-        <p class="max-w-xl text-lg text-white/70 text-pretty lg:col-span-6">{t.contactLede}</p>
-        <div class="flex flex-wrap items-center gap-x-8 gap-y-4 lg:col-span-6 lg:justify-end">
-          <a
-            href={localizePath('/services', lang)}
-            class="text-sm text-white/80 underline decoration-white/40 underline-offset-[5px] hover:decoration-accent-400"
-          >
-            {t.services}
-          </a>
-        </div>
-      </div>
+  <section class="contact">
+    <div class="shell">
+      <h2 class="label" data-reveal>{t.contact}</h2>
+      <a href={`mailto:${SITE.email}`} class="mail" data-reveal>{SITE.email}</a>
+      <p data-reveal>{t.contactLede}</p>
+      <a href={localizePath('/services', lang)} class="more" data-reveal>{t.services}</a>
     </div>
   </section>
 </BaseLayout>
 
 <style>
-  .eyebrow {
+  /* ---------- Ouverture ---------- */
+
+  .hero {
+    --nav: 4rem;
+    --sx: 62%;
+    --sy: 46%;
+    --px: 0;
+    --py: 0;
+    --scroll: 0;
+
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    min-height: calc(100svh - var(--nav));
+    padding: 3rem 1.25rem 6.5rem;
+    overflow: hidden;
+
+    /* Comme la carte, l'ouverture garde son fond clair dans les deux thèmes :
+       le texte noir doit pouvoir passer sur le disque jaune. */
+    --heading: #0a0a0a;
+    --text-muted: #5a5a5a;
+
+    background: #ededed;
+  }
+
+  @media (min-width: 1024px) {
+    .hero {
+      padding: 4rem 6vw 6rem;
+    }
+  }
+
+  .sun {
+    position: absolute;
+    top: var(--sy);
+    left: var(--sx);
+    width: min(62vw, 72svh);
+    aspect-ratio: 1;
+    translate: -50% -50%;
+    transform: translate3d(
+        calc(var(--px) * 28px),
+        calc(var(--py) * 28px + var(--scroll) * 22svh),
+        0
+      )
+      scale(calc(1 - var(--scroll) * 0.3));
+    transition:
+      top 1.6s cubic-bezier(0.22, 1, 0.36, 1),
+      left 1.6s cubic-bezier(0.22, 1, 0.36, 1),
+      transform 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+    will-change: transform;
+  }
+
+  .sun i {
+    display: block;
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    background: var(--color-accent-400);
+  }
+
+  /* La nuit, il ne reste que le contour du disque. */
+  .hero[data-night] .sun i {
+    background: none;
+    box-shadow: inset 0 0 0 1.5px var(--heading);
+  }
+
+  .statement {
+    position: relative;
+    margin: 0;
+    font-size: clamp(2.05rem, 8.4vw, 3.4rem);
+    font-weight: 400;
+    line-height: 1.04;
+    letter-spacing: -0.045em;
+    color: var(--heading);
+    /* L'animation commune des titres est remplacée ici par une montée ligne à ligne. */
+    animation: none !important;
+  }
+
+  @media (min-width: 1024px) {
+    .statement {
+      font-size: clamp(3.2rem, 5.7vw, 6.4rem);
+    }
+  }
+
+  .line {
+    display: block;
+    overflow: hidden;
+    padding-bottom: 0.08em;
+  }
+
+  .line.in {
+    padding-left: 0.62em;
+  }
+
+  .line > span {
+    display: block;
+  }
+
+  .statement strong {
+    font-weight: 600;
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    :global(.js) .line > span {
+      animation: line-up 1s cubic-bezier(0.22, 1, 0.36, 1) both;
+      animation-delay: calc(var(--i) * 80ms + 100ms);
+    }
+
+    :global(.js) .sun i {
+      animation: sun-in 1.3s cubic-bezier(0.22, 1, 0.36, 1) both;
+    }
+  }
+
+  @keyframes line-up {
+    from {
+      transform: translateY(110%);
+    }
+  }
+
+  @keyframes sun-in {
+    from {
+      transform: scale(0);
+    }
+  }
+
+  .hero-foot {
+    position: absolute;
+    inset: auto 1.25rem 1.25rem;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 0.75rem 2rem;
+    font-size: 0.85rem;
+    color: var(--text-muted);
+  }
+
+  @media (min-width: 1024px) {
+    .hero-foot {
+      inset: auto 6vw 1.75rem;
+    }
+  }
+
+  .readout {
+    margin: 0;
     font-family: var(--font-mono);
     font-size: 0.72rem;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
+    line-height: 1.6;
+  }
+
+  .readout span {
+    display: block;
+    min-height: 1.6em;
+  }
+
+  .down {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--heading);
+  }
+
+  .down svg {
+    width: 0.9rem;
+    height: 0.9rem;
+    fill: none;
+    stroke: currentcolor;
+    stroke-width: 1.5;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .down svg {
+      animation: nudge 2s ease-in-out infinite;
+    }
+  }
+
+  @keyframes nudge {
+    50% {
+      transform: translateY(3px);
+    }
+  }
+
+  /* ---------- Sections ---------- */
+
+  .works,
+  .block,
+  .contact {
+    padding-block: 5rem 0;
+    background: var(--surface);
+  }
+
+  .contact {
+    padding-bottom: 5rem;
+  }
+
+  @media (min-width: 1024px) {
+    .works,
+    .block,
+    .contact {
+      padding-block: 9rem 0;
+    }
+
+    .contact {
+      padding-bottom: 9rem;
+    }
+  }
+
+  .label {
+    margin: 0 0 1.5rem;
+    font-size: 0.95rem;
+    font-weight: 400;
     color: var(--text-subtle);
   }
 
-  .display {
-    font-family: var(--font-display);
-    font-size: clamp(2.4rem, 6vw, 4.6rem);
-    font-weight: 400;
-    line-height: 1;
-    letter-spacing: -0.025em;
-    text-wrap: balance;
-  }
-
-  /* Registre de production */
-  .ledger-title {
-    background: linear-gradient(currentcolor, currentcolor) 0 100% / 0 1px no-repeat;
-    transition: background-size 0.45s cubic-bezier(0.22, 1, 0.36, 1);
-  }
-
-  .ledger-row:hover .ledger-title,
-  .ledger-title:focus-visible {
-    background-size: 100% 1px;
-  }
-
-  .ledger-link {
-    display: inline-flex;
-    align-items: baseline;
-    gap: 0.4rem;
-    color: var(--link);
-  }
-
-  .ledger-link:hover span {
+  .more {
+    display: inline-block;
+    margin-top: 2rem;
+    font-size: 0.95rem;
+    color: var(--heading);
     text-decoration: underline;
-    text-underline-offset: 3px;
+    text-decoration-color: var(--border);
+    text-underline-offset: 5px;
+    transition: text-decoration-color 0.2s ease;
   }
 
-  .ledger-link svg {
-    flex: none;
-    width: 0.6rem;
-    height: 0.6rem;
-    fill: none;
-    stroke: currentcolor;
-    stroke-width: 1.4;
-    transition: transform 0.25s ease;
+  .more:hover {
+    text-decoration-color: var(--heading);
   }
 
-  .ledger-link:hover svg {
-    transform: translate(2px, -2px);
+  /* Noms des systèmes */
+  .names {
+    margin: 0;
+    font-size: clamp(2.3rem, 8.2vw, 7rem);
+    font-weight: 500;
+    line-height: 1;
+    letter-spacing: -0.05em;
+    color: color-mix(in srgb, var(--heading) 26%, transparent);
   }
 
-  /* Résultat de la sonde : n'apparaît que si le service a effectivement répondu. */
+  .names button {
+    padding: 0;
+    font: inherit;
+    letter-spacing: inherit;
+    text-align: left;
+    color: color-mix(in srgb, var(--heading) 26%, transparent);
+    cursor: pointer;
+    transition: color 0.3s ease;
+  }
+
+  .names button:hover,
+  .names button[aria-pressed='true'] {
+    color: var(--heading);
+  }
+
+  .details {
+    margin-top: 3rem;
+    padding-top: 1.5rem;
+    border-top: 1.5px solid var(--heading);
+  }
+
+  .detail {
+    display: grid;
+    gap: 1.5rem 3rem;
+  }
+
+  .detail[hidden] {
+    display: none;
+  }
+
+  @media (min-width: 1024px) {
+    .detail {
+      grid-template-columns: minmax(0, 5fr) minmax(0, 4fr) minmax(0, 3fr);
+      min-height: 9rem;
+    }
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .detail > * {
+      animation: detail-in 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+    }
+
+    .detail > :nth-child(2) {
+      animation-delay: 60ms;
+    }
+
+    .detail > :nth-child(3) {
+      animation-delay: 120ms;
+    }
+  }
+
+  @keyframes detail-in {
+    from {
+      opacity: 0;
+      transform: translateY(0.8rem);
+    }
+  }
+
+  .summary {
+    margin: 0;
+    font-size: clamp(1.1rem, 1.6vw, 1.45rem);
+    line-height: 1.3;
+    letter-spacing: -0.02em;
+    color: var(--heading);
+    text-wrap: pretty;
+  }
+
+  .detail dl {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    align-content: start;
+    gap: 1rem;
+    margin: 0;
+  }
+
+  .detail dd {
+    margin: 0;
+    font-size: 1.5rem;
+    font-weight: 500;
+    line-height: 1;
+    letter-spacing: -0.04em;
+    color: var(--heading);
+  }
+
+  .detail dt {
+    margin-top: 0.4rem;
+    font-size: 0.78rem;
+    line-height: 1.3;
+    color: var(--text-muted);
+  }
+
+  .detail ul {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    font-family: var(--font-mono);
+    font-size: 0.78rem;
+    line-height: 1.9;
+  }
+
+  .detail ul a {
+    color: var(--heading);
+    overflow-wrap: anywhere;
+  }
+
   .ping {
     display: none;
     align-items: center;
-    gap: 0.45rem;
-    margin-top: 0.15rem;
-    font-size: 0.7rem;
-    color: var(--text-subtle);
+    gap: 0.4rem;
+    font-size: 0.68rem;
+    line-height: 1.4;
+    color: var(--text-muted);
   }
 
   .ping[data-state='ok'] {
@@ -437,173 +672,258 @@ const upcoming = [
     width: 0.4rem;
     height: 0.4rem;
     border-radius: 50%;
-    background: oklch(0.62 0.15 150);
-  }
-
-  .arrow-link {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.6rem;
-    font-size: 0.95rem;
-    font-weight: 500;
-    color: var(--heading);
-    text-decoration: underline;
-    text-decoration-color: var(--border);
-    text-underline-offset: 6px;
-    transition: text-decoration-color 0.2s ease;
-  }
-
-  .arrow-link::after {
-    content: '→';
-    transition: transform 0.25s ease;
-  }
-
-  .arrow-link:hover {
-    text-decoration-color: var(--link);
-  }
-
-  .arrow-link:hover::after {
-    transform: translateX(4px);
-  }
-
-  .cite-title {
-    text-decoration: underline;
-    text-decoration-color: transparent;
-    text-decoration-thickness: 1px;
-    text-underline-offset: 4px;
-    transition: text-decoration-color 0.2s ease;
-  }
-
-  .cite-title:hover {
-    text-decoration-color: var(--link);
+    background: #1faa59;
   }
 
   /* Parcours */
   .bio {
-    max-width: 68rem;
+    max-width: 70rem;
   }
 
   .bio p {
-    font-family: var(--font-display);
-    font-size: clamp(1.25rem, 2.1vw, 1.9rem);
-    line-height: 1.32;
-    letter-spacing: -0.012em;
+    margin: 0;
+    font-size: clamp(1.3rem, 2.5vw, 2.3rem);
+    line-height: 1.16;
+    letter-spacing: -0.035em;
     color: var(--heading);
     text-wrap: pretty;
   }
 
-  .portrait {
+  .bio img {
     float: right;
-    width: clamp(7.5rem, 18vw, 15rem);
-    margin: 0.4rem 0 1rem 2rem;
-    shape-outside: margin-box;
-  }
-
-  .portrait img {
-    width: 100%;
+    width: clamp(6.5rem, 15vw, 13rem);
+    height: auto;
     aspect-ratio: 4 / 5;
+    margin: 0.3rem 0 1rem 1.5rem;
     object-fit: cover;
     object-position: 50% 72%;
-    filter: grayscale(1) contrast(1.05);
-    mix-blend-mode: multiply;
+    filter: grayscale(1) contrast(1.08);
+    transition: filter 0.5s ease;
   }
 
-  :global([data-theme='dark']) .portrait img {
-    mix-blend-mode: normal;
+  .bio img:hover {
+    filter: none;
   }
 
-  .portrait figcaption {
-    margin-top: 0.5rem;
-    font-family: var(--font-mono);
-    font-size: 0.68rem;
+  /* Listes : une ligne par entrée, rien d'autre. */
+  .rows {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    clear: both;
+    border-top: 1px solid var(--border);
+  }
+
+  .rows.after-bio {
+    margin-top: 3.5rem;
+  }
+
+  .rows li {
+    display: grid;
+    gap: 0.15rem 2rem;
+    padding-block: 0.9rem;
+    border-bottom: 1px solid var(--border);
+    font-size: 0.98rem;
+    color: var(--text-muted);
+    transition: padding-left 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  .rows li:hover {
+    padding-left: 0.6rem;
+  }
+
+  @media (min-width: 900px) {
+    .rows li {
+      grid-template-columns: 11rem minmax(0, 6fr) minmax(0, 5fr);
+      align-items: baseline;
+    }
+
+    .rows.wip li {
+      grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+    }
+  }
+
+  .rows .when {
+    font-size: 0.85rem;
     color: var(--text-subtle);
   }
 
-  .career {
-    width: 100%;
-    border-collapse: collapse;
-    border-top: 1px solid var(--heading);
-    clear: both;
+  .rows .what {
+    color: var(--heading);
   }
 
-  .career tr {
-    border-bottom: 1px solid var(--border);
-  }
-
-  .career th,
-  .career td {
-    padding: 0.85rem 1.5rem 0.85rem 0;
-    text-align: left;
-    vertical-align: baseline;
-    font-size: 0.95rem;
+  .rows small {
+    display: block;
+    margin-top: 0.25rem;
+    font-size: 0.82rem;
+    line-height: 1.45;
     color: var(--text-muted);
   }
 
-  .career th {
-    width: 9rem;
-    font-family: var(--font-mono);
-    font-size: 0.75rem;
-    font-weight: 400;
-    color: var(--text-subtle);
-    white-space: nowrap;
-  }
-
-  .career .role {
+  .rows small b {
     font-weight: 500;
     color: var(--heading);
   }
 
-  @media (max-width: 760px) {
-    .career tr {
-      display: grid;
-      grid-template-columns: 5.5rem 1fr;
-      padding-block: 0.8rem;
-    }
+  .rows .doi {
+    font-family: var(--font-mono);
+    font-size: 0.74rem;
+    overflow-wrap: anywhere;
+  }
 
-    .career th,
-    .career td {
-      padding: 0;
-    }
-
-    .career th {
-      grid-row: span 3;
-      width: auto;
-    }
-
-    .career .place {
-      font-size: 0.85rem;
+  @media (min-width: 900px) {
+    .rows .doi {
+      text-align: right;
     }
   }
 
+  /* Contact */
   .mail {
-    font-family: var(--font-display);
-    font-size: clamp(1.9rem, 6.6vw, 6rem);
-    line-height: 1.05;
-    letter-spacing: -0.02em;
+    display: inline-block;
+    font-size: clamp(1.7rem, 7.4vw, 7rem);
+    font-weight: 500;
+    line-height: 1;
+    letter-spacing: -0.05em;
+    color: var(--heading);
     overflow-wrap: anywhere;
-    color: #fff;
-    text-decoration: underline;
-    text-decoration-color: var(--color-accent-400);
-    text-decoration-thickness: 2px;
-    text-underline-offset: 0.14em;
-    transition: color 0.2s ease;
+    background: linear-gradient(var(--color-accent-400), var(--color-accent-400)) 0 100% / 100% 0
+      no-repeat;
+    transition:
+      background-size 0.45s cubic-bezier(0.22, 1, 0.36, 1),
+      color 0.3s ease;
   }
 
   .mail:hover {
-    color: var(--color-accent-300);
+    background-size: 100% 100%;
+    color: #111;
+  }
+
+  .contact p {
+    max-width: 34rem;
+    margin: 2rem 0 0;
+    color: var(--text-muted);
+    text-wrap: pretty;
   }
 </style>
 
 <script>
-  // Sonde de disponibilité : quand le registre entre à l'écran, le navigateur du visiteur
-  // interroge chaque service et affiche le délai mesuré. Un échec reste silencieux.
-  const initPing = () => {
-    const section = document.getElementById('production');
-    if (!section || section.dataset.pinged) return;
-    const links = [...section.querySelectorAll<HTMLAnchorElement>('[data-ping]')];
-    if (!links.length || !('IntersectionObserver' in window)) return;
+  /* ---------- Le soleil de l'ouverture ---------- */
+
+  let stopHero: (() => void) | null = null;
+
+  const solar = (lat: number, lon: number, date: Date) => {
+    const start = Date.UTC(date.getUTCFullYear(), 0, 0);
+    const day = Math.floor((date.getTime() - start) / 86400000);
+    const hours = date.getUTCHours() + date.getUTCMinutes() / 60;
+    const g = ((2 * Math.PI) / 365) * (day - 1 + (hours - 12) / 24);
+    const eqTime =
+      229.18 *
+      (0.000075 +
+        0.001868 * Math.cos(g) -
+        0.032077 * Math.sin(g) -
+        0.014615 * Math.cos(2 * g) -
+        0.040849 * Math.sin(2 * g));
+    const decl =
+      0.006918 -
+      0.399912 * Math.cos(g) +
+      0.070257 * Math.sin(g) -
+      0.006758 * Math.cos(2 * g) +
+      0.000907 * Math.sin(2 * g) -
+      0.002697 * Math.cos(3 * g) +
+      0.00148 * Math.sin(3 * g);
+    let hourAngle = (hours * 60 + eqTime + 4 * lon) / 4 - 180;
+    if (hourAngle < -180) hourAngle += 360;
+    const phi = (lat * Math.PI) / 180;
+    const cosZ =
+      Math.sin(phi) * Math.sin(decl) +
+      Math.cos(phi) * Math.cos(decl) * Math.cos((hourAngle * Math.PI) / 180);
+    const elevation = (Math.asin(Math.max(-1, Math.min(1, cosZ))) * 180) / Math.PI;
+    // Rayonnement global par ciel clair, modèle de Haurwitz (1945).
+    const ghi = cosZ > 0.02 ? 1098 * cosZ * Math.exp(-0.057 / cosZ) : 0;
+    return { elevation, hourAngle, ghi };
+  };
+
+  const initHero = () => {
+    stopHero?.();
+    stopHero = null;
+    const hero = document.querySelector<HTMLElement>('[data-hero]');
+    if (!hero) return;
+    const cities = [...hero.querySelectorAll<HTMLElement>('[data-city]')];
+    const locale = hero.dataset.locale ?? 'fr-FR';
+
+    const update = () => {
+      const now = new Date();
+      cities.forEach((el, index) => {
+        const { elevation, hourAngle, ghi } = solar(
+          Number(el.dataset.lat),
+          Number(el.dataset.lon),
+          now,
+        );
+        const time = new Intl.DateTimeFormat(locale, {
+          hour: '2-digit',
+          minute: '2-digit',
+          hour12: false,
+          timeZone: el.dataset.tz,
+        }).format(now);
+        const day = elevation > 0;
+        el.textContent = ((day ? hero.dataset.day : hero.dataset.night) ?? '')
+          .replace('{city}', el.dataset.city ?? '')
+          .replace('{time}', time)
+          .replace('{elev}', String(Math.round(elevation)))
+          .replace('{ghi}', String(Math.round(ghi / 10) * 10));
+        // Le disque suit le soleil de la première ville : le matin à gauche, le soir à droite,
+        // d'autant plus haut que le soleil est haut.
+        if (index === 0) {
+          const x = 50 + Math.max(-1, Math.min(1, hourAngle / 90)) * 30;
+          const y = day ? 62 - (elevation / 90) * 34 : 78;
+          hero.style.setProperty('--sx', `${x.toFixed(1)}%`);
+          hero.style.setProperty('--sy', `${y.toFixed(1)}%`);
+          hero.toggleAttribute('data-night', !day);
+        }
+      });
+    };
+    update();
+    const timer = window.setInterval(update, 30000);
+
+    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const onMove = (event: PointerEvent) => {
+      const rect = hero.getBoundingClientRect();
+      hero.style.setProperty('--px', ((event.clientX - rect.left) / rect.width - 0.5).toFixed(3));
+      hero.style.setProperty('--py', ((event.clientY - rect.top) / rect.height - 0.5).toFixed(3));
+    };
+    let ticking = false;
+    const onScroll = () => {
+      if (ticking) return;
+      ticking = true;
+      requestAnimationFrame(() => {
+        ticking = false;
+        const progress = Math.max(0, Math.min(1, window.scrollY / hero.offsetHeight));
+        hero.style.setProperty('--scroll', progress.toFixed(3));
+      });
+    };
+    if (!reduced) {
+      hero.addEventListener('pointermove', onMove);
+      window.addEventListener('scroll', onScroll, { passive: true });
+    }
+    stopHero = () => {
+      window.clearInterval(timer);
+      hero.removeEventListener('pointermove', onMove);
+      window.removeEventListener('scroll', onScroll);
+    };
+  };
+
+  /* ---------- Systèmes en production ---------- */
+
+  const initWorks = () => {
+    const section = document.querySelector<HTMLElement>('[data-works]');
+    if (!section || section.dataset.ready) return;
+    section.dataset.ready = 'true';
+    const buttons = [...section.querySelectorAll<HTMLButtonElement>('[data-work]')];
+    const details = [...section.querySelectorAll<HTMLElement>('[data-detail]')];
 
     const probe = async (link: HTMLAnchorElement) => {
+      if (link.dataset.pinged) return;
+      link.dataset.pinged = 'true';
       const out = link.parentElement?.querySelector<HTMLElement>('[data-ping-out]');
       if (!out) return;
       const controller = new AbortController();
@@ -615,8 +935,7 @@ const upcoming = [
           cache: 'no-store',
           signal: controller.signal,
         });
-        const ms = Math.round(performance.now() - started);
-        out.textContent = `${out.dataset.label} ${ms} ms`;
+        out.textContent = `${out.dataset.label} ${Math.round(performance.now() - started)} ms`;
         out.dataset.state = 'ok';
       } catch {
         /* service injoignable depuis ce réseau : on n'affiche rien. */
@@ -625,16 +944,35 @@ const upcoming = [
       }
     };
 
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (!entries.some((entry) => entry.isIntersecting)) return;
-        observer.disconnect();
-        section.dataset.pinged = 'true';
-        links.forEach(probe);
-      },
-      { rootMargin: '0px 0px -20% 0px' },
-    );
+    const show = (index: string) => {
+      buttons.forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.work === index)));
+      details.forEach((d) => {
+        d.hidden = d.dataset.detail !== index;
+        // Un service n'est sondé que lorsque sa fiche s'affiche.
+        if (!d.hidden) d.querySelectorAll<HTMLAnchorElement>('[data-ping]').forEach(probe);
+      });
+    };
+    buttons.forEach((b) => {
+      const select = () => show(b.dataset.work ?? '0');
+      b.addEventListener('pointerenter', select);
+      b.addEventListener('focus', select);
+      b.addEventListener('click', select);
+    });
+
+    const observer = new IntersectionObserver((entries) => {
+      if (!entries.some((entry) => entry.isIntersecting)) return;
+      observer.disconnect();
+      show('0');
+    });
     observer.observe(section);
   };
-  document.addEventListener('astro:page-load', initPing);
+
+  document.addEventListener('astro:page-load', () => {
+    initHero();
+    initWorks();
+  });
+  document.addEventListener('astro:before-swap', () => {
+    stopHero?.();
+    stopHero = null;
+  });
 </script>

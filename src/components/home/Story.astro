@@ -238,7 +238,7 @@ const config = JSON.stringify({
 });
 ---
 
-<section class="story" data-story data-step="0" data-config={config}>
+<section class="story" data-story data-step="1" data-config={config}>
   <div class="stage">
     <svg
       class="map"
@@ -250,8 +250,8 @@ const config = JSON.stringify({
       <defs>
         <clipPath id="story-land"><path d={MAP.land}></path></clipPath>
         <linearGradient id="story-bias" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0" style="stop-color: oklch(0.62 0.21 33); stop-opacity: 0.06"></stop>
-          <stop offset="1" style="stop-color: oklch(0.62 0.21 33); stop-opacity: 0.86"></stop>
+          <stop offset="0" style="stop-color: #f50; stop-opacity: 0.06"></stop>
+          <stop offset="1" style="stop-color: #f50; stop-opacity: 0.86"></stop>
         </linearGradient>
         <pattern
           id="story-hatch"
@@ -260,7 +260,7 @@ const config = JSON.stringify({
           patternUnits="userSpaceOnUse"
           patternTransform="rotate(45)"
         >
-          <line x1="0" y1="0" x2="0" y2="5" stroke="oklch(0.62 0.21 33)" stroke-width="1.6"></line>
+          <line x1="0" y1="0" x2="0" y2="5" stroke="#f50" stroke-width="1.6"></line>
         </pattern>
       </defs>
 
@@ -358,19 +358,11 @@ const config = JSON.stringify({
       </g>
     </svg>
 
-    {/* Marges de la planche */}
-    <p class="sheet">
-      <span>Pl. 1</span>
-      {t.sheet}
-    </p>
     <ol class="rail" aria-label={t.rail}>
       {
-        [t.opening, ...t.steps.map((s) => s.tag)].map((label, i) => (
+        t.steps.map((step, i) => (
           <li>
-            <a href={`#etape-${i}`} data-rail={i}>
-              <b>{i}</b>
-              <span>{label}</span>
-            </a>
+            <a href={`#etape-${i + 1}`} data-rail={i + 1} aria-label={step.tag} title={step.tag} />
           </li>
         ))
       }
@@ -380,57 +372,14 @@ const config = JSON.stringify({
       <span>500 km</span>
     </div>
 
-    <h1 class="title">
-      <span>{t.h1a}</span>
-      <span>{t.h1b} <em>{t.h1c}</em></span>
-    </h1>
-
     {/* Cartouche : la légende de la planche, qui change avec l'étape */}
     <div class="cartouche">
-      <div class="panel panel-hero" data-panel="0">
-        <div class="col-a">
-          <p class="tag">{t.kicker}</p>
-          <p class="lede">{t.lede}</p>
-        </div>
-        <div class="col-b">
-          <a class="cue" href="#etape-1">
-            {t.cue}
-            <svg viewBox="0 0 16 16" aria-hidden="true"
-              ><path d="M8 2v11M3.5 8.5 8 13l4.5-4.5"></path></svg
-            >
-          </a>
-          <a class="quiet" href="#production">{t.production}</a>
-        </div>
-        <div class="col-c sun" data-sun title={t.sunNote}>
-          <p class="tag">{t.sunTitle}</p>
-          <dl>
-            {
-              [
-                { city: 'Conakry', lat: 9.51, lon: -13.71, tz: 'Africa/Conakry' },
-                { city: 'Montréal', lat: 45.5, lon: -73.57, tz: 'America/Toronto' },
-              ].map((c) => (
-                <div data-sun-city data-lat={c.lat} data-lon={c.lon} data-tz={c.tz}>
-                  <dt>{c.city}</dt>
-                  <dd data-sun-time>--:--</dd>
-                  <dd data-sun-elev />
-                  <dd data-sun-ghi />
-                </div>
-              ))
-            }
-          </dl>
-        </div>
-      </div>
-
       {
         t.steps.map((step, index) => {
           const n = index + 1;
           return (
             <article class="panel" data-panel={n}>
               <div class="col-a">
-                <p class="tag">
-                  <b>{n}</b>
-                  {step.tag}
-                </p>
                 <h2>{step.title}</h2>
               </div>
               <div class="col-b">
@@ -544,7 +493,7 @@ const config = JSON.stringify({
 
   {/* Piste de défilement : une hauteur d'écran par étape, sans contenu propre */}
   <div class="track" aria-hidden="true">
-    {[0, 1, 2, 3, 4, 5].map((n) => <div class="stop" id={`etape-${n}`} data-step={n} />)}
+    {[1, 2, 3, 4, 5].map((n) => <div class="stop" id={`etape-${n}`} data-step={n} />)}
   </div>
 </section>
 
@@ -552,17 +501,17 @@ const config = JSON.stringify({
   /* La planche garde son papier et ses deux encres quel que soit le thème du site. */
   .story {
     --nav: 4rem;
-    --paper: oklch(0.955 0.013 88);
-    --sea: oklch(0.928 0.015 88);
-    --ink: oklch(0.19 0.012 60);
-    --ink-2: oklch(0.42 0.012 60);
-    --ink-3: oklch(0.58 0.012 62);
-    --rule: oklch(0.8 0.014 80);
-    --spot: oklch(0.6 0.215 33);
+    --paper: #fff;
+    --sea: #ededed;
+    --ink: #111;
+    --ink-2: #5a5a5a;
+    --ink-3: #8a8a8a;
+    --rule: #d4d4d4;
+    --spot: #f50;
     --u: 0.5;
     --stage-h: calc(100svh - var(--nav));
     --pad: 1.25rem;
-    --cart-h: 52%;
+    --cart-h: 50%;
 
     position: relative;
     background: var(--sea);
@@ -607,12 +556,12 @@ const config = JSON.stringify({
   }
 
   .land {
-    fill: oklch(0.985 0.006 90);
+    fill: #fff;
   }
 
   .borders {
     fill: none;
-    stroke: oklch(0.78 0.012 80);
+    stroke: #cfcfcf;
     stroke-width: 0.8;
     vector-effect: non-scaling-stroke;
   }
@@ -662,26 +611,6 @@ const config = JSON.stringify({
       display: none;
     }
 
-    .stage::before {
-      content: '';
-      position: absolute;
-      inset: 0 0 auto;
-      z-index: 1;
-      height: 34%;
-      background: linear-gradient(to bottom, var(--sea) 30%, transparent);
-      pointer-events: none;
-      transition: opacity 0.6s ease;
-    }
-
-    .story:not([data-step='0']) .stage::before {
-      opacity: 0;
-    }
-
-    .title,
-    .rail {
-      z-index: 2;
-    }
-
     .panel[data-panel='2'] .scale {
       display: none;
     }
@@ -723,7 +652,7 @@ const config = JSON.stringify({
   .st text {
     fill: var(--ink);
     paint-order: stroke;
-    stroke: oklch(0.985 0.006 90);
+    stroke: #fff;
     stroke-width: 3.5px;
     stroke-linejoin: round;
   }
@@ -760,12 +689,12 @@ const config = JSON.stringify({
 
   .st .dot {
     fill: var(--ink);
-    stroke: oklch(0.985 0.006 90);
+    stroke: #fff;
     stroke-width: 1.2;
   }
 
   .st.tier-2 .dot {
-    fill: oklch(0.985 0.006 90);
+    fill: #fff;
     stroke: var(--ink);
     stroke-width: 1.5;
   }
@@ -897,80 +826,52 @@ const config = JSON.stringify({
 
   /* ---------- Marges de la planche ---------- */
 
-  .sheet,
-  .rail,
-  .scalebar,
-  .tag {
+  .scalebar {
     font-family: var(--font-mono);
     font-size: 0.7rem;
-    letter-spacing: 0.03em;
   }
 
-  .sheet {
-    position: absolute;
-    top: 0.9rem;
-    left: var(--pad);
-    margin: 0;
-    color: var(--ink-2);
-  }
-
-  .sheet span {
-    margin-right: 0.8rem;
-    color: var(--ink);
-  }
-
+  /* Graduations : une par étape, la courante s'allonge. */
   .rail {
     position: absolute;
-    top: 0.55rem;
-    right: var(--pad);
+    top: 1rem;
+    left: 50%;
+    z-index: 2;
     display: flex;
+    gap: 0;
     margin: 0;
     padding: 0;
     list-style: none;
+    transform: translateX(-50%);
   }
 
   .rail a {
-    display: flex;
-    align-items: center;
-    gap: 0.45rem;
-    padding: 0.35rem 0.5rem;
-    color: var(--ink-3);
-    text-decoration: none;
-    border-bottom: 1px solid transparent;
+    display: block;
+    width: 1.1rem;
+    height: 1.6rem;
+    position: relative;
   }
 
-  .rail b {
-    font-weight: 400;
+  .rail a::before {
+    content: '';
+    position: absolute;
+    left: 50%;
+    bottom: 0.3rem;
+    width: 1.5px;
+    height: 0.55rem;
+    background: var(--ink-3);
+    transition:
+      height 0.35s cubic-bezier(0.22, 1, 0.36, 1),
+      background 0.2s ease;
   }
 
-  .rail span {
-    display: none;
+  .rail a:hover::before {
+    background: var(--ink);
   }
 
-  .rail a:hover {
-    color: var(--ink);
-  }
-
-  .rail a[aria-current='step'] {
-    color: var(--ink);
-    border-bottom-color: var(--ink);
-  }
-
-  @media (min-width: 1024px) {
-    .rail a[aria-current='step'] span {
-      display: inline;
-    }
-  }
-
-  @media (max-width: 520px) {
-    .sheet {
-      display: none;
-    }
-
-    .rail {
-      left: calc(var(--pad) - 0.5rem);
-      right: auto;
-    }
+  .rail a[aria-current='step']::before {
+    height: 1.1rem;
+    background: var(--ink);
   }
 
   .scalebar {
@@ -993,54 +894,12 @@ const config = JSON.stringify({
     border-top: 0;
   }
 
-  /* ---------- Titre, posé sur le Sahara ---------- */
-
-  .title {
-    position: absolute;
-    top: 9%;
-    left: var(--pad);
-    right: var(--pad);
-    margin: 0;
-    font-family: var(--font-display);
-    font-size: clamp(2.3rem, 10.4vw, 3.6rem);
-    font-weight: 400;
-    line-height: 0.98;
-    letter-spacing: -0.03em;
-    color: var(--ink);
-    transition:
-      opacity 0.5s ease,
-      transform 0.7s cubic-bezier(0.22, 1, 0.36, 1);
-  }
-
-  .title span {
-    display: block;
-  }
-
-  .title em {
-    color: var(--spot);
-  }
-
-  @media (min-width: 1024px) {
-    .title {
-      top: 10%;
-      font-size: clamp(3.4rem, 6.3vw, 7.4rem);
-      line-height: 0.95;
-    }
-  }
-
-  :global(.js) .story:not([data-step='0']) .title {
-    opacity: 0;
-    transform: translateY(-1.5rem);
-    pointer-events: none;
-  }
-
   /* ---------- Cartouche ---------- */
 
   .cartouche {
     position: absolute;
     inset: auto 0 0;
     height: var(--cart-h);
-    border-top: 1px solid var(--ink);
     background: var(--paper);
   }
 
@@ -1115,12 +974,12 @@ const config = JSON.stringify({
   }
 
   h2 {
-    margin: 0.5rem 0 0;
+    margin: 0;
     font-family: var(--font-display);
-    font-size: clamp(1.45rem, 5.6vw, 1.8rem);
-    font-weight: 400;
-    line-height: 1.06;
-    letter-spacing: -0.02em;
+    font-size: clamp(1.5rem, 5.8vw, 1.9rem);
+    font-weight: 500;
+    line-height: 1.02;
+    letter-spacing: -0.04em;
     color: var(--ink);
     text-wrap: balance;
   }
@@ -1140,7 +999,7 @@ const config = JSON.stringify({
 
   @media (min-width: 1024px) {
     h2 {
-      font-size: clamp(1.7rem, 2.5vw, 2.7rem);
+      font-size: clamp(1.9rem, 2.9vw, 3.2rem);
     }
 
     .lede {
@@ -1538,7 +1397,7 @@ const config = JSON.stringify({
     let view = [0, 0, 1, 1];
     let frame = 0;
     let focusKey = 'net';
-    let heroView = true;
+    let heroView = false;
     const scalebar = root.querySelector<HTMLElement>('[data-scalebar]');
 
     const frameFor = (key: string, hero: boolean) => {
@@ -1595,7 +1454,7 @@ const config = JSON.stringify({
     };
 
     svg.setAttribute('preserveAspectRatio', 'xMidYMid meet');
-    moveTo('net', true, false);
+    moveTo('net', false, false);
 
     const onResize = () => moveTo(focusKey, heroView, false);
     window.addEventListener('resize', onResize);
@@ -1702,7 +1561,7 @@ const config = JSON.stringify({
         else a.removeAttribute('aria-current');
       });
       const key = step === '5' ? 'gin' : 'net';
-      const hero = step === '0';
+      const hero = false;
       if (key !== focusKey || hero !== heroView) moveTo(key, hero, true);
       if (step === '2' && !demoDone) {
         demoDone = true;
@@ -1713,73 +1572,14 @@ const config = JSON.stringify({
     const observer = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
-          if (entry.isIntersecting) setStep((entry.target as HTMLElement).dataset.step ?? '0');
+          if (entry.isIntersecting) setStep((entry.target as HTMLElement).dataset.step ?? '1');
         });
       },
       { rootMargin: '-50% 0px -50% 0px' },
     );
     steps.forEach((el) => observer.observe(el));
-    setStep(root.dataset.step ?? '0');
+    setStep(root.dataset.step ?? '1');
     cleanups.push(() => observer.disconnect());
-
-    /* ---------- Le soleil, maintenant ---------- */
-
-    const cities = [...root.querySelectorAll<HTMLElement>('[data-sun-city]')];
-    const sun = (lat: number, lon: number, date: Date) => {
-      const start = Date.UTC(date.getUTCFullYear(), 0, 0);
-      const day = Math.floor((date.getTime() - start) / 86400000);
-      const hours = date.getUTCHours() + date.getUTCMinutes() / 60;
-      const g = ((2 * Math.PI) / 365) * (day - 1 + (hours - 12) / 24);
-      const eqTime =
-        229.18 *
-        (0.000075 +
-          0.001868 * Math.cos(g) -
-          0.032077 * Math.sin(g) -
-          0.014615 * Math.cos(2 * g) -
-          0.040849 * Math.sin(2 * g));
-      const decl =
-        0.006918 -
-        0.399912 * Math.cos(g) +
-        0.070257 * Math.sin(g) -
-        0.006758 * Math.cos(2 * g) +
-        0.000907 * Math.sin(2 * g) -
-        0.002697 * Math.cos(3 * g) +
-        0.00148 * Math.sin(3 * g);
-      const solarMinutes = hours * 60 + eqTime + 4 * lon;
-      const hourAngle = ((solarMinutes / 4 - 180) * Math.PI) / 180;
-      const phi = (lat * Math.PI) / 180;
-      const cosZ =
-        Math.sin(phi) * Math.sin(decl) + Math.cos(phi) * Math.cos(decl) * Math.cos(hourAngle);
-      const elevation = (Math.asin(Math.max(-1, Math.min(1, cosZ))) * 180) / Math.PI;
-      // Rayonnement global par ciel clair, modèle de Haurwitz (1945).
-      const ghi = cosZ > 0.02 ? 1098 * cosZ * Math.exp(-0.057 / cosZ) : 0;
-      return { elevation, ghi };
-    };
-
-    const updateSun = () => {
-      const now = new Date();
-      cities.forEach((el) => {
-        const { elevation, ghi } = sun(Number(el.dataset.lat), Number(el.dataset.lon), now);
-        const time = new Intl.DateTimeFormat(cfg.locale, {
-          hour: '2-digit',
-          minute: '2-digit',
-          hour12: false,
-          timeZone: el.dataset.tz,
-        }).format(now);
-        const set = (key: string, value: string) => {
-          const cell = el.querySelector(`[data-sun-${key}]`);
-          if (cell) cell.textContent = value;
-        };
-        set('time', time);
-        set('elev', elevation > 0 ? `${Math.round(elevation)}°` : cfg.night);
-        set('ghi', elevation > 0 ? `${Math.round(ghi / 10) * 10} W/m² ${cfg.clear}` : '');
-      });
-    };
-    if (cities.length) {
-      updateSun();
-      const timer = window.setInterval(updateSun, 30000);
-      cleanups.push(() => window.clearInterval(timer));
-    }
 
     teardown = () => cleanups.forEach((fn) => fn());
   }

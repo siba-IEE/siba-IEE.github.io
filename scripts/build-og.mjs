@@ -16,20 +16,16 @@ const name = 'Siba Kalivogui';
 const role = 'Ingénieur en efficacité énergétique';
 const meta = 'Fondateur de Kuma Science';
 
-// Même planche que l'accueil : papier, encre noire, un filet vermillon.
+// Même ouverture que l'accueil : fond gris, disque jaune, grotesque noire.
 const svg = `<svg width="1200" height="630" viewBox="0 0 1200 630" xmlns="http://www.w3.org/2000/svg">
-  <rect width="1200" height="630" fill="#f3efe8"/>
-  <rect x="0" y="0" width="1200" height="10" fill="#1f1a17"/>
-  <g font-family="Georgia, 'Times New Roman', serif">
-    <text x="80" y="250" font-size="96" fill="#1f1a17" letter-spacing="-2">${name}</text>
-    <text x="80" y="330" font-size="42" font-style="italic" fill="#d9431f">${role}</text>
+  <rect width="1200" height="630" fill="#ededed"/>
+  <circle cx="820" cy="300" r="270" fill="#ffff00"/>
+  <g font-family="Helvetica, Arial, sans-serif" fill="#0a0a0a" letter-spacing="-3">
+    <text x="70" y="250" font-size="92" font-weight="700">${name}</text>
+    <text x="110" y="345" font-size="64">${role}</text>
+    <text x="70" y="440" font-size="64">${meta}</text>
   </g>
-  <rect x="80" y="400" width="1040" height="2" fill="#1f1a17"/>
-  <g font-family="Courier New, monospace" font-size="24" fill="#5c544c">
-    <text x="80" y="456">${meta}</text>
-    <text x="80" y="496">ORCID 0009-0002-8292-1905</text>
-    <text x="1120" y="456" text-anchor="end">siba-iee.github.io</text>
-  </g>
+  <text x="70" y="570" font-family="Courier New, monospace" font-size="22" fill="#5a5a5a">siba-iee.github.io</text>
 </svg>`;
 
 await mkdir(dirname(OUT), { recursive: true });

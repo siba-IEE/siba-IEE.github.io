@@ -43,26 +43,23 @@ const domains = domainOrder
 
 <BaseLayout title={t('projects.pageTitle')} description={t('projects.pageLede')}>
   {/* En-tête encre : titre + accroche + liens vers les domaines */}
-  <section class="relative overflow-hidden bg-brand-900 text-white">
+  <section class="relative overflow-hidden border-b border-border bg-surface">
     <div class="shell relative grid gap-10 py-16 sm:py-20 lg:grid-cols-[1fr_1fr] lg:gap-16">
       <div>
         <h1
-          class="font-display text-4xl font-medium tracking-tight text-balance text-white sm:text-5xl"
+          class="font-display text-4xl font-medium tracking-tight text-balance text-heading sm:text-5xl"
         >
           {t('projects.pageTitle')}
         </h1>
-        <p class="mt-5 max-w-md text-lg text-white/80 text-pretty">{t('projects.pageLede')}</p>
+        <p class="mt-5 max-w-md text-lg text-text-muted text-pretty">{t('projects.pageLede')}</p>
       </div>
       <div class="lg:pt-3">
-        <p class="text-xs font-medium tracking-[0.15em] text-white/50 uppercase">
-          {isFr ? 'Explorer' : 'Explore'}
-        </p>
         <div class="mt-4 grid gap-3 sm:grid-cols-2">
           {
             domains.map((d) => (
               <a
                 href={`#${d.kind}`}
-                class="rounded-sm bg-white/10 px-4 py-2.5 text-sm font-medium ring-1 ring-white/15 transition-colors hover:bg-white/20"
+                class="rounded-sm bg-panel px-4 py-2.5 text-sm font-medium ring-1 ring-border transition-colors hover:bg-accent-400 hover:text-black"
               >
                 {isFr ? d.meta.fr : d.meta.en}
               </a>
@@ -101,7 +98,7 @@ const domains = domainOrder
                       <h3 class="font-display text-xl font-medium tracking-tight sm:text-2xl">
                         {project.title}
                       </h3>
-                      <span class="rounded-sm bg-surface-3 px-2.5 py-0.5 text-[0.65rem] font-medium tracking-wide text-text-subtle uppercase">
+                      <span class="rounded-sm bg-surface-3 px-2.5 py-0.5 text-[0.65rem] font-medium text-text-subtle">
                         {statusLabels[project.status][lang]}
                       </span>
                     </div>

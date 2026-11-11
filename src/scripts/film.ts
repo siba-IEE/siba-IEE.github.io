@@ -1,5 +1,5 @@
 /**
- * Film 3D de la page Travaux (three.js). Sept plans de douze secondes, joués comme une vidéo :
+ * Film 3D de la page Travaux (three.js). Sept plans de vingt secondes, joués comme une vidéo :
  * une station de mesure, le réseau sur 13 pays, le satellite au-dessus de l'Afrique de l'Ouest,
  * le capteur en gros plan, le transfert vers un site sans station, une centrale solaire, puis
  * la maille d'un produit satellitaire.
@@ -19,7 +19,7 @@ import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
 import { STATIONS } from '../data/stations';
 import borders from '../data/borders.json';
 
-export const CHAPTER_SECONDS = 12;
+export const CHAPTER_SECONDS = 20;
 export const CHAPTER_COUNT = 7;
 const FADE_SECONDS = 0.6;
 
@@ -42,6 +42,10 @@ export interface FilmLabels {
   conakry: string;
   /** Les 13 pays du réseau, dans l'ordre de COUNTRIES. */
   countries: string[];
+  /** Légendes de la station : capteur de rayonnement global, capteur ombré, coffret. */
+  station: [string, string, string];
+  /** Distance entre Kindia et Mamou. */
+  distance: string;
 }
 
 export interface Film {
@@ -97,22 +101,33 @@ function part(geometry: THREE.BufferGeometry, material: THREE.Material, x = 0, y
 
 function textSprite(text: string, size: number) {
   const canvas = document.createElement('canvas');
-  canvas.width = 512;
+  const font = '500 72px "Geist Variable", Helvetica, Arial, sans-serif';
+  const measure = canvas.getContext('2d')!;
+  measure.font = font;
+  // Le canvas prend la largeur du texte : une étiquette longue n'est jamais coupée.
+  canvas.width = Math.ceil(measure.measureText(text).width) + 48;
   canvas.height = 128;
   const context = canvas.getContext('2d')!;
-  context.font = '500 72px "Geist Variable", Helvetica, Arial, sans-serif';
+  context.font = font;
   context.textAlign = 'center';
   context.textBaseline = 'middle';
-  context.shadowColor = 'rgba(0, 0, 0, 0.6)';
-  context.shadowBlur = 12;
+  context.shadowColor = 'rgba(0, 0, 0, 0.7)';
+  context.shadowBlur = 14;
   context.fillStyle = '#fff';
-  context.fillText(text, 256, 68);
+  context.fillText(text, canvas.width / 2, 68);
   const texture = new THREE.CanvasTexture(canvas);
   texture.colorSpace = THREE.SRGBColorSpace;
   const sprite = new THREE.Sprite(
-    new THREE.SpriteMaterial({ map: texture, transparent: true, depthTest: false, fog: false }),
+    new THREE.SpriteMaterial({
+      map: texture,
+      transparent: true,
+      depthTest: false,
+      fog: false,
+      toneMapped: false,
+    }),
   );
-  sprite.scale.set(size, size / 4, 1);
+  // `size` est la largeur d'une étiquette de proportion 4:1 ; la hauteur reste donc constante.
+  sprite.scale.set((size / 4) * (canvas.width / canvas.height), size / 4, 1);
   return sprite;
 }
 
@@ -485,6 +500,29 @@ export function mountFilm(
   land.add(shadowCatcher);
 
   const station = buildStation();
+  // Légendes de la station : un trait et un nom pour chaque élément, qui apparaissent en cours de plan.
+  const calloutLine = new THREE.LineBasicMaterial({
+    color: 0xffffff,
+    transparent: true,
+    opacity: 0,
+    toneMapped: false,
+  });
+  const callouts: THREE.SpriteMaterial[] = [];
+  const callout = (text: string, from: THREE.Vector3, to: THREE.Vector3) => {
+    station.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints([from, to]), calloutLine));
+    const name = textSprite(text, 1.5);
+    name.position.copy(to).add(vec(0, 0.24, 0));
+    name.material.opacity = 0;
+    callouts.push(name.material);
+    station.add(name);
+  };
+  callout(labels.station[0], SENSOR.clone().add(vec(0, 0.08, 0)), vec(-2.1, 3.9, 0));
+  callout(labels.station[1], vec(0.85, 3.08, 0), vec(2.2, 4.1, 0));
+  callout(labels.station[2], vec(0.28, 1.3, 0.2), vec(2.3, 1.7, 0.6));
+  const showCallouts = (amount: number) => {
+    calloutLine.opacity = amount * 0.8;
+    callouts.forEach((material) => (material.opacity = amount));
+  };
   const plant = buildPlant();
   land.add(station, plant);
 
@@ -528,9 +566,13 @@ export function mountFilm(
   const donors = [...STATIONS]
     .sort((a, b) => haversine(a, CONAKRY) - haversine(b, CONAKRY))
     .slice(0, 3);
-  STATIONS.forEach((station) =>
-    region.pin(station.lat, station.lon, donors.includes(station) ? 2.4 : 1.6, 0.09, 0xffffff),
-  );
+  STATIONS.forEach((item) => {
+    const height = donors.includes(item) ? 2.4 : 1.6;
+    region.pin(item.lat, item.lon, height, 0.09, 0xffffff);
+    const name = textSprite(item.name, 4.6);
+    name.position.copy(region.at(item.lat, item.lon, height + 1.1));
+    region.scene.add(name);
+  });
   region.pin(CONAKRY.lat, CONAKRY.lon, 3.4, 0.12, ORANGE, labels.conakry);
   const linkMaterial = flat({ color: ORANGE });
   const links = donors.map((donor) => {
@@ -583,6 +625,16 @@ export function mountFilm(
   guinea.scene.add(wash);
   guinea.pin(KINDIA.lat, KINDIA.lon, 12, 0.4, 0xffffff, labels.kindia);
   guinea.pin(MAMOU.lat, MAMOU.lon, 12, 0.4, 0xffffff, labels.mamou);
+  const span = guinea.line(
+    guinea.at(KINDIA.lat, KINDIA.lon),
+    guinea.at(MAMOU.lat, MAMOU.lon),
+    0.7,
+    flat({ color: ORANGE }),
+  );
+  span.position.y = 0.1;
+  const distance = textSprite(labels.distance, 26);
+  distance.position.copy(guinea.at((KINDIA.lat + MAMOU.lat) / 2, (KINDIA.lon + MAMOU.lon) / 2, 5));
+  guinea.scene.add(distance);
 
   /* ----- Scène en orbite ----- */
 
@@ -710,9 +762,11 @@ export function mountFilm(
       scene: land,
       exposure: 1,
       camera: lookFrom(vec(9.5, 1.5, 10.5), vec(5.5, 2.1, 7), vec(0, 2.1, 0)),
-      animate: () => {
+      animate: (u) => {
         station.visible = true;
         plant.visible = false;
+        // Les légendes arrivent avec le deuxième sous-titre.
+        showCallouts(smooth(0.36, 0.46, u) * (1 - smooth(0.9, 0.97, u)));
       },
     },
     {
@@ -745,6 +799,7 @@ export function mountFilm(
       animate: () => {
         station.visible = true;
         plant.visible = false;
+        showCallouts(0);
       },
     },
     {
@@ -814,6 +869,11 @@ export function mountFilm(
 
     const { position, target } = shot.camera(u);
     camera.position.copy(position);
+    if (shot.scene === land) {
+      // Un flottement à peine visible : la caméra semble tenue à l'épaule.
+      camera.position.x += Math.sin(seconds * 0.9) * 0.02;
+      camera.position.y += Math.sin(seconds * 1.3 + 1) * 0.015;
+    }
     camera.lookAt(target);
 
     renderer.toneMappingExposure = shot.exposure;
